@@ -39,4 +39,5 @@ dependencies {
     implementation(libs.nav3.ui)
 
     implementation(libs.lifecycle.viewmodel.compose)
+    implementation(libs.appcompat)
 }
