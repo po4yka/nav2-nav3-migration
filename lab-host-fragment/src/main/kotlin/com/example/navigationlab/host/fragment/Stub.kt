@@ -6,6 +6,7 @@ import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.contracts.LabScenario
 import com.example.navigationlab.host.fragment.hosts.DualHostActivity
 import com.example.navigationlab.host.fragment.hosts.FragmentHostActivity
+import com.example.navigationlab.host.fragment.hosts.FragmentNav2HostActivity
 
 /**
  * Entry point for the fragment host module.
@@ -33,4 +34,18 @@ object DualHostProvider {
     /** Create an Intent to launch the T4 dual-container host activity. */
     fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
         DualHostActivity.createIntent(context, caseId, runMode)
+}
+
+/**
+ * Entry point for the T6 topology (Fragment host -> ComposeView -> internal Nav2).
+ * Provides B06/B07 scenarios and factory for launching FragmentNav2HostActivity.
+ */
+object FragmentNav2HostProvider {
+
+    /** All scenarios registered by this provider (T6 topology). */
+    val scenarios: List<LabScenario> = T6_SCENARIOS
+
+    /** Create an Intent to launch the T6 host activity for a given case. */
+    fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
+        FragmentNav2HostActivity.createIntent(context, caseId, runMode)
 }

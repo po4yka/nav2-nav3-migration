@@ -40,6 +40,7 @@ dependencies {
 
     implementation(libs.nav2.compose)
 
+    implementation(libs.fragment.ktx)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.appcompat)
 }

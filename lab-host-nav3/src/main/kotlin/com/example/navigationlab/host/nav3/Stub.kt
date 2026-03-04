@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.contracts.LabScenario
+import com.example.navigationlab.host.nav3.hosts.Nav3FragmentIslandActivity
 import com.example.navigationlab.host.nav3.hosts.Nav3HostActivity
 import com.example.navigationlab.host.nav3.hosts.Nav3ToNav2InteropActivity
 
@@ -33,4 +34,18 @@ object Nav3ToNav2InteropProvider {
     /** Create an Intent to launch the T8 interop activity for a given case. */
     fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
         Nav3ToNav2InteropActivity.createIntent(context, caseId, runMode)
+}
+
+/**
+ * Entry point for the T5 topology (Nav3 root -> legacy fragment island).
+ * Provides B05 scenario and factory for launching the fragment island activity.
+ */
+object Nav3FragmentIslandProvider {
+
+    /** All scenarios registered by this provider (T5 topology). */
+    val scenarios: List<LabScenario> = T5_SCENARIOS
+
+    /** Create an Intent to launch the T5 fragment island activity for a given case. */
+    fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
+        Nav3FragmentIslandActivity.createIntent(context, caseId, runMode)
 }

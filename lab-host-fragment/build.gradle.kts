@@ -40,4 +40,7 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.foundation)
     implementation(libs.compose.runtime)
+
+    // Nav2 for T6 topology (Fragment -> ComposeView -> internal Nav2)
+    implementation(libs.nav2.compose)
 }
