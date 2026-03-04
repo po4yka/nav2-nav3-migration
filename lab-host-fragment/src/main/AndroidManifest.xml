@@ -5,5 +5,8 @@
         <activity
             android:name=".hosts.FragmentHostActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+        <activity
+            android:name=".hosts.DualHostActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
     </application>
 </manifest>

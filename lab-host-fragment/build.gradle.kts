@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -22,6 +23,7 @@ android {
 
     buildFeatures {
         viewBinding = true
+        compose = true
     }
 }
 
@@ -31,4 +33,11 @@ dependencies {
     implementation(libs.appcompat)
     implementation(libs.fragment.ktx)
     implementation(libs.core.ktx)
+
+    // Compose deps for T4 dual-container topology (ComposeView + overlay FrameLayout)
+    implementation(platform(libs.compose.bom))
+    implementation(libs.compose.material3)
+    implementation(libs.compose.ui)
+    implementation(libs.compose.foundation)
+    implementation(libs.compose.runtime)
 }
