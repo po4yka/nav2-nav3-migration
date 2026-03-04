@@ -1,5 +1,7 @@
 # Navigation Interop Lab -- Android Test Application
 
+> **Note:** This file is the original build prompt/specification used to generate the project. For user-facing documentation, see [`README.md`](README.md).
+
 ## Objective
 
 Build a multi-module Android test application inside this repository that validates navigation interoperability patterns: Nav2/Nav3 bridging, Fragment/Compose transitions, hybrid back-stack behavior, deeplink handling, and state restore across configuration changes and process death.
@@ -13,7 +15,7 @@ Requirements Q&A: `specs/navigation-interop-lab/requirements.md`.
 
 - **minSdk 24**, latest stable Kotlin / AGP / Gradle.
 - **Koin** for dependency injection.
-- **Nav3**: latest alpha (`androidx.navigation3:*`) with Material 3 integration.
+- **Nav3**: `androidx.navigation3:*` 1.0.1 (stable) with Material 3 integration.
 - **No sync mechanism** with production repo -- lab is self-contained.
 - **GitHub Actions CI** smoke pipeline for instrumentation tests.
 - **In-memory** `LabTraceStore` (no persistence).

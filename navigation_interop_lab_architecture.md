@@ -58,7 +58,7 @@ Out of scope:
 
 ### Module layout
 
-Use a **standalone repository** (not a module inside this repo).
+The lab is built directly inside this repository (`nav2-nav3-migration`).
 
 ```text
 nav2-nav3-migration/
@@ -102,19 +102,7 @@ nav2-nav3-migration/
       results/
   lab-testkit/
     src/androidTest/kotlin/.../
-  docs/
-    architecture.md
-    cases.md
-    known-issues.md
-    sync-with-source-repo.md
 ```
-
-### Repository strategy
-
-- Create a new Git repository (example name: `navigation-interop-lab`).
-- Keep it buildable independently (`./gradlew :app:assembleDebug` in that repo).
-- Do not include lab modules into current production `settings.gradle.kts`.
-- Do not add runtime dependency from production app to lab repo.
 
 ### Dependency boundary policy
 
@@ -197,24 +185,6 @@ Core runtime components:
   - fragment transactions
   - back events
   - deeplink outcomes
-
-### Synchronization with source repository
-
-Because the lab is in a separate repository, add a documented sync process:
-
-1. Keep a `SOURCE_SNAPSHOT.md` with:
-- source repository URL
-- source commit SHA used for latest sync
-- changed anchor files and line ranges
-
-2. Add `tools/sync/refresh_inventory.sh` in lab repo to refresh:
-- NavHost inventory
-- deeplink manager chain inventory
-- container/back-handler anchor list
-
-3. Run sync regularly (for example once per sprint or before major migration decision).
-
-4. Version every sync update as a separate PR in the lab repo.
 
 ### Host topologies to implement in the lab
 
