@@ -5,5 +5,8 @@
         <activity
             android:name=".hosts.Nav3HostActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+        <activity
+            android:name=".hosts.Nav3ToNav2InteropActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
     </application>
 </manifest>

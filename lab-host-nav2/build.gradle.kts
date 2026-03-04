@@ -39,6 +39,9 @@ dependencies {
     implementation(libs.nav2.fragment)
     implementation(libs.nav2.ui)
 
+    implementation(libs.nav3.runtime)
+    implementation(libs.nav3.ui)
+
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.appcompat)
 }

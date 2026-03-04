@@ -38,6 +38,8 @@ dependencies {
     implementation(libs.nav3.runtime)
     implementation(libs.nav3.ui)
 
+    implementation(libs.nav2.compose)
+
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.appcompat)
 }
