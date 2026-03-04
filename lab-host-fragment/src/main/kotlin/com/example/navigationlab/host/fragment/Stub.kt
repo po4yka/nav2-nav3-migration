@@ -39,12 +39,13 @@ object DualHostProvider {
 
 /**
  * Entry point for the T6 topology (Fragment host -> ComposeView -> internal Nav2).
- * Provides B06/B07 scenarios and factory for launching FragmentNav2HostActivity.
+ * Provides B06/B07 plus D01/D02/D03/D04/D06/D07/D08/D09 scenarios and factory
+ * for launching FragmentNav2HostActivity.
  */
 object FragmentNav2HostProvider {
 
-    /** All scenarios registered by this provider (T6 topology). */
-    val scenarios: List<LabScenario> = T6_SCENARIOS
+    /** All scenarios registered by this provider (T6 Nav2 + D-family overlays). */
+    val scenarios: List<LabScenario> = T6_SCENARIOS + D_NAV2_SCENARIOS
 
     /** Create an Intent to launch the T6 host activity for a given case. */
     fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
@@ -52,13 +53,13 @@ object FragmentNav2HostProvider {
 }
 
 /**
- * Entry point for B08 scenario (Fragment host -> ComposeView -> Nav3 NavDisplay).
+ * Entry point for B08 and D05 scenarios (Fragment host -> ComposeView -> Nav3 NavDisplay).
  * Uses T6 topology pattern with Nav3 instead of Nav2.
  */
 object FragmentNav3HostProvider {
 
-    /** All scenarios registered by this provider (B08). */
-    val scenarios: List<LabScenario> = B08_SCENARIOS
+    /** All scenarios registered by this provider (B08 + D05). */
+    val scenarios: List<LabScenario> = B08_SCENARIOS + D_NAV3_SCENARIOS
 
     /** Create an Intent to launch the B08 host activity for a given case. */
     fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
