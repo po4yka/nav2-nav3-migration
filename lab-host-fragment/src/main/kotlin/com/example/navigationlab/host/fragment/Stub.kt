@@ -64,3 +64,33 @@ object FragmentNav3HostProvider {
     fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
         FragmentNav3HostActivity.createIntent(context, caseId, runMode)
 }
+
+/**
+ * C-family: Compose-to-XML bridge scenarios using T4 (DualHostActivity).
+ * Covers C01 (compose opens fragment), C04 (compose opens DialogFragment),
+ * C07 (compose args -> fragment args), C08 (activity recreate bridge).
+ */
+object ComposeToXmlBridgeProvider {
+
+    /** C-family scenarios using T4 topology. */
+    val scenarios: List<LabScenario> = C_T4_SCENARIOS
+
+    /** Create an Intent to launch the T4 dual-container host activity. */
+    fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
+        DualHostActivity.createIntent(context, caseId, runMode)
+}
+
+/**
+ * C-family: XML-to-Compose bridge scenarios using T6 (FragmentNav2HostActivity).
+ * Covers C03 (fragment hosts ComposeView), C05 (fragment opens Compose dialog),
+ * C06 (XML args -> Compose args).
+ */
+object XmlToComposeBridgeProvider {
+
+    /** C-family scenarios using T6 topology. */
+    val scenarios: List<LabScenario> = C_T6_SCENARIOS
+
+    /** Create an Intent to launch the T6 host activity. */
+    fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
+        FragmentNav2HostActivity.createIntent(context, caseId, runMode)
+}

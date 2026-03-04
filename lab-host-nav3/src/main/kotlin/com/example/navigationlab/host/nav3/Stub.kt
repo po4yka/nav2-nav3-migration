@@ -64,3 +64,17 @@ object Nav3NestedChainProvider {
     fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
         Nav3NestedChainActivity.createIntent(context, caseId, runMode)
 }
+
+/**
+ * C-family: XML-in-Compose bridge scenario using T5 (Nav3FragmentIslandActivity).
+ * Covers C02 (Compose route hosts XML via AndroidViewBinding and keeps state).
+ */
+object XmlInComposeBridgeProvider {
+
+    /** C-family scenario using T5 topology. */
+    val scenarios: List<LabScenario> = C_NAV3_SCENARIOS
+
+    /** Create an Intent to launch the T5 fragment island activity. */
+    fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
+        Nav3FragmentIslandActivity.createIntent(context, caseId, runMode)
+}
