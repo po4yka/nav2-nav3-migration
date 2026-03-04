@@ -15,8 +15,8 @@ import com.example.navigationlab.host.fragment.hosts.FragmentNav3HostActivity
  */
 object FragmentHostProvider {
 
-    /** All scenarios registered by this module (T1 + E02 callback baseline). */
-    val scenarios: List<LabScenario> = T1_SCENARIOS + E_T1_SCENARIOS
+    /** All scenarios registered by this module (T1 + E02 + H01). */
+    val scenarios: List<LabScenario> = T1_SCENARIOS + E_T1_SCENARIOS + H_T1_SCENARIOS
 
     /** Create an Intent to launch the T1 host activity for a given case. */
     fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
@@ -29,8 +29,8 @@ object FragmentHostProvider {
  */
 object DualHostProvider {
 
-    /** All scenarios registered by this module (T4 + E06 root back policy). */
-    val scenarios: List<LabScenario> = T4_SCENARIOS + E_T4_SCENARIOS
+    /** All scenarios registered by this module (T4 + E06 + H05). */
+    val scenarios: List<LabScenario> = T4_SCENARIOS + E_T4_SCENARIOS + H_T4_SCENARIOS
 
     /** Create an Intent to launch the T4 dual-container host activity. */
     fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
@@ -44,8 +44,9 @@ object DualHostProvider {
  */
 object FragmentNav2HostProvider {
 
-    /** All scenarios registered by this provider (T6 Nav2 + D/E/F mixed cases). */
-    val scenarios: List<LabScenario> = T6_SCENARIOS + D_NAV2_SCENARIOS + E_T6_NAV2_SCENARIOS + F_T6_SCENARIOS
+    /** All scenarios registered by this provider (T6 Nav2 + D/E/F/G mixed cases). */
+    val scenarios: List<LabScenario> =
+        T6_SCENARIOS + D_NAV2_SCENARIOS + E_T6_NAV2_SCENARIOS + F_T6_SCENARIOS + G_T6_SCENARIOS
 
     /** Create an Intent to launch the T6 host activity for a given case. */
     fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
