@@ -1,6 +1,7 @@
 package com.example.navigationlab
 
 import android.app.Application
+import com.example.navigationlab.di.labModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
@@ -9,7 +10,7 @@ class NavigationLabApp : Application() {
         super.onCreate()
         startKoin {
             androidContext(this@NavigationLabApp)
-            modules(emptyList())
+            modules(labModule)
         }
     }
 }
