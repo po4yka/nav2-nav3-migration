@@ -43,6 +43,7 @@ dependencies {
     implementation(project(":lab-deeplink"))
     implementation(project(":lab-back"))
     implementation(project(":lab-results"))
+    implementation(project(":lab-recipes"))
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.material3)

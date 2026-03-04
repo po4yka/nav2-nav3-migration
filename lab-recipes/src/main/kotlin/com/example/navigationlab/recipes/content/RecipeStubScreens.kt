@@ -1,0 +1,206 @@
+package com.example.navigationlab.recipes.content
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.dropUnlessResumed
+
+// Pastel colors matching nav3-recipes theme
+private val PastelGreen = Color(0xFFA8E6CF)
+private val PastelBlue = Color(0xFFA8D8EA)
+private val PastelRed = Color(0xFFFFB3BA)
+private val PastelPink = Color(0xFFFFD1DC)
+private val PastelPurple = Color(0xFFD5AAFF)
+private val PastelMauve = Color(0xFFE0BBE4)
+
+@Composable
+private fun ContentBase(
+    title: String,
+    modifier: Modifier = Modifier,
+    onNext: (() -> Unit)? = null,
+    content: (@Composable () -> Unit)? = null,
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+            .fillMaxSize()
+            .clip(RoundedCornerShape(48.dp))
+    ) {
+        Text(
+            modifier = Modifier.padding(24.dp),
+            fontWeight = FontWeight.Bold,
+            text = title,
+        )
+        if (content != null) content()
+        if (onNext != null) {
+            Button(
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                onClick = onNext,
+            ) {
+                Text("Next")
+            }
+        }
+    }
+}
+
+@Composable
+fun ContentGreen(
+    title: String,
+    modifier: Modifier = Modifier,
+    onNext: (() -> Unit)? = null,
+    content: (@Composable () -> Unit)? = null,
+) = ContentBase(title, modifier.background(PastelGreen), onNext, content)
+
+@Composable
+fun ContentBlue(
+    title: String,
+    modifier: Modifier = Modifier,
+    onNext: (() -> Unit)? = null,
+    content: (@Composable () -> Unit)? = null,
+) = ContentBase(title, modifier.background(PastelBlue), onNext, content)
+
+@Composable
+fun ContentRed(
+    title: String,
+    modifier: Modifier = Modifier,
+    content: (@Composable () -> Unit)? = null,
+) = ContentBase(title, modifier.background(PastelRed), content = content)
+
+@Composable
+fun ContentPink(
+    title: String,
+    modifier: Modifier = Modifier,
+) = ContentBase(title, modifier.background(PastelPink))
+
+@Composable
+fun ContentPurple(
+    title: String,
+    modifier: Modifier = Modifier,
+) = ContentBase(title, modifier.background(PastelPurple))
+
+@Composable
+fun ContentMauve(
+    title: String,
+    modifier: Modifier = Modifier,
+    content: (@Composable () -> Unit)? = null,
+) = ContentBase(title, modifier.background(PastelMauve), content = content)
+
+// -- Migration screen composables --
+
+@Composable
+fun MigScreenA(onSubRouteClick: () -> Unit, onDialogClick: () -> Unit) {
+    ContentRed("Route A title") {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Button(onClick = dropUnlessResumed(block = onSubRouteClick)) {
+                Text("Go to A1")
+            }
+            Button(onClick = dropUnlessResumed(block = onDialogClick)) {
+                Text("Open dialog D")
+            }
+        }
+    }
+}
+
+@Composable
+fun MigScreenA1() {
+    ContentPink("Route A1 title")
+}
+
+@Composable
+fun MigScreenB(onDetailClick: (String) -> Unit, onDialogClick: () -> Unit) {
+    ContentGreen("Route B title") {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Button(onClick = dropUnlessResumed { onDetailClick("ABC") }) {
+                Text("Go to B1")
+            }
+            Button(onClick = dropUnlessResumed(block = onDialogClick)) {
+                Text("Open dialog D")
+            }
+        }
+    }
+}
+
+@Composable
+fun MigScreenB1(id: String) {
+    ContentPurple("Route B1 title. ID: $id")
+}
+
+@Composable
+fun MigScreenC(onDialogClick: () -> Unit) {
+    ContentMauve("Route C title") {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Button(onClick = dropUnlessResumed(block = onDialogClick)) {
+                Text("Open dialog D")
+            }
+        }
+    }
+}
+
+// -- Results screen composables --
+
+data class Person(val name: String, val favoriteColor: String)
+
+@Composable
+fun HomeScreen(
+    person: Person?,
+    onNext: () -> Unit,
+) {
+    ContentBlue("Hello ${person?.name ?: "unknown person"}") {
+        if (person != null) {
+            Text("Your favorite color is ${person.favoriteColor}")
+        }
+        Spacer(Modifier.height(16.dp))
+        Button(onClick = dropUnlessResumed(block = onNext)) {
+            Text("Tell us about yourself")
+        }
+    }
+}
+
+@Composable
+fun PersonDetailsScreen(
+    onSubmit: (Person) -> Unit,
+) {
+    ContentGreen("About you") {
+        val nameTextState = rememberTextFieldState()
+        OutlinedTextField(
+            state = nameTextState,
+            label = { Text("Please enter your name") },
+        )
+
+        val favoriteColorTextState = rememberTextFieldState()
+        OutlinedTextField(
+            state = favoriteColorTextState,
+            label = { Text("Please enter your favorite color") },
+        )
+
+        Button(
+            onClick = dropUnlessResumed {
+                val person = Person(
+                    name = nameTextState.text.toString(),
+                    favoriteColor = favoriteColorTextState.text.toString(),
+                )
+                onSubmit(person)
+            },
+            enabled = nameTextState.text.isNotBlank() &&
+                favoriteColorTextState.text.isNotBlank(),
+        ) {
+            Text("Submit")
+        }
+    }
+}

@@ -17,6 +17,10 @@ import com.example.navigationlab.host.nav3.Nav3HostProvider
 import com.example.navigationlab.host.nav3.Nav3NestedChainProvider
 import com.example.navigationlab.host.nav3.Nav3ToNav2InteropProvider
 import com.example.navigationlab.host.nav3.XmlInComposeBridgeProvider
+import com.example.navigationlab.recipes.RecipeBasicProvider
+import com.example.navigationlab.recipes.RecipeInteropProvider
+import com.example.navigationlab.recipes.RecipeMigrationProvider
+import com.example.navigationlab.recipes.RecipeResultsProvider
 
 /** Aggregates app-visible scenarios and launch mapping from all host providers. */
 object AppScenarioCatalog {
@@ -42,6 +46,10 @@ object AppScenarioCatalog {
         ProviderEntry(Nav3FragmentIslandProvider.scenarios, Nav3FragmentIslandProvider::createHostIntent),
         ProviderEntry(Nav3NestedChainProvider.scenarios, Nav3NestedChainProvider::createHostIntent),
         ProviderEntry(XmlInComposeBridgeProvider.scenarios, XmlInComposeBridgeProvider::createHostIntent),
+        ProviderEntry(RecipeBasicProvider.scenarios, RecipeBasicProvider::createHostIntent),
+        ProviderEntry(RecipeInteropProvider.scenarios, RecipeInteropProvider::createHostIntent),
+        ProviderEntry(RecipeMigrationProvider.scenarios, RecipeMigrationProvider::createHostIntent),
+        ProviderEntry(RecipeResultsProvider.scenarios, RecipeResultsProvider::createHostIntent),
     )
 
     val scenarios: List<LabScenario> = providers
