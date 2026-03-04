@@ -14,16 +14,47 @@ local.properties
 *.aab
 *.ap_
 *.dex
+*.hprof
 
-# IDE
-/.idea/
+# Android Studio
+.idea/
+.navigation/
+output.json
+
+# JetBrains (general)
 *.iws
 *.ipr
+*.iml
+out/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Cursor
+.cursor/
+.cursorignore
+.cursorindexingignore
 
 # OS
 .DS_Store
 Thumbs.db
+*~
+*.swp
+*.swo
 
 # Ralph
 .ralph/
 ralph.yml
+
+# Claude Code
+.claude/logs/
+.claude/tmp/
+.claude/worktrees/
+SCRATCHPAD.md
+
+# Codex (OpenAI)
+.codex/
+
+# Gemini CLI / Antigravity
+.gemini/
