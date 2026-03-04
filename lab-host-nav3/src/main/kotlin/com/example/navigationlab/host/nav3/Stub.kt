@@ -29,8 +29,8 @@ object Nav3HostProvider {
  */
 object Nav3ToNav2InteropProvider {
 
-    /** All scenarios registered by this provider (T8 topology). */
-    val scenarios: List<LabScenario> = T8_SCENARIOS
+    /** All scenarios registered by this provider (T8 + E07 fallback back chain). */
+    val scenarios: List<LabScenario> = T8_SCENARIOS + E_T8_SCENARIOS
 
     /** Create an Intent to launch the T8 interop activity for a given case. */
     fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
@@ -43,8 +43,8 @@ object Nav3ToNav2InteropProvider {
  */
 object Nav3FragmentIslandProvider {
 
-    /** All scenarios registered by this provider (T5 topology). */
-    val scenarios: List<LabScenario> = T5_SCENARIOS
+    /** All scenarios registered by this provider (T5 + E04 wizard back stack). */
+    val scenarios: List<LabScenario> = T5_SCENARIOS + E_T5_SCENARIOS
 
     /** Create an Intent to launch the T5 fragment island activity for a given case. */
     fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =

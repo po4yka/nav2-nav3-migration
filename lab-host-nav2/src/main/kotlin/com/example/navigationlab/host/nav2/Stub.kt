@@ -13,8 +13,8 @@ import com.example.navigationlab.host.nav2.hosts.Nav2ToNav3InteropActivity
  */
 object Nav2HostProvider {
 
-    /** All scenarios registered by this module (T2 topology). */
-    val scenarios: List<LabScenario> = T2_SCENARIOS
+    /** All scenarios registered by this module (T2 + E01). */
+    val scenarios: List<LabScenario> = T2_SCENARIOS + E_T2_SCENARIOS
 
     /** Create an Intent to launch the T2 host activity for a given case. */
     fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
