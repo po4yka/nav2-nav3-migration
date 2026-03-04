@@ -44,8 +44,8 @@ object DualHostProvider {
  */
 object FragmentNav2HostProvider {
 
-    /** All scenarios registered by this provider (T6 Nav2 + D/E mixed back cases). */
-    val scenarios: List<LabScenario> = T6_SCENARIOS + D_NAV2_SCENARIOS + E_T6_NAV2_SCENARIOS
+    /** All scenarios registered by this provider (T6 Nav2 + D/E/F mixed cases). */
+    val scenarios: List<LabScenario> = T6_SCENARIOS + D_NAV2_SCENARIOS + E_T6_NAV2_SCENARIOS + F_T6_SCENARIOS
 
     /** Create an Intent to launch the T6 host activity for a given case. */
     fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =

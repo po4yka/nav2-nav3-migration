@@ -15,8 +15,8 @@ import com.example.navigationlab.host.nav3.hosts.Nav3ToNav2InteropActivity
  */
 object Nav3HostProvider {
 
-    /** All scenarios registered by this module (T3 topology). */
-    val scenarios: List<LabScenario> = T3_SCENARIOS
+    /** All scenarios registered by this module (T3 + F04/F08 deeplink cases). */
+    val scenarios: List<LabScenario> = T3_SCENARIOS + F_T3_SCENARIOS
 
     /** Create an Intent to launch the T3 host activity for a given case. */
     fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
@@ -29,8 +29,8 @@ object Nav3HostProvider {
  */
 object Nav3ToNav2InteropProvider {
 
-    /** All scenarios registered by this provider (T8 + E07 fallback back chain). */
-    val scenarios: List<LabScenario> = T8_SCENARIOS + E_T8_SCENARIOS
+    /** All scenarios registered by this provider (T8 + E07 + F07 restore replay). */
+    val scenarios: List<LabScenario> = T8_SCENARIOS + E_T8_SCENARIOS + F_T8_SCENARIOS
 
     /** Create an Intent to launch the T8 interop activity for a given case. */
     fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
