@@ -14,6 +14,24 @@
         <activity
             android:name=".hosts.RecipeResultsHostActivity"
             android:exported="false" />
+        <activity
+            android:name=".hosts.RecipeAppStateHostActivity"
+            android:exported="false" />
+        <activity
+            android:name=".hosts.RecipeDeepLinkHostActivity"
+            android:exported="false" />
+        <activity
+            android:name=".hosts.RecipeDeepLinksActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="recipes"
+                    android:host="target" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

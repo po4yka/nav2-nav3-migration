@@ -101,6 +101,133 @@ fun ContentMauve(
     content: (@Composable () -> Unit)? = null,
 ) = ContentBase(title, modifier.background(PastelMauve), content = content)
 
+// -- Tab screen composables (R09-R12) --
+
+private val PastelYellow = Color(0xFFFFF9C4)
+private val PastelOrange = Color(0xFFFFE0B2)
+private val PastelTeal = Color(0xFFB2DFDB)
+
+@Composable
+fun TabAlphaScreen(onDetail: () -> Unit) {
+    ContentGreen("Tab Alpha") {
+        Button(onClick = dropUnlessResumed(block = onDetail)) {
+            Text("Go to Detail")
+        }
+    }
+}
+
+@Composable
+fun TabAlphaDetailScreen(from: String, onEdit: () -> Unit, result: String?) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxSize()
+            .background(PastelYellow)
+            .clip(RoundedCornerShape(48.dp)),
+    ) {
+        Text(
+            modifier = Modifier.padding(24.dp),
+            fontWeight = FontWeight.Bold,
+            text = "Alpha Detail (from: $from)",
+        )
+        if (result != null) {
+            Text("Edit result: $result")
+        }
+        Spacer(Modifier.height(16.dp))
+        Button(onClick = dropUnlessResumed(block = onEdit)) {
+            Text("Edit")
+        }
+    }
+}
+
+@Composable
+fun TabAlphaEditScreen(from: String, onDone: (String) -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxSize()
+            .background(PastelOrange)
+            .clip(RoundedCornerShape(48.dp)),
+    ) {
+        Text(
+            modifier = Modifier.padding(24.dp),
+            fontWeight = FontWeight.Bold,
+            text = "Edit (from: $from)",
+        )
+        val textState = rememberTextFieldState()
+        OutlinedTextField(
+            state = textState,
+            label = { Text("Enter a value") },
+        )
+        Spacer(Modifier.height(16.dp))
+        Button(
+            onClick = dropUnlessResumed { onDone(textState.text.toString()) },
+            enabled = textState.text.isNotBlank(),
+        ) {
+            Text("Done")
+        }
+    }
+}
+
+@Composable
+fun TabBetaScreen(onDetail: () -> Unit) {
+    ContentBlue("Tab Beta") {
+        Button(onClick = dropUnlessResumed(block = onDetail)) {
+            Text("Go to Detail")
+        }
+    }
+}
+
+@Composable
+fun TabBetaDetailScreen() {
+    ContentPurple("Beta Detail (SAME_AS_PARENT)")
+}
+
+@Composable
+fun TabGammaScreen(onDetail: () -> Unit) {
+    ContentMauve("Tab Gamma") {
+        Button(onClick = dropUnlessResumed(block = onDetail)) {
+            Text("Go to Detail")
+        }
+    }
+}
+
+@Composable
+fun TabGammaDetailScreen(result: String) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxSize()
+            .background(PastelTeal)
+            .clip(RoundedCornerShape(48.dp)),
+    ) {
+        Text(
+            modifier = Modifier.padding(24.dp),
+            fontWeight = FontWeight.Bold,
+            text = "Gamma Detail (ViewModel)",
+        )
+        Text("ViewModel result: $result")
+    }
+}
+
+// -- Deep link screen composables (R13) --
+
+@Composable
+fun DeepLinkHomeScreen(onNavigate: () -> Unit) {
+    ContentGreen("Deep Link Home") {
+        Button(onClick = dropUnlessResumed(block = onNavigate)) {
+            Text("Navigate to Target")
+        }
+    }
+}
+
+@Composable
+fun DeepLinkTargetScreen(param: String) {
+    ContentBlue("Deep Link Target") {
+        Text("Param: $param")
+    }
+}
+
 // -- Migration screen composables --
 
 @Composable

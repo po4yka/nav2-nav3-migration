@@ -35,6 +35,7 @@ dependencies {
     implementation(libs.fragment.ktx)
     implementation(libs.fragment.compose)
     implementation(libs.lifecycle.viewmodel.compose)
+    implementation(libs.lifecycle.viewmodel.nav3)
     implementation(libs.appcompat)
     implementation(libs.activity.compose)
     implementation(libs.kotlinx.serialization.json)

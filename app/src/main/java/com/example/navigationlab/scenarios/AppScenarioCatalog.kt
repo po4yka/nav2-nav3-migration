@@ -17,7 +17,9 @@ import com.example.navigationlab.host.nav3.Nav3HostProvider
 import com.example.navigationlab.host.nav3.Nav3NestedChainProvider
 import com.example.navigationlab.host.nav3.Nav3ToNav2InteropProvider
 import com.example.navigationlab.host.nav3.XmlInComposeBridgeProvider
+import com.example.navigationlab.recipes.RecipeAppStateProvider
 import com.example.navigationlab.recipes.RecipeBasicProvider
+import com.example.navigationlab.recipes.RecipeDeepLinkProvider
 import com.example.navigationlab.recipes.RecipeInteropProvider
 import com.example.navigationlab.recipes.RecipeMigrationProvider
 import com.example.navigationlab.recipes.RecipeResultsProvider
@@ -50,6 +52,8 @@ object AppScenarioCatalog {
         ProviderEntry(RecipeInteropProvider.scenarios, RecipeInteropProvider::createHostIntent),
         ProviderEntry(RecipeMigrationProvider.scenarios, RecipeMigrationProvider::createHostIntent),
         ProviderEntry(RecipeResultsProvider.scenarios, RecipeResultsProvider::createHostIntent),
+        ProviderEntry(RecipeAppStateProvider.scenarios, RecipeAppStateProvider::createHostIntent),
+        ProviderEntry(RecipeDeepLinkProvider.scenarios, RecipeDeepLinkProvider::createHostIntent),
     )
 
     val scenarios: List<LabScenario> = providers

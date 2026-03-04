@@ -165,6 +165,140 @@ val R_MIGRATION_SCENARIOS: List<LabScenario> = listOf(
     ),
 )
 
+val R_APP_STATE_SCENARIOS: List<LabScenario> = listOf(
+    LabScenario(
+        id = LabCaseId(CaseFamily.R, 9),
+        title = "Multi-stack with tab history (LifoUniqueQueue)",
+        topology = TopologyId.T3,
+        preconditions = listOf(
+            "Nav3 NavDisplay with AppState orchestrator",
+            "3-tab layout with LifoUniqueQueue tracking tab visit order",
+        ),
+        steps = listOf(
+            LabStep(1, "Open Tab Alpha (default start tab)",
+                expectedEvents = listOf(TraceEventType.CONTAINER_CHANGE)),
+            LabStep(2, "Navigate to Alpha Detail",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE)),
+            LabStep(3, "Switch to Tab Beta via bottom bar",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE)),
+            LabStep(4, "Press back from Tab Beta root; returns to Tab Alpha (not exit)",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT, TraceEventType.STACK_CHANGE)),
+            LabStep(5, "Switch to Tab Gamma, then Tab Beta",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE)),
+            LabStep(6, "Press back from Tab Beta root; returns to Gamma (LIFO order)",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT, TraceEventType.STACK_CHANGE)),
+        ),
+        invariants = listOf(
+            "LifoUniqueQueue tracks tab visit order",
+            "Back from tab root goes to previously visited tab",
+            "Each tab preserves its own back stack",
+        ),
+    ),
+    LabScenario(
+        id = LabCaseId(CaseFamily.R, 10),
+        title = "Bottom bar visibility control",
+        topology = TopologyId.T3,
+        preconditions = listOf(
+            "Nav3 NavDisplay with AppState + AnimatedVisibility bottom bar",
+            "TOP_LEVEL_NAVIGATION_BEHAVIOR_MAP maps routes to HIDE/SAME_AS_PARENT",
+        ),
+        steps = listOf(
+            LabStep(1, "Open Tab Alpha (bottom bar visible)",
+                expectedEvents = listOf(TraceEventType.CONTAINER_CHANGE)),
+            LabStep(2, "Navigate to TabAlphaDetail (bar hides with slide animation)",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE)),
+            LabStep(3, "Switch to Tab Beta, navigate to TabBetaDetail (bar stays same as parent)",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE)),
+            LabStep(4, "Press back to Tab Alpha root (bar reappears)",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT, TraceEventType.STACK_CHANGE)),
+        ),
+        invariants = listOf(
+            "HIDE behavior hides bottom bar",
+            "SAME_AS_PARENT inherits current visibility",
+            "Returning to tab root restores bar",
+        ),
+    ),
+    LabScenario(
+        id = LabCaseId(CaseFamily.R, 11),
+        title = "ViewModel preservation in Nav3 entries",
+        topology = TopologyId.T3,
+        preconditions = listOf(
+            "Nav3 NavDisplay with rememberViewModelStoreNavEntryDecorator",
+            "RecipeViewModel receives NavKey arg",
+        ),
+        steps = listOf(
+            LabStep(1, "Open Tab Gamma",
+                expectedEvents = listOf(TraceEventType.CONTAINER_CHANGE)),
+            LabStep(2, "Navigate to TabGammaDetail(\"test\")",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE)),
+            LabStep(3, "Verify RecipeViewModel.result == \"test\"",
+                expectedEvents = listOf(TraceEventType.INVARIANT)),
+            LabStep(4, "Rotate device or trigger config change",
+                expectedEvents = listOf(TraceEventType.LIFECYCLE)),
+            LabStep(5, "Verify ViewModel preserved (result still \"test\")",
+                expectedEvents = listOf(TraceEventType.INVARIANT)),
+        ),
+        invariants = listOf(
+            "rememberViewModelStoreNavEntryDecorator preserves ViewModel",
+            "ViewModel survives configuration changes",
+            "ViewModel receives NavKey arg via factory",
+        ),
+    ),
+    LabScenario(
+        id = LabCaseId(CaseFamily.R, 12),
+        title = "Result consumption with LaunchedEffect",
+        topology = TopologyId.T3,
+        preconditions = listOf(
+            "Nav3 NavDisplay with ResultStore + LaunchedEffect consumption pattern",
+            "TabAlphaDetail observes result; TabAlphaEdit sets result",
+        ),
+        steps = listOf(
+            LabStep(1, "Open Tab Alpha, navigate to TabAlphaDetail",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE)),
+            LabStep(2, "Navigate to TabAlphaEdit",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE)),
+            LabStep(3, "Enter text, tap Done",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE)),
+            LabStep(4, "Verify TabAlphaDetail shows result via LaunchedEffect",
+                expectedEvents = listOf(TraceEventType.INVARIANT)),
+            LabStep(5, "Result cleared from store after consumption",
+                expectedEvents = listOf(TraceEventType.INVARIANT)),
+        ),
+        invariants = listOf(
+            "ResultStore.setResult delivers to consumer",
+            "LaunchedEffect consumes and clears result",
+            "Consumed result survives recomposition via remember",
+        ),
+    ),
+)
+
+val R_DEEP_LINK_SCENARIOS: List<LabScenario> = listOf(
+    LabScenario(
+        id = LabCaseId(CaseFamily.R, 13),
+        title = "Deep link bridging to Nav3",
+        topology = TopologyId.T3,
+        preconditions = listOf(
+            "RecipeDeepLinksActivity trampoline parses custom URI scheme",
+            "RecipeDeepLinkHostActivity handles deep link intent in Nav3",
+        ),
+        steps = listOf(
+            LabStep(1, "Launch RecipeDeepLinksActivity with URI recipes://target?param=hello",
+                expectedEvents = listOf(TraceEventType.CONTAINER_CHANGE)),
+            LabStep(2, "Verify RecipeDeepLinkHostActivity launches",
+                expectedEvents = listOf(TraceEventType.CONTAINER_CHANGE)),
+            LabStep(3, "Verify DeepLinkTarget screen shows param \"hello\"",
+                expectedEvents = listOf(TraceEventType.INVARIANT)),
+            LabStep(4, "Press back returns to DeepLinkHome",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT, TraceEventType.STACK_CHANGE)),
+        ),
+        invariants = listOf(
+            "Trampoline activity parses URI and forwards via Intent extras",
+            "Nav3 host handles deep link on creation",
+            "Back stack is correct after deep link",
+        ),
+    ),
+)
+
 val R_RESULTS_SCENARIOS: List<LabScenario> = listOf(
     LabScenario(
         id = LabCaseId(CaseFamily.R, 7),

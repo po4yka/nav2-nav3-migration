@@ -87,6 +87,35 @@ data object ResultHome : NavKey
 @Serializable
 class ResultPersonDetailsForm : NavKey
 
+// -- R09-R12: Multi-tab app keys --
+@Serializable
+data object TabAlpha : NavKey
+
+@Serializable
+data class TabAlphaDetail(val from: String) : NavKey
+
+@Serializable
+data class TabAlphaEdit(val from: String) : NavKey
+
+@Serializable
+data object TabBeta : NavKey
+
+@Serializable
+data object TabBetaDetail : NavKey
+
+@Serializable
+data object TabGamma : NavKey
+
+@Serializable
+data class TabGammaDetail(val result: String) : NavKey
+
+// -- R13: Deep link keys --
+@Serializable
+data object DeepLinkHome : NavKey
+
+@Serializable
+data class DeepLinkTarget(val param: String) : NavKey
+
 // -- NavBarItem for migration scenarios --
 class NavBarItem(
     val icon: ImageVector,
