@@ -25,6 +25,5 @@ local.properties
 Thumbs.db
 
 # Ralph
-.ralph/agent/
-.ralph/diagnostics/
-.ralph/loop.lock
+.ralph/
+ralph.yml
