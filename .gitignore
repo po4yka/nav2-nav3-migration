@@ -1,11 +1,30 @@
+# Gradle
+.gradle/
+build/
+!gradle-wrapper.jar
+
+# Android
 *.iml
-.gradle
 /local.properties
-/.idea
-.DS_Store
-/build
-/*/build
-/captures
-.externalNativeBuild
-.cxx
 local.properties
+/captures
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# IDE
+/.idea/
+*.iws
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Ralph
+.ralph/agent/
+.ralph/diagnostics/
+.ralph/loop.lock
