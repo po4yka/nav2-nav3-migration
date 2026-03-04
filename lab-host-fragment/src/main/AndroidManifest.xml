@@ -11,5 +11,8 @@
         <activity
             android:name=".hosts.FragmentNav2HostActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+        <activity
+            android:name=".hosts.FragmentNav3HostActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
     </application>
 </manifest>

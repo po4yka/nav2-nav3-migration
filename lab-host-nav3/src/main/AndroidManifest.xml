@@ -11,5 +11,8 @@
         <activity
             android:name=".hosts.Nav3FragmentIslandActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+        <activity
+            android:name=".hosts.Nav3NestedChainActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
     </application>
 </manifest>

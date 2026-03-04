@@ -5,6 +5,7 @@ import android.content.Intent
 import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.contracts.LabScenario
 import com.example.navigationlab.host.nav3.hosts.Nav3FragmentIslandActivity
+import com.example.navigationlab.host.nav3.hosts.Nav3NestedChainActivity
 import com.example.navigationlab.host.nav3.hosts.Nav3HostActivity
 import com.example.navigationlab.host.nav3.hosts.Nav3ToNav2InteropActivity
 
@@ -48,4 +49,18 @@ object Nav3FragmentIslandProvider {
     /** Create an Intent to launch the T5 fragment island activity for a given case. */
     fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
         Nav3FragmentIslandActivity.createIntent(context, caseId, runMode)
+}
+
+/**
+ * Entry point for B09 nested chain stress test (Nav3 -> Nav2 -> Fragment -> Nav2 dialog).
+ * Provides B09 scenario and factory for launching the nested chain activity.
+ */
+object Nav3NestedChainProvider {
+
+    /** All scenarios registered by this provider (B09). */
+    val scenarios: List<LabScenario> = B09_SCENARIOS
+
+    /** Create an Intent to launch the B09 nested chain activity for a given case. */
+    fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
+        Nav3NestedChainActivity.createIntent(context, caseId, runMode)
 }

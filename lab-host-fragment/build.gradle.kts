@@ -43,4 +43,8 @@ dependencies {
 
     // Nav2 for T6 topology (Fragment -> ComposeView -> internal Nav2)
     implementation(libs.nav2.compose)
+
+    // Nav3 for B08 (Fragment -> ComposeView -> Nav3 NavDisplay with modal)
+    implementation(libs.nav3.runtime)
+    implementation(libs.nav3.ui)
 }
