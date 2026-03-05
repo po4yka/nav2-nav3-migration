@@ -26,7 +26,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Run Robolectric smoke test
-        run: ./gradlew :lab-host-nav2:testDebugUnitTest --stacktrace
+        run: ./gradlew :lab-host-nav2:testDebugUnitTest :lab-host-nav3:testDebugUnitTest :lab-host-fragment:testDebugUnitTest --stacktrace
 
       - name: Run connectedAndroidTest smoke suite
         uses: reactivecircus/android-emulator-runner@v2
