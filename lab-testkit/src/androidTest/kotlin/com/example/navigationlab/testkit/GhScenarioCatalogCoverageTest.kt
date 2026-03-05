@@ -3,6 +3,7 @@ package com.example.navigationlab.testkit
 import androidx.test.runner.AndroidJUnit4
 import com.example.navigationlab.contracts.CaseFamily
 import com.example.navigationlab.contracts.LabScenario
+import com.example.navigationlab.contracts.effectiveInvariantSpecs
 import com.example.navigationlab.host.fragment.ComposeToXmlBridgeProvider
 import com.example.navigationlab.host.fragment.DualHostProvider
 import com.example.navigationlab.host.fragment.FragmentHostProvider
@@ -61,7 +62,14 @@ class GhScenarioCatalogCoverageTest {
                 "${scenario.id.code} steps should have expected events",
                 scenario.steps.all { it.expectedEvents.isNotEmpty() },
             )
-            assertTrue("${scenario.id.code} should define at least one invariant", scenario.invariants.isNotEmpty())
+            assertTrue(
+                "${scenario.id.code} steps should define typed actions",
+                scenario.steps.all { it.action.observedEvents.isNotEmpty() },
+            )
+            assertTrue(
+                "${scenario.id.code} should define typed invariants",
+                scenario.effectiveInvariantSpecs.isNotEmpty(),
+            )
         }
     }
 

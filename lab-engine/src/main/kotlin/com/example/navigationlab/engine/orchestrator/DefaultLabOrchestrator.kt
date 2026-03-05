@@ -7,6 +7,7 @@ import com.example.navigationlab.contracts.LabStep
 import com.example.navigationlab.contracts.ResultStatus
 import com.example.navigationlab.contracts.RunMode
 import com.example.navigationlab.contracts.TraceEventType
+import com.example.navigationlab.contracts.effectiveInvariantSpecs
 import com.example.navigationlab.engine.LabTraceStore
 import com.example.navigationlab.engine.invariants.InvariantChecker
 import com.example.navigationlab.engine.invariants.TraceInvariantChecker
@@ -152,12 +153,16 @@ class DefaultLabOrchestrator(
 
     private fun checkInvariants(scenario: LabScenario): List<InvariantResult> {
         val events = traceStore.snapshot()
-        return scenario.invariants.map { description ->
-            val result = invariantChecker.check(description, events)
+        return scenario.effectiveInvariantSpecs.map { spec ->
+            val result = invariantChecker.check(spec, events)
             traceStore.record(
                 TraceEventType.INVARIANT,
-                description,
-                mapOf("passed" to result.passed.toString()),
+                spec.description,
+                mapOf(
+                    "passed" to result.passed.toString(),
+                    "scope" to "scenario_invariant",
+                    "invariant_type" to spec::class.simpleName.orEmpty(),
+                ),
             )
             result
         }

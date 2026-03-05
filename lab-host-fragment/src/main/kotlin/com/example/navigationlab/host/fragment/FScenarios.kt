@@ -1,7 +1,9 @@
 package com.example.navigationlab.host.fragment
 
 import com.example.navigationlab.contracts.CaseFamily
+import com.example.navigationlab.contracts.LabAction
 import com.example.navigationlab.contracts.LabCaseId
+import com.example.navigationlab.contracts.LabDeeplinkRequest
 import com.example.navigationlab.contracts.LabScenario
 import com.example.navigationlab.contracts.LabStep
 import com.example.navigationlab.contracts.TopologyId
@@ -20,8 +22,15 @@ val F_T6_SCENARIOS: List<LabScenario> = listOf(
         steps = listOf(
             LabStep(1, "Create FragmentNav2HostActivity and confirm host ready",
                 expectedEvents = listOf(TraceEventType.CONTAINER_CHANGE, TraceEventType.LIFECYCLE)),
-            LabStep(2, "Dispatch blocked deeplink /space/private-room",
-                expectedEvents = listOf(TraceEventType.DEEPLINK)),
+            LabStep(
+                2,
+                "Dispatch blocked deeplink /space/private-room",
+                expectedEvents = listOf(TraceEventType.DEEPLINK),
+                action = LabAction(
+                    observedEvents = listOf(TraceEventType.DEEPLINK),
+                    deeplink = LabDeeplinkRequest(path = "/space/private-room"),
+                ),
+            ),
             LabStep(3, "Apply fallback menu/home route while retaining blocked context metadata",
                 expectedEvents = listOf(TraceEventType.DEEPLINK, TraceEventType.STACK_CHANGE)),
             LabStep(4, "Verify trace exposes chainOutcome=BLOCKED and final outcome=FALLBACK",
@@ -42,12 +51,26 @@ val F_T6_SCENARIOS: List<LabScenario> = listOf(
             "Deeplink request is buffered through simulator entrypoint",
         ),
         steps = listOf(
-            LabStep(1, "Launch FragmentNav2HostActivity and dispatch deeplink before host-ready signal",
-                expectedEvents = listOf(TraceEventType.LIFECYCLE, TraceEventType.DEEPLINK)),
+            LabStep(
+                1,
+                "Launch FragmentNav2HostActivity and dispatch deeplink before host-ready signal",
+                expectedEvents = listOf(TraceEventType.LIFECYCLE, TraceEventType.DEEPLINK),
+                action = LabAction(
+                    observedEvents = listOf(TraceEventType.LIFECYCLE, TraceEventType.DEEPLINK),
+                    deeplink = LabDeeplinkRequest(hostReady = false),
+                ),
+            ),
             LabStep(2, "Simulator returns fallback with HOST_NOT_READY reason",
                 expectedEvents = listOf(TraceEventType.DEEPLINK, TraceEventType.INVARIANT)),
-            LabStep(3, "Mark host ready and re-dispatch buffered deeplink",
-                expectedEvents = listOf(TraceEventType.DEEPLINK, TraceEventType.STACK_CHANGE)),
+            LabStep(
+                3,
+                "Mark host ready and re-dispatch buffered deeplink",
+                expectedEvents = listOf(TraceEventType.DEEPLINK, TraceEventType.STACK_CHANGE),
+                action = LabAction(
+                    observedEvents = listOf(TraceEventType.DEEPLINK, TraceEventType.STACK_CHANGE),
+                    deeplink = LabDeeplinkRequest(hostReady = true),
+                ),
+            ),
             LabStep(4, "Verify final destination is deterministic after readiness handoff",
                 expectedEvents = listOf(TraceEventType.INVARIANT)),
         ),
@@ -68,12 +91,26 @@ val F_T6_SCENARIOS: List<LabScenario> = listOf(
         steps = listOf(
             LabStep(1, "Create FragmentNav2HostActivity and activate channel mode",
                 expectedEvents = listOf(TraceEventType.CONTAINER_CHANGE, TraceEventType.LIFECYCLE)),
-            LabStep(2, "Dispatch deeplink while sendToChannelActive=true",
-                expectedEvents = listOf(TraceEventType.DEEPLINK)),
+            LabStep(
+                2,
+                "Dispatch deeplink while sendToChannelActive=true",
+                expectedEvents = listOf(TraceEventType.DEEPLINK),
+                action = LabAction(
+                    observedEvents = listOf(TraceEventType.DEEPLINK),
+                    deeplink = LabDeeplinkRequest(sendToChannelActive = true),
+                ),
+            ),
             LabStep(3, "Verify simulator routes to fallback with CHANNEL_ACTIVE reason",
                 expectedEvents = listOf(TraceEventType.DEEPLINK, TraceEventType.STACK_CHANGE, TraceEventType.INVARIANT)),
-            LabStep(4, "Disable channel mode and dispatch same deeplink again",
-                expectedEvents = listOf(TraceEventType.DEEPLINK, TraceEventType.STACK_CHANGE)),
+            LabStep(
+                4,
+                "Disable channel mode and dispatch same deeplink again",
+                expectedEvents = listOf(TraceEventType.DEEPLINK, TraceEventType.STACK_CHANGE),
+                action = LabAction(
+                    observedEvents = listOf(TraceEventType.DEEPLINK, TraceEventType.STACK_CHANGE),
+                    deeplink = LabDeeplinkRequest(sendToChannelActive = false),
+                ),
+            ),
             LabStep(5, "Verify second dispatch is handled normally by manager chain",
                 expectedEvents = listOf(TraceEventType.INVARIANT)),
         ),
