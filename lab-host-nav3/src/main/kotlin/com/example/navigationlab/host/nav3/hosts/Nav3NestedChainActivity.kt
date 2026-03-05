@@ -71,6 +71,12 @@ class Nav3NestedChainActivity : AppCompatActivity() {
     var lastDialogResult: String? = null
         private set
 
+    /** Tracked Nav2 chain depth without restricted NavController APIs. */
+    private var nav2ChainDepthValue: Int = 0
+
+    /** Tracked fragment Nav2 depth without restricted NavController APIs. */
+    private var fragmentNav2DepthValue: Int = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_nav3_host)
@@ -107,6 +113,7 @@ class Nav3NestedChainActivity : AppCompatActivity() {
                                 // Layer 2: Nav2 NavHost
                                 val controller = rememberNavController()
                                 nav2ChainController = controller
+                                nav2ChainDepthValue = 1
                                 Nav2ChainLayer(controller)
                             }
                             else -> NavEntry(key) {
@@ -136,6 +143,9 @@ class Nav3NestedChainActivity : AppCompatActivity() {
                             id = View.generateViewId()
                             post {
                                 val fragment = ChainStubFragment.newInstance { navCtrl, result ->
+                                    if (navCtrl != null && navCtrl !== fragmentNav2Controller) {
+                                        fragmentNav2DepthValue = 1
+                                    }
                                     fragmentNav2Controller = navCtrl
                                     if (result != null) lastDialogResult = result
                                 }
@@ -161,33 +171,63 @@ class Nav3NestedChainActivity : AppCompatActivity() {
 
     /** Navigate within Nav2 chain (Layer 2). */
     fun navigateNav2Chain(route: String) {
-        nav2ChainController?.navigate(route)
-        NavLogger.push(TAG, route, nav2ChainController?.currentBackStack?.value?.size ?: 0)
+        val controller = nav2ChainController ?: return
+        controller.navigate(route)
+        nav2ChainDepthValue += 1
+        NavLogger.push(TAG, route, nav2ChainDepthValue)
     }
 
     /** Navigate within fragment's Nav2 (Layer 3/4). */
     fun navigateFragmentNav2(route: String) {
-        fragmentNav2Controller?.navigate(route)
-        NavLogger.push(TAG, route, fragmentNav2Controller?.currentBackStack?.value?.size ?: 0)
+        val controller = fragmentNav2Controller ?: return
+        controller.navigate(route)
+        fragmentNav2DepthValue += 1
+        NavLogger.push(TAG, route, fragmentNav2DepthValue)
     }
 
     /** Pop Nav3 root back stack. */
     fun popNav3Back(): Boolean {
         if (nav3BackStack.size <= 1) return false
+        val popped = nav3BackStack.lastOrNull()
         val from = nav3BackStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
         nav3BackStack.removeLastOrNull()
+        if (popped is ChainNav3Key.ChainEntry) {
+            nav2ChainController = null
+            nav2ChainDepthValue = 0
+            fragmentNav2Controller = null
+            fragmentNav2DepthValue = 0
+        }
         NavLogger.pop(TAG, from, nav3BackStack.size)
         return true
     }
 
     /** Pop Nav2 chain back stack. */
-    fun popNav2ChainBack(): Boolean = nav2ChainController?.popBackStack() ?: false
+    fun popNav2ChainBack(): Boolean {
+        val controller = nav2ChainController ?: return false
+        val from = controller.currentBackStackEntry?.destination?.route
+        val result = controller.popBackStack()
+        if (result) {
+            if (nav2ChainDepthValue > 1) nav2ChainDepthValue -= 1
+            if (from == CHAIN_ROUTE_FRAGMENT) {
+                fragmentNav2Controller = null
+                fragmentNav2DepthValue = 0
+            }
+        }
+        return result
+    }
 
     /** Pop fragment's Nav2 back stack. */
-    fun popFragmentNav2Back(): Boolean = fragmentNav2Controller?.popBackStack() ?: false
+    fun popFragmentNav2Back(): Boolean {
+        val controller = fragmentNav2Controller ?: return false
+        val result = controller.popBackStack()
+        if (result && fragmentNav2DepthValue > 1) {
+            fragmentNav2DepthValue -= 1
+        }
+        return result
+    }
 
     val nav3Depth: Int get() = nav3BackStack.size
-    val nav2ChainDepth: Int get() = nav2ChainController?.currentBackStack?.value?.size ?: 0
+    val nav2ChainDepth: Int get() = nav2ChainDepthValue
 
     companion object {
         private const val TAG = "B09Host"

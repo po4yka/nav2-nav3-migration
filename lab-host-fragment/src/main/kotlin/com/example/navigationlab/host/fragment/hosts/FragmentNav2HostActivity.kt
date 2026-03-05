@@ -54,8 +54,9 @@ class FragmentNav2HostActivity : AppCompatActivity() {
 
     /** Navigate to a route within the fragment's Nav2 graph. */
     fun navigateNav2(route: String) {
-        composeFragment?.navHostController?.navigate(route)
-        NavLogger.push(TAG, route, nav2BackStackDepth)
+        val fragment = composeFragment ?: return
+        fragment.navigateTo(route)
+        NavLogger.push(TAG, route, fragment.navBackStackDepth)
     }
 
     /** Open D-family sheet-style route in the fragment Nav2 graph. */
@@ -69,15 +70,16 @@ class FragmentNav2HostActivity : AppCompatActivity() {
 
     /** Pop the fragment's Nav2 back stack. */
     fun popNav2Back(): Boolean {
+        val fragment = composeFragment ?: return false
         val from = currentNav2Route ?: "?"
-        val result = composeFragment?.navHostController?.popBackStack() ?: false
-        if (result) NavLogger.pop(TAG, from, nav2BackStackDepth)
+        val result = fragment.popBack()
+        if (result) NavLogger.pop(TAG, from, fragment.navBackStackDepth)
         return result
     }
 
     /** Nav2 back stack depth inside the fragment. */
     val nav2BackStackDepth: Int
-        get() = composeFragment?.navHostController?.currentBackStack?.value?.size ?: 0
+        get() = composeFragment?.navBackStackDepth ?: 0
 
     /** Current route at top of the fragment's Nav2 graph. */
     val currentNav2Route: String?

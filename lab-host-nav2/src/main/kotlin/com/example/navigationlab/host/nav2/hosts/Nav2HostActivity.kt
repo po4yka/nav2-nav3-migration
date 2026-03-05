@@ -30,6 +30,9 @@ class Nav2HostActivity : AppCompatActivity() {
     lateinit var navController: NavHostController
         private set
 
+    /** Tracked Nav2 depth without restricted NavController APIs. */
+    private var nav2BackStackDepthValue: Int = 1
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_nav2_host)
@@ -48,6 +51,7 @@ class Nav2HostActivity : AppCompatActivity() {
             MaterialTheme {
                 val controller = rememberNavController()
                 navController = controller
+                nav2BackStackDepthValue = 1
 
                 NavHost(
                     navController = controller,
@@ -72,10 +76,14 @@ class Nav2HostActivity : AppCompatActivity() {
 
     /** Navigate to a route. Host topology modules use this to execute scenario steps. */
     fun navigateTo(route: String, singleTop: Boolean = false) {
+        val previousRoute = navController.currentBackStackEntry?.destination?.route
         navController.navigate(route) {
             launchSingleTop = singleTop
         }
-        NavLogger.push(TAG, route, navController.currentBackStack.value.size)
+        if (!(singleTop && previousRoute == route)) {
+            nav2BackStackDepthValue += 1
+        }
+        NavLogger.push(TAG, route, nav2BackStackDepthValue)
     }
 
     /** Navigate to a route, clearing the back stack to root. */
@@ -84,20 +92,24 @@ class Nav2HostActivity : AppCompatActivity() {
             popUpTo(ROUTE_HOME) { inclusive = false }
             launchSingleTop = true
         }
-        NavLogger.push(TAG, route, navController.currentBackStack.value.size)
+        nav2BackStackDepthValue = if (route == ROUTE_HOME) 1 else 2
+        NavLogger.push(TAG, route, nav2BackStackDepthValue)
     }
 
     /** Pop the current destination off the back stack. */
     fun popBack(): Boolean {
         val from = navController.currentBackStackEntry?.destination?.route ?: "?"
         val result = navController.popBackStack()
-        if (result) NavLogger.pop(TAG, from, navController.currentBackStack.value.size)
+        if (result) {
+            if (nav2BackStackDepthValue > 1) nav2BackStackDepthValue -= 1
+            NavLogger.pop(TAG, from, nav2BackStackDepthValue)
+        }
         return result
     }
 
     /** Current back stack depth (approximated via back queue size). */
     val backStackDepth: Int
-        get() = navController.currentBackStack.value.size
+        get() = nav2BackStackDepthValue
 
     companion object {
         private const val TAG = "T2Host"
