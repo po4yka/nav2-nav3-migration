@@ -46,6 +46,7 @@ class Nav3HostActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_nav3_host)
+        restoreBackStack(savedInstanceState)
 
         val caseCode = intent.getStringExtra(EXTRA_CASE_ID) ?: run {
             Log.e(TAG, "No case ID provided")
@@ -111,6 +112,44 @@ class Nav3HostActivity : AppCompatActivity() {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putStringArrayList(
+            STATE_BACK_STACK_KEYS,
+            ArrayList(backStack.mapNotNull(::keyToToken)),
+        )
+    }
+
+    private fun restoreBackStack(savedState: Bundle?) {
+        val tokens = savedState?.getStringArrayList(STATE_BACK_STACK_KEYS) ?: return
+        if (tokens.isEmpty()) return
+        val restored = tokens.mapNotNull(::tokenToKey)
+        if (restored.isEmpty()) return
+        backStack.clear()
+        backStack.addAll(restored)
+    }
+
+    private fun keyToToken(key: Nav3Key): String? = when (key) {
+        Nav3Key.Home -> TOKEN_HOME
+        Nav3Key.ScreenA -> TOKEN_SCREEN_A
+        Nav3Key.ScreenB -> TOKEN_SCREEN_B
+        Nav3Key.ScreenC -> TOKEN_SCREEN_C
+        Nav3Key.DialogModal -> TOKEN_DIALOG
+        Nav3Key.SheetModal -> TOKEN_SHEET
+        Nav3Key.PopupOverlay -> TOKEN_POPUP
+    }
+
+    private fun tokenToKey(token: String): Nav3Key? = when (token) {
+        TOKEN_HOME -> Nav3Key.Home
+        TOKEN_SCREEN_A -> Nav3Key.ScreenA
+        TOKEN_SCREEN_B -> Nav3Key.ScreenB
+        TOKEN_SCREEN_C -> Nav3Key.ScreenC
+        TOKEN_DIALOG -> Nav3Key.DialogModal
+        TOKEN_SHEET -> Nav3Key.SheetModal
+        TOKEN_POPUP -> Nav3Key.PopupOverlay
+        else -> null
+    }
+
     /** Navigate to a key. Host topology modules use this to execute scenario steps. */
     fun navigateTo(key: Nav3Key) {
         backStack.add(key)
@@ -162,6 +201,15 @@ class Nav3HostActivity : AppCompatActivity() {
         private const val TAG = "T3Host"
         const val EXTRA_CASE_ID = "case_id"
         const val EXTRA_RUN_MODE = "run_mode"
+        private const val STATE_BACK_STACK_KEYS = "state_back_stack_keys"
+
+        private const val TOKEN_HOME = "home"
+        private const val TOKEN_SCREEN_A = "screen_a"
+        private const val TOKEN_SCREEN_B = "screen_b"
+        private const val TOKEN_SCREEN_C = "screen_c"
+        private const val TOKEN_DIALOG = "dialog"
+        private const val TOKEN_SHEET = "sheet"
+        private const val TOKEN_POPUP = "popup"
 
         /** Predefined colors for fake screens. */
         val COLORS = listOf(

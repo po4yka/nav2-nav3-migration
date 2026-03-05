@@ -54,9 +54,15 @@ class Nav2ToNav3InteropActivity : AppCompatActivity() {
     /** Nav3 leaf back stack -- active when nav3_leaf route is displayed. */
     val nav3LeafBackStack = mutableStateListOf<Nav3LeafKey>(Nav3LeafKey.LeafHome)
 
+    /** Deferred default argument resolved for Nav3 leaf entry (G06). */
+    var resolvedLeafDefaultArgument: String = DEFAULT_LEAF_ARGUMENT
+        private set
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_nav2_host)
+        resolvedLeafDefaultArgument = savedInstanceState?.getString(STATE_RESOLVED_LEAF_DEFAULT_ARGUMENT)
+            ?: DEFAULT_LEAF_ARGUMENT
 
         val caseCode = intent.getStringExtra(EXTRA_CASE_ID) ?: run {
             Log.e(TAG, "No case ID provided")
@@ -131,6 +137,11 @@ class Nav2ToNav3InteropActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(STATE_RESOLVED_LEAF_DEFAULT_ARGUMENT, resolvedLeafDefaultArgument)
     }
 
     /** Navigate to a Nav2 route. */
@@ -226,15 +237,27 @@ class Nav2ToNav3InteropActivity : AppCompatActivity() {
     val isLeafModalVisible: Boolean
         get() = isLeafDialogVisible || isLeafSheetVisible
 
+    /**
+     * Enter Nav3 leaf while resolving a deferred default argument.
+     * The resolved value is persisted across recreation boundaries (G06).
+     */
+    fun enterNav3LeafWithDeferredDefault(explicitValue: String? = null): String {
+        resolvedLeafDefaultArgument = explicitValue ?: resolvedLeafDefaultArgument
+        navigateTo(ROUTE_NAV3_LEAF, singleTop = true)
+        return resolvedLeafDefaultArgument
+    }
+
     companion object {
         private const val TAG = "T7Host"
         const val EXTRA_CASE_ID = "case_id"
         const val EXTRA_RUN_MODE = "run_mode"
+        private const val STATE_RESOLVED_LEAF_DEFAULT_ARGUMENT = "state_resolved_leaf_default_argument"
 
         const val ROUTE_HOME = "home"
         const val ROUTE_SCREEN_A = "screen_a"
         const val ROUTE_NAV3_LEAF = "nav3_leaf"
         const val ROUTE_RESULT_DIALOG = "result_dialog"
+        const val DEFAULT_LEAF_ARGUMENT = "leaf_default"
 
         val COLORS = listOf(
             Color(0xFF6200EE), // Purple

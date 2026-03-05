@@ -103,7 +103,7 @@ class DualHostActivity : AppCompatActivity() {
         supportFragmentManager.beginTransaction()
             .add(R.id.overlayContainer, fragment)
             .addToBackStack("overlay")
-            .commit()
+            .commitAllowingStateLoss()
         NavLogger.push(TAG, "overlay", supportFragmentManager.backStackEntryCount + 1)
     }
 
@@ -124,6 +124,10 @@ class DualHostActivity : AppCompatActivity() {
     /** Current overlay fragment backstack depth. */
     val overlayBackStackDepth: Int
         get() = supportFragmentManager.backStackEntryCount
+
+    /** Whether overlay container currently hosts a fragment instance. */
+    val hasOverlayFragment: Boolean
+        get() = supportFragmentManager.findFragmentById(R.id.overlayContainer) != null
 
     /** Remove overlay: pop fragment back stack and hide overlay container. */
     fun dismissOverlay() {

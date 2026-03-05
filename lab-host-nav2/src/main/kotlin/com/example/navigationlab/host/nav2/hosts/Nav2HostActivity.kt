@@ -49,9 +49,20 @@ class Nav2HostActivity : AppCompatActivity() {
     /** Tracked Nav2 depth without restricted NavController APIs. */
     private var nav2BackStackDepthValue: Int = 1
 
+    /** Whether a non-saveable argument injection path was explicitly detected. */
+    var nonSaveableArgumentDetected: Boolean = false
+        private set
+
+    /** Resolved argument value used after saveability checks. */
+    var resolvedArgumentValue: String = DEFAULT_ARGUMENT_FALLBACK
+        private set
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_nav2_host)
+        nonSaveableArgumentDetected = savedInstanceState?.getBoolean(STATE_NON_SAVEABLE_ARG_DETECTED, false) ?: false
+        resolvedArgumentValue = savedInstanceState?.getString(STATE_RESOLVED_ARGUMENT_VALUE)
+            ?: DEFAULT_ARGUMENT_FALLBACK
 
         val caseCode = intent.getStringExtra(EXTRA_CASE_ID) ?: run {
             Log.e(TAG, "No case ID provided")
@@ -114,6 +125,12 @@ class Nav2HostActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(STATE_NON_SAVEABLE_ARG_DETECTED, nonSaveableArgumentDetected)
+        outState.putString(STATE_RESOLVED_ARGUMENT_VALUE, resolvedArgumentValue)
     }
 
     /** Navigate to a route. Host topology modules use this to execute scenario steps. */
@@ -190,10 +207,35 @@ class Nav2HostActivity : AppCompatActivity() {
     val isFullScreenDialogVisible: Boolean
         get() = currentRoute == ROUTE_FULL_SCREEN_DIALOG
 
+    /**
+     * Inject synthetic argument payload and return whether it is saveable.
+     * Non-saveable payloads are detected explicitly and resolved to [fallbackValue].
+     */
+    fun injectSyntheticArgument(payload: Any?, fallbackValue: String = DEFAULT_ARGUMENT_FALLBACK): Boolean {
+        val saveable = payload == null || payload is java.io.Serializable || payload is android.os.Parcelable
+        return if (saveable) {
+            nonSaveableArgumentDetected = false
+            resolvedArgumentValue = payload?.toString().orEmpty()
+            true
+        } else {
+            nonSaveableArgumentDetected = true
+            resolvedArgumentValue = fallbackValue
+            false
+        }
+    }
+
+    /** Inject lambda-like payload used by G05 to exercise explicit non-saveable fallback path. */
+    fun injectNonSaveableArgumentSurrogate(fallbackValue: String = DEFAULT_ARGUMENT_FALLBACK): Boolean =
+        injectSyntheticArgument(payload = ({ /* non-saveable */ }), fallbackValue = fallbackValue)
+
     companion object {
         private const val TAG = "T2Host"
         const val EXTRA_CASE_ID = "case_id"
         const val EXTRA_RUN_MODE = "run_mode"
+        private const val STATE_NON_SAVEABLE_ARG_DETECTED = "state_non_saveable_arg_detected"
+        private const val STATE_RESOLVED_ARGUMENT_VALUE = "state_resolved_argument_value"
+
+        const val DEFAULT_ARGUMENT_FALLBACK = "fallback_arg"
 
         const val ROUTE_HOME = "home"
         const val ROUTE_SCREEN_A = "screen_a"

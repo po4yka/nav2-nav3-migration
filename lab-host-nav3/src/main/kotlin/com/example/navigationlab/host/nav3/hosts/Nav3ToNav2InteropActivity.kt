@@ -57,15 +57,23 @@ class Nav3ToNav2InteropActivity : AppCompatActivity() {
     /** Tracked Nav2 leaf depth without restricted NavController APIs. */
     private var nav2LeafDepthValue: Int = 0
 
-    /** Pending child-modal route to restore after recreation (G08). */
-    private var pendingLeafModalRestoreRoute: String? = null
+    /** Pending Nav2 leaf route to restore after recreation (G02/G08). */
+    private var pendingLeafRestoreRoute: String? = null
+
+    /** Last route requested by UI-source navigation in the Nav2 leaf (H04). */
+    var lastUiLeafNavigationRoute: String? = null
+        private set
+
+    /** Last route requested by deeplink-source navigation in the Nav2 leaf (H04). */
+    var lastDeeplinkLeafNavigationRoute: String? = null
+        private set
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_nav3_host)
 
         restoreParentBackStack(savedInstanceState)
-        pendingLeafModalRestoreRoute = savedInstanceState?.getString(STATE_PENDING_LEAF_MODAL_ROUTE)
+        pendingLeafRestoreRoute = savedInstanceState?.getString(STATE_PENDING_LEAF_RESTORE_ROUTE)
 
         val caseCode = intent.getStringExtra(EXTRA_CASE_ID) ?: run {
             Log.e(TAG, "No case ID provided")
@@ -117,11 +125,15 @@ class Nav3ToNav2InteropActivity : AppCompatActivity() {
                                 val controller = rememberNavController()
                                 nav2LeafController = controller
                                 nav2LeafDepthValue = 1
-                                LaunchedEffect(controller, pendingLeafModalRestoreRoute) {
-                                    val restoreRoute = pendingLeafModalRestoreRoute ?: return@LaunchedEffect
+                                LaunchedEffect(controller, pendingLeafRestoreRoute) {
+                                    val restoreRoute = pendingLeafRestoreRoute ?: return@LaunchedEffect
+                                    if (controller.currentBackStackEntry?.destination?.route != LEAF_ROUTE_HOME) {
+                                        pendingLeafRestoreRoute = null
+                                        return@LaunchedEffect
+                                    }
                                     controller.navigate(restoreRoute)
                                     nav2LeafDepthValue += 1
-                                    pendingLeafModalRestoreRoute = null
+                                    pendingLeafRestoreRoute = null
                                 }
                                 NavHost(
                                     navController = controller,
@@ -192,6 +204,28 @@ class Nav3ToNav2InteropActivity : AppCompatActivity() {
         controller.navigate(route)
         nav2LeafDepthValue += 1
         NavLogger.push(TAG, route, nav2LeafDepthValue)
+    }
+
+    /** Navigate Nav2 leaf route attributed to UI source (H04). */
+    fun navigateNav2LeafFromUi(route: String) {
+        lastUiLeafNavigationRoute = route
+        navigateNav2Leaf(route)
+    }
+
+    /** Navigate Nav2 leaf route attributed to deeplink source (H04). */
+    fun navigateNav2LeafFromDeeplink(route: String) {
+        lastDeeplinkLeafNavigationRoute = route
+        navigateNav2Leaf(route)
+    }
+
+    /**
+     * Resolve concurrent UI/deeplink updates with deterministic ordering policy:
+     * UI request first, deeplink request second (deeplink wins as top-most).
+     */
+    fun resolveConcurrentLeafNavigation(uiRoute: String, deeplinkRoute: String): String {
+        navigateNav2LeafFromUi(uiRoute)
+        navigateNav2LeafFromDeeplink(deeplinkRoute)
+        return deeplinkRoute
     }
 
     /** Pop the Nav2 leaf back stack. */
@@ -280,8 +314,8 @@ class Nav3ToNav2InteropActivity : AppCompatActivity() {
             ArrayList(backStack.mapNotNull(::keyToToken)),
         )
         val route = currentLeafRoute
-        if (route == LEAF_ROUTE_DIALOG || route == LEAF_ROUTE_SHEET || route == LEAF_ROUTE_FULL_SCREEN_DIALOG) {
-            outState.putString(STATE_PENDING_LEAF_MODAL_ROUTE, route)
+        if (route != null && route != LEAF_ROUTE_HOME) {
+            outState.putString(STATE_PENDING_LEAF_RESTORE_ROUTE, route)
         }
     }
 
@@ -324,7 +358,7 @@ class Nav3ToNav2InteropActivity : AppCompatActivity() {
         const val LEAF_ROUTE_FULL_SCREEN_DIALOG = "leaf_full_screen_dialog"
 
         private const val STATE_PARENT_BACK_STACK_KEYS = "state_parent_back_stack_keys"
-        private const val STATE_PENDING_LEAF_MODAL_ROUTE = "pending_leaf_modal_route"
+        private const val STATE_PENDING_LEAF_RESTORE_ROUTE = "pending_leaf_restore_route"
 
         private const val TOKEN_HOME = "home"
         private const val TOKEN_SCREEN_A = "screen_a"

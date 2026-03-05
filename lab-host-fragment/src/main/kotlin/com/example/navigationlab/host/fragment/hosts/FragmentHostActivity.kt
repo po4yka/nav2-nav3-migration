@@ -20,6 +20,11 @@ import com.example.navigationlab.host.fragment.fragments.LabStubFragment
 class FragmentHostActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityFragmentHostBinding
+    private var pendingStateLossOverlay: LabStubFragment? = null
+
+    /** True after a pending state-loss overlay commit has been applied (H01). */
+    var didApplyStateLossCommit: Boolean = false
+        private set
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,6 +53,18 @@ class FragmentHostActivity : AppCompatActivity() {
         }
     }
 
+    override fun onStop() {
+        pendingStateLossOverlay?.let { fragment ->
+            supportFragmentManager.beginTransaction()
+                .add(R.id.fragmentContainer, fragment)
+                .addToBackStack("state_loss_overlay")
+                .commitAllowingStateLoss()
+            didApplyStateLossCommit = true
+            pendingStateLossOverlay = null
+        }
+        super.onStop()
+    }
+
     /**
      * Navigate to a new stub fragment within the container.
      * Host topology modules use this to execute scenario steps.
@@ -68,6 +85,11 @@ class FragmentHostActivity : AppCompatActivity() {
             .add(R.id.fragmentContainer, fragment)
             .addToBackStack("overlay")
             .commit()
+    }
+
+    /** Schedule an overlay fragment commitAllowingStateLoss operation for next onStop boundary. */
+    fun scheduleStateLossOverlayCommit(fragment: LabStubFragment) {
+        pendingStateLossOverlay = fragment
     }
 
     /** Current backstack entry count. */
