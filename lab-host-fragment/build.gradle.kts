@@ -20,6 +20,10 @@ android {
         viewBinding = true
         compose = true
     }
+
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 dependencies {
@@ -42,4 +46,8 @@ dependencies {
     // Nav3 for B08 (Fragment -> ComposeView -> Nav3 NavDisplay with modal)
     implementation(libs.nav3.runtime)
     implementation(libs.nav3.ui)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.test.core)
 }
