@@ -1,0 +1,4 @@
+interface:
+  display_name: "Nav2->Nav3 Refactor"
+  short_description: "Nav2->Nav3 refactor workflow and parity checks"
+  default_prompt: "Migrate the requested Android scope from Nav2 to Nav3 incrementally with parity-focused tests and interop safeguards."
