@@ -89,4 +89,28 @@ val G_T8_SCENARIOS: List<LabScenario> = listOf(
             "Restore does not introduce duplicated interop entries",
         ),
     ),
+    LabScenario(
+        id = LabCaseId(CaseFamily.G, 8),
+        title = "Rotation/restore with child modal top-most and parent stack active",
+        topology = TopologyId.T8,
+        preconditions = listOf(
+            "Nav3ToNav2InteropActivity can restore pending child modal route",
+            "Parent Nav3 stack and child Nav2 modal can both be non-root at rotation time",
+        ),
+        steps = listOf(
+            LabStep(1, "Navigate Nav3 Home -> ScreenA -> Nav2Leaf and open child dialog modal",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE, TraceEventType.CONTAINER_CHANGE)),
+            LabStep(2, "Trigger configuration change while child modal is top-most",
+                expectedEvents = listOf(TraceEventType.LIFECYCLE)),
+            LabStep(3, "Recreate host and restore parent stack plus child modal route",
+                expectedEvents = listOf(TraceEventType.LIFECYCLE, TraceEventType.STACK_CHANGE, TraceEventType.CONTAINER_CHANGE)),
+            LabStep(4, "Dismiss child modal and verify parent stack is still ScreenA -> Nav2Leaf",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT, TraceEventType.STACK_CHANGE, TraceEventType.INVARIANT)),
+        ),
+        invariants = listOf(
+            "Child modal route is restored without duplicating parent entries",
+            "Parent Nav3 stack remains active during child-modal restore",
+            "Post-restore unwind order remains child-first, parent-second",
+        ),
+    ),
 )

@@ -6,10 +6,24 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import com.example.navigationlab.contracts.LabCaseId
@@ -75,6 +89,21 @@ class Nav3HostActivity : AppCompatActivity() {
                             is Nav3Key.ScreenC -> NavEntry(key) {
                                 Nav3StubScreen("Screen C", COLORS[3])
                             }
+                            is Nav3Key.DialogModal -> NavEntry(key) {
+                                Nav3DialogModalContent(
+                                    onDismiss = { this@Nav3HostActivity.popBack() },
+                                )
+                            }
+                            is Nav3Key.SheetModal -> NavEntry(key) {
+                                Nav3SheetModalContent(
+                                    onDismiss = { this@Nav3HostActivity.popBack() },
+                                )
+                            }
+                            is Nav3Key.PopupOverlay -> NavEntry(key) {
+                                Nav3PopupOverlayContent(
+                                    onDismiss = { this@Nav3HostActivity.popBack() },
+                                )
+                            }
                         }
                     },
                 )
@@ -101,6 +130,34 @@ class Nav3HostActivity : AppCompatActivity() {
     val backStackDepth: Int
         get() = backStack.size
 
+    /** Open dialog-style Nav3 modal. */
+    fun openDialogModal() {
+        navigateTo(Nav3Key.DialogModal)
+    }
+
+    /** Open sheet-style Nav3 modal. */
+    fun openSheetModal() {
+        navigateTo(Nav3Key.SheetModal)
+    }
+
+    /** Dismiss active modal/popup entry if present. */
+    fun dismissModalOrPopup(): Boolean {
+        if (!isDialogModalVisible && !isSheetModalVisible && !isPopupVisible) return false
+        return popBack()
+    }
+
+    /** Whether dialog-style Nav3 modal is currently top-most. */
+    val isDialogModalVisible: Boolean
+        get() = backStack.lastOrNull() is Nav3Key.DialogModal
+
+    /** Whether sheet-style Nav3 modal is currently top-most. */
+    val isSheetModalVisible: Boolean
+        get() = backStack.lastOrNull() is Nav3Key.SheetModal
+
+    /** Whether popup-style Nav3 overlay is currently top-most. */
+    val isPopupVisible: Boolean
+        get() = backStack.lastOrNull() is Nav3Key.PopupOverlay
+
     companion object {
         private const val TAG = "T3Host"
         const val EXTRA_CASE_ID = "case_id"
@@ -121,5 +178,89 @@ class Nav3HostActivity : AppCompatActivity() {
                 putExtra(EXTRA_CASE_ID, caseId.code)
                 putExtra(EXTRA_RUN_MODE, runMode)
             }
+    }
+}
+
+@androidx.compose.runtime.Composable
+private fun Nav3DialogModalContent(onDismiss: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.55f)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.85f)
+                .background(Color.White, shape = RoundedCornerShape(12.dp))
+                .padding(24.dp),
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Nav3 Dialog Modal",
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(onClick = onDismiss) {
+                    Text("Dismiss")
+                }
+            }
+        }
+    }
+}
+
+@androidx.compose.runtime.Composable
+private fun Nav3SheetModalContent(onDismiss: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.35f)),
+        contentAlignment = Alignment.BottomCenter,
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                .padding(24.dp),
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Nav3 Sheet Modal",
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(onClick = onDismiss) {
+                    Text("Dismiss Sheet")
+                }
+            }
+        }
+    }
+}
+
+@androidx.compose.runtime.Composable
+private fun Nav3PopupOverlayContent(onDismiss: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Transparent),
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(24.dp)
+                .align(Alignment.TopEnd)
+                .background(Color.White, shape = RoundedCornerShape(10.dp))
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Nav3 Popup Overlay",
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(onClick = onDismiss) {
+                    Text("Close")
+                }
+            }
+        }
     }
 }

@@ -18,9 +18,9 @@ This document is an implementation blueprint for that test project and a complet
 Last verified against repository state: **2026-03-05**.
 
 - Milestones `M1-M5`: implemented
-- Interop families `A-H`: implemented (`49` scenarios)
-- Recipe suite `R01-R19`: implemented (`19` scenarios)
-- Total scenarios: `68`
+- Interop families `A-H`: implemented (`61` scenarios)
+- Recipe suite `R01-R25`: implemented (`25` scenarios)
+- Total scenarios: `86`
 
 Current baseline verification commands:
 
@@ -288,6 +288,10 @@ Each case must include:
 | `B10` | Cross-engine pop: pop from child engine should not corrupt parent stack. |
 | `B11` | `singleTop` semantics parity for equivalent Nav2 and Nav3 routes. |
 | `B12` | Clear-to-root parity across interop boundaries. |
+| `B13` | Nav2 parent dialog over Nav3 leaf; parent/child stack isolation. |
+| `B14` | Nav3 leaf modal flow returns to Nav2 parent without stack corruption. |
+| `B15` | Parent-level modal/popup while Nav2 leaf is active. |
+| `B16` | Nav2 leaf modal dismiss without mutating Nav3 parent stack. |
 
 ### C. XML <-> Compose screen connection
 
@@ -315,6 +319,12 @@ Each case must include:
 | `D07` | Sheet dismiss should not pop parent graph unexpectedly. |
 | `D08` | Fullscreen dialog should preserve transparent-background semantics. |
 | `D09` | Transition from overlay fragment back into compose sheet state. |
+| `D10` | Pure Nav2 bottom-sheet semantics baseline. |
+| `D11` | Pure Nav2 dialog semantics baseline. |
+| `D12` | Pure Nav2 fullscreen dialog semantics baseline. |
+| `D13` | Pure Nav3 dialog-style modal semantics baseline. |
+| `D14` | Pure Nav3 sheet-style modal semantics baseline. |
+| `D15` | Legacy island DialogFragment/popup layering over Nav3 island. |
 
 ### E. Back handling and nested stacks
 
@@ -328,6 +338,7 @@ Each case must include:
 | `E06` | Back from root should trigger exit logic only once (double-back policy). |
 | `E07` | Back after deep-link fallback pop chain. |
 | `E08` | Back while pending transaction exists (`executePendingTransactions` edge). |
+| `E09` | Back-order chain: popup -> child modal -> parent route. |
 
 ### F. Deeplink and fallback behavior
 
@@ -353,6 +364,7 @@ Each case must include:
 | `G05` | Non-saveable argument injection failure case (lambda-like arg). |
 | `G06` | Runtime default argument drift case (value resolved at different times). |
 | `G07` | Restore when dialog/sheet is top-most destination. |
+| `G08` | Rotation/restore when child modal is top-most with parent stack active. |
 
 ### H. Transaction safety and race conditions
 
@@ -387,6 +399,12 @@ Each case must include:
 | `R17` | Adaptive list-detail layout (`ListDetailSceneStrategy`) |
 | `R18` | Conditional navigation (auth gate via `ConditionalNavigator`) |
 | `R19` | Advanced deep links with synthetic backstack |
+| `R20` | Nav2 modal reference (dialog/sheet/fullscreen) |
+| `R21` | Nav3 modal reference (dialog-style + sheet-style) |
+| `R22` | Nav2 -> Nav3 modal interop reference |
+| `R23` | Nav3 -> Nav2 modal interop reference |
+| `R24` | Nav3 legacy island + popup/dialog reference |
+| `R25` | Restore/unwind reference for stacked modals across engines |
 
 ---
 
@@ -424,4 +442,4 @@ Minimum automated coverage before using lab for migration decisions:
 | `M2` | Done | All `A*`, `B*`, `C*` cases implemented and manually runnable. |
 | `M3` | Done | `D*`, `E*`, `F*` cases implemented; trace logging and pass/fail invariants active. |
 | `M4` | Done | `G*`, `H*` cases automated in `androidTest`; CI smoke pipeline added. |
-| `M5` | Done | Recipe cases `R01-R19`, NavLogger, transitions, nav-state indicators. |
+| `M5` | Done | Recipe cases `R01-R25`, NavLogger, transitions, nav-state indicators. |

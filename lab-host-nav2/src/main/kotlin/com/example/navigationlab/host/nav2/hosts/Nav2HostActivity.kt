@@ -6,12 +6,28 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.dialog
 import androidx.navigation.compose.rememberNavController
 import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.contracts.NavLogger
@@ -74,6 +90,27 @@ class Nav2HostActivity : AppCompatActivity() {
                     composable(ROUTE_SCREEN_C) {
                         Nav2StubScreen("Screen C", COLORS[3])
                     }
+                    dialog(ROUTE_RESULT_DIALOG) {
+                        DialogStubContent(
+                            onDismiss = { popBack() },
+                        )
+                    }
+                    dialog(ROUTE_BOTTOM_SHEET) {
+                        BottomSheetStubContent(
+                            onDismiss = { popBack() },
+                        )
+                    }
+                    dialog(
+                        route = ROUTE_FULL_SCREEN_DIALOG,
+                        dialogProperties = DialogProperties(
+                            usePlatformDefaultWidth = false,
+                            decorFitsSystemWindows = false,
+                        ),
+                    ) {
+                        FullScreenDialogStubContent(
+                            onDismiss = { popBack() },
+                        )
+                    }
                 }
             }
         }
@@ -116,6 +153,43 @@ class Nav2HostActivity : AppCompatActivity() {
     val backStackDepth: Int
         get() = nav2BackStackDepthValue
 
+    /** Current route at top of the Nav2 graph. */
+    val currentRoute: String?
+        get() = navController.currentBackStackEntry?.destination?.route
+
+    /** Open sheet-style modal route. */
+    fun openBottomSheet() {
+        navigateTo(ROUTE_BOTTOM_SHEET)
+    }
+
+    /** Open dialog-style modal route. */
+    fun openDialog() {
+        navigateTo(ROUTE_RESULT_DIALOG)
+    }
+
+    /** Open fullscreen modal route. */
+    fun openFullScreenDialog() {
+        navigateTo(ROUTE_FULL_SCREEN_DIALOG)
+    }
+
+    /** Dismiss current modal route if one is visible. */
+    fun dismissModal(): Boolean {
+        if (!isBottomSheetVisible && !isDialogVisible && !isFullScreenDialogVisible) return false
+        return popBack()
+    }
+
+    /** Whether sheet-style modal route is currently visible. */
+    val isBottomSheetVisible: Boolean
+        get() = currentRoute == ROUTE_BOTTOM_SHEET
+
+    /** Whether dialog-style modal route is currently visible. */
+    val isDialogVisible: Boolean
+        get() = currentRoute == ROUTE_RESULT_DIALOG
+
+    /** Whether fullscreen modal route is currently visible. */
+    val isFullScreenDialogVisible: Boolean
+        get() = currentRoute == ROUTE_FULL_SCREEN_DIALOG
+
     companion object {
         private const val TAG = "T2Host"
         const val EXTRA_CASE_ID = "case_id"
@@ -125,6 +199,9 @@ class Nav2HostActivity : AppCompatActivity() {
         const val ROUTE_SCREEN_A = "screen_a"
         const val ROUTE_SCREEN_B = "screen_b"
         const val ROUTE_SCREEN_C = "screen_c"
+        const val ROUTE_RESULT_DIALOG = "result_dialog"
+        const val ROUTE_BOTTOM_SHEET = "bottom_sheet"
+        const val ROUTE_FULL_SCREEN_DIALOG = "full_screen_dialog"
 
         /** Predefined colors for fake screens. */
         val COLORS = listOf(
@@ -141,5 +218,89 @@ class Nav2HostActivity : AppCompatActivity() {
                 putExtra(EXTRA_CASE_ID, caseId.code)
                 putExtra(EXTRA_RUN_MODE, runMode)
             }
+    }
+}
+
+@androidx.compose.runtime.Composable
+private fun DialogStubContent(onDismiss: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White, shape = RoundedCornerShape(12.dp))
+            .padding(24.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "Nav2 Dialog",
+                style = MaterialTheme.typography.headlineSmall,
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = onDismiss) {
+                Text("Dismiss")
+            }
+        }
+    }
+}
+
+@androidx.compose.runtime.Composable
+private fun BottomSheetStubContent(onDismiss: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.35f)),
+        contentAlignment = Alignment.BottomCenter,
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                .padding(24.dp),
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Nav2 Sheet",
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(onClick = onDismiss) {
+                    Text("Dismiss Sheet")
+                }
+            }
+        }
+    }
+}
+
+@androidx.compose.runtime.Composable
+private fun FullScreenDialogStubContent(onDismiss: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.2f))
+            .padding(24.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White.copy(alpha = 0.94f), shape = RoundedCornerShape(20.dp))
+                .padding(24.dp),
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Nav2 Fullscreen Dialog",
+                    style = MaterialTheme.typography.headlineMedium,
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Transparent backdrop preserved",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(onClick = onDismiss) {
+                    Text("Close Dialog")
+                }
+            }
+        }
     }
 }

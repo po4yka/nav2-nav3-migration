@@ -23,7 +23,7 @@ Standalone Android test app for validating Nav2/Nav3 migration and interoperabil
 | `lab-deeplink` | Deeplink simulator and fake managers |
 | `lab-back` | Back orchestration and related utilities |
 | `lab-results` | Trace/results rendering |
-| `lab-recipes` | Recipe scenarios `R01-R19` |
+| `lab-recipes` | Recipe scenarios `R01-R25` |
 | `lab-testkit` | Instrumentation tests (Espresso + Compose) |
 
 ## Conventions
@@ -38,9 +38,9 @@ Standalone Android test app for validating Nav2/Nav3 migration and interoperabil
 ## Scope Summary
 
 - Topologies: `T1-T8`
-- Interop case families: `A-H` (49 scenarios)
-- Recipe suite: `R01-R19` (19 scenarios)
-- Total scenarios: `68`
+- Interop case families: `A-H` (61 scenarios)
+- Recipe suite: `R01-R25` (25 scenarios)
+- Total scenarios: `86`
 
 ## Adding a Recipe
 

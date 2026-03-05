@@ -15,14 +15,14 @@ class HeuristicStepExecutor : StepExecutor {
         val text = step.instruction.lowercase(Locale.ROOT)
         val observed = linkedSetOf<TraceEventType>()
 
-        if (containsAny(text, "navigate", "push", "switch", "open route")) {
+        if (containsAny(text, "navigate", "push", "switch", "open route", "open dialog", "open sheet", "open modal", "open popup")) {
             observed += TraceEventType.STACK_CHANGE
         }
         if (containsAny(text, "pop", "back", "dismiss")) {
             observed += TraceEventType.BACK_EVENT
             observed += TraceEventType.STACK_CHANGE
         }
-        if (containsAny(text, "create", "inflate", "visible", "container", "overlay")) {
+        if (containsAny(text, "create", "inflate", "visible", "container", "overlay", "dialog", "sheet", "modal", "popup")) {
             observed += TraceEventType.CONTAINER_CHANGE
         }
         if (containsAny(text, "fragment", "transaction", "replace", "add ")) {
@@ -50,4 +50,3 @@ class HeuristicStepExecutor : StepExecutor {
     private fun containsAny(text: String, vararg tokens: String): Boolean =
         tokens.any { token -> text.contains(token) }
 }
-

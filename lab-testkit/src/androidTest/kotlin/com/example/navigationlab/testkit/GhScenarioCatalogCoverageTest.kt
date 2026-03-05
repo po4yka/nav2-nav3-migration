@@ -30,7 +30,7 @@ class GhScenarioCatalogCoverageTest {
             .filter { it.id.family == CaseFamily.G }
             .map { it.id.code }
 
-        val expected = (1..7).map { "G%02d".format(it) }.toSet()
+        val expected = (1..8).map { "G%02d".format(it) }.toSet()
 
         assertEquals(expected, gCaseCodes.toSet())
         assertEquals(expected.size, gCaseCodes.size)
@@ -54,7 +54,7 @@ class GhScenarioCatalogCoverageTest {
             it.id.family == CaseFamily.G || it.id.family == CaseFamily.H
         }
 
-        assertEquals(12, ghScenarios.size)
+        assertEquals(13, ghScenarios.size)
         ghScenarios.forEach { scenario ->
             assertTrue("${scenario.id.code} should define at least one step", scenario.steps.isNotEmpty())
             assertTrue(

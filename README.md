@@ -50,7 +50,7 @@ Prerequisites:
 | `lab-deeplink` | Deeplink simulator and fake deeplink managers |
 | `lab-back` | Back orchestration and back-handling test infrastructure |
 | `lab-results` | Results/trace rendering components |
-| `lab-recipes` | Nav3 recipe scenarios (`R01-R19`) and helpers |
+| `lab-recipes` | Nav3 recipe scenarios (`R01-R25`) and helpers |
 | `lab-testkit` | `androidTest` instrumentation coverage (Espresso + Compose) |
 
 All modules depend on `:lab-contracts`. `:app` depends on all feature/test modules.
@@ -70,22 +70,22 @@ All modules depend on `:lab-contracts`. `:app` depends on all feature/test modul
 
 ## Scenario Coverage
 
-### A-H interop families (49 scenarios)
+### A-H interop families (61 scenarios)
 
 | Family | Cases | Focus |
 |--------|-------|-------|
-| A | A01-A07 (7) | Container and host ownership |
-| B | B01-B12 (12) | Nav2/Nav3 interoperability |
-| C | C01-C08 (8) | XML <-> Compose connection |
-| D | D01-D09 (9) | Dialog/sheet/overlay semantics |
-| E | E01-E08 (8) | Back handling and nested stacks |
-| F | F01-F08 (8) | Deeplink and fallback behavior |
-| G | G01-G07 (7) | State restore and argument stability |
-| H | H01-H05 (5) | Transaction safety and race conditions |
+| A | A01-A07 | Container and host ownership |
+| B | B01-B16 | Nav2/Nav3 interoperability |
+| C | C01-C08 | XML <-> Compose connection |
+| D | D01-D15 | Dialog/sheet/overlay semantics |
+| E | E01-E09 | Back handling and nested stacks |
+| F | F01-F08 | Deeplink and fallback behavior |
+| G | G01-G08 | State restore and argument stability |
+| H | H01-H05 | Transaction safety and race conditions |
 
-### R recipes (19 scenarios)
+### R recipes (25 scenarios)
 
-`lab-recipes` contains `R01-R19`, grouped as:
+`lab-recipes` contains `R01-R25`, grouped as:
 - Basic (`R01-R03`)
 - Interop (`R04`)
 - Migration (`R05-R06`)
@@ -95,8 +95,9 @@ All modules depend on `:lab-contracts`. `:app` depends on all feature/test modul
 - Transitions (`R14-R16`)
 - Adaptive (`R17`)
 - Conditional (`R18-R19`)
+- Modal interop matrix (`R20-R25`)
 
-Total implemented scenarios: **68** (`49 + 19`).
+Total implemented scenarios: **86** (`61 + 25`).
 
 ## Verification Baseline
 
@@ -156,4 +157,4 @@ GitHub Actions workflow: `.github/workflows/android-instrumentation-smoke.yml`
 | M2 | Done | `A*`, `B*`, `C*` scenarios runnable |
 | M3 | Done | `D*`, `E*`, `F*` scenarios + trace/invariants |
 | M4 | Done | `G*`, `H*` automation + CI smoke pipeline |
-| M5 | Done | `R01-R19` recipe suite, helpers, navigation observability |
+| M5 | Done | `R01-R25` recipe suite, helpers, navigation observability |

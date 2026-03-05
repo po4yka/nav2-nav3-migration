@@ -34,3 +34,33 @@ val E_T2_SCENARIOS: List<LabScenario> = listOf(
         ),
     ),
 )
+
+/** E-family scenario on T7 interop (popup -> child modal -> parent route unwind order). */
+val E_T7_SCENARIOS: List<LabScenario> = listOf(
+    LabScenario(
+        id = LabCaseId(CaseFamily.E, 9),
+        title = "Back-order chain: popup -> child modal -> parent route",
+        topology = TopologyId.T7,
+        preconditions = listOf(
+            "Nav2ToNav3InteropActivity supports parent dialog and Nav3 leaf modal keys",
+            "Parent and child layers can be inspected independently",
+        ),
+        steps = listOf(
+            LabStep(1, "Navigate Nav2 Home -> nav3_leaf and open child Nav3 dialog modal",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE, TraceEventType.CONTAINER_CHANGE)),
+            LabStep(2, "Open parent Nav2 dialog on top of child modal",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE, TraceEventType.CONTAINER_CHANGE)),
+            LabStep(3, "Dispatch back: dismiss parent dialog first",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT, TraceEventType.STACK_CHANGE)),
+            LabStep(4, "Dispatch back again: dismiss child modal before popping parent route",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT, TraceEventType.STACK_CHANGE)),
+            LabStep(5, "Dispatch back at child root: pop nav3_leaf route to Nav2 parent",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT, TraceEventType.STACK_CHANGE)),
+        ),
+        invariants = listOf(
+            "Back dispatch prioritizes top-most parent dialog over child modal",
+            "Child modal is dismissed before Nav2 parent route pop",
+            "Unwind order is deterministic across parent/child interop layers",
+        ),
+    ),
+)

@@ -138,7 +138,22 @@ class LabRuntimeStepExecutor(
             navDepth += 1
         }
 
-        if (containsAny(text, "show overlay", "add overlay", "open overlay", "overlay fragment")) {
+        if (containsAny(
+                text,
+                "show overlay",
+                "add overlay",
+                "open overlay",
+                "overlay fragment",
+                "open dialog",
+                "show dialog",
+                "open sheet",
+                "show sheet",
+                "open modal",
+                "show modal",
+                "open popup",
+                "show popup",
+            )
+        ) {
             overlayDepth += 1
         }
 
@@ -175,4 +190,3 @@ class LabRuntimeStepExecutor(
     private fun containsAny(text: String, vararg tokens: String): Boolean =
         tokens.any { token -> text.contains(token) }
 }
-
