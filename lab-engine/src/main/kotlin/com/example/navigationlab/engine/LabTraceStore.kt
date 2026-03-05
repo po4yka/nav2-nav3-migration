@@ -8,22 +8,31 @@ import com.example.navigationlab.contracts.TraceEventType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.json.JSONArray
+import org.json.JSONObject
 
 /**
  * In-memory store for trace events captured during lab scenario execution.
  * Observable via [events] StateFlow for live UI updates.
  */
-class LabTraceStore {
+class LabTraceStore(
+    private val maxEvents: Int = DEFAULT_MAX_EVENTS,
+) {
+    init {
+        require(maxEvents > 0) { "maxEvents must be > 0" }
+    }
 
-    private val _events = MutableStateFlow<List<LabTraceEvent>>(emptyList())
-    val events: StateFlow<List<LabTraceEvent>> = _events.asStateFlow()
+    private val _eventVersion = MutableStateFlow(0L)
+    val eventVersion: StateFlow<Long> = _eventVersion.asStateFlow()
+    private val ringBuffer = ArrayDeque<LabTraceEvent>(maxEvents)
+    private var droppedEventCount: Int = 0
 
     /** Currently active case, if any. */
     private var activeCaseId: LabCaseId? = null
 
     fun startCase(caseId: LabCaseId) {
         activeCaseId = caseId
-        _events.value = emptyList()
+        resetBuffer()
         record(TraceEventType.STEP_MARKER, "Started case ${caseId.code}")
     }
 
@@ -34,7 +43,7 @@ class LabTraceStore {
             description = description,
             metadata = metadata,
         )
-        _events.value = _events.value + event
+        append(event)
 
         // Always mirror to logcat
         val tag = "LabTrace"
@@ -48,8 +57,62 @@ class LabTraceStore {
 
     fun clear() {
         activeCaseId = null
-        _events.value = emptyList()
+        resetBuffer()
     }
 
-    fun snapshot(): List<LabTraceEvent> = _events.value
+    fun snapshot(): List<LabTraceEvent> = ringBuffer.toList()
+
+    fun exportSnapshotJson(pretty: Boolean = true): String {
+        val payload = JSONObject().apply {
+            put("caseId", activeCaseId?.code ?: JSONObject.NULL)
+            put("eventCount", ringBuffer.size)
+            put("droppedEventCount", droppedEventCount)
+            put("generatedAtElapsedRealtimeMs", SystemClock.elapsedRealtime())
+            put(
+                "events",
+                JSONArray().apply {
+                    snapshot().forEach { event ->
+                        put(
+                            JSONObject().apply {
+                                put("timestampMs", event.timestampMs)
+                                put("type", event.type.name)
+                                put("description", event.description)
+                                put("metadata", event.metadata.toSortedJson())
+                            },
+                        )
+                    }
+                },
+            )
+        }
+        return if (pretty) payload.toString(2) else payload.toString()
+    }
+
+    private fun append(event: LabTraceEvent) {
+        if (ringBuffer.size == maxEvents) {
+            ringBuffer.removeFirst()
+            droppedEventCount += 1
+        }
+        ringBuffer.addLast(event)
+        publishUpdate()
+    }
+
+    private fun resetBuffer() {
+        ringBuffer.clear()
+        droppedEventCount = 0
+        publishUpdate()
+    }
+
+    private fun publishUpdate() {
+        _eventVersion.value = _eventVersion.value + 1
+    }
+
+    private companion object {
+        const val DEFAULT_MAX_EVENTS: Int = 2_000
+    }
+}
+
+private fun Map<String, String>.toSortedJson(): JSONObject = JSONObject().apply {
+    entries.sortedBy { it.key }.forEach { (key, value) ->
+        put(key, value)
+    }
 }

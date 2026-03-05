@@ -1,6 +1,7 @@
 package com.example.navigationlab.engine.casebrowser
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,23 +12,28 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.navigationlab.contracts.CaseFamily
 import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.contracts.LabScenario
 import com.example.navigationlab.contracts.RunMode
+import com.example.navigationlab.contracts.TopologyId
 
 /**
  * Main case browser screen that lists all case families and registered scenarios.
@@ -40,10 +46,37 @@ fun CaseBrowserScreen(
     modifier: Modifier = Modifier,
 ) {
     var selectedRunMode by remember { mutableStateOf(RunMode.MANUAL) }
-    val grouped = remember(scenarios) {
-        CaseFamily.entries.associateWith { family ->
-            scenarios.filter { it.id.family == family }
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedFamilyFilter by remember { mutableStateOf<CaseFamily?>(null) }
+    var selectedTopologyFilter by remember { mutableStateOf<TopologyId?>(null) }
+    var lastSelectedCase by remember { mutableStateOf<LabCaseId?>(null) }
+
+    val filteredScenarios = remember(scenarios, searchQuery, selectedFamilyFilter, selectedTopologyFilter) {
+        val normalizedQuery = searchQuery.trim().lowercase()
+        scenarios.filter { scenario ->
+            val matchesFamily = selectedFamilyFilter == null || scenario.id.family == selectedFamilyFilter
+            val matchesTopology = selectedTopologyFilter == null || scenario.topology == selectedTopologyFilter
+            val matchesQuery =
+                normalizedQuery.isBlank() ||
+                    scenario.id.code.lowercase().contains(normalizedQuery) ||
+                    scenario.title.lowercase().contains(normalizedQuery) ||
+                    scenario.topology.name.lowercase().contains(normalizedQuery)
+
+            matchesFamily && matchesTopology && matchesQuery
         }
+    }
+
+    val grouped = remember(filteredScenarios) {
+        CaseFamily.entries.associateWith { family ->
+            filteredScenarios
+                .filter { it.id.family == family }
+                .sortedBy { it.id.number }
+        }
+    }
+
+    fun launchCase(caseId: LabCaseId) {
+        lastSelectedCase = caseId
+        onCaseSelected(caseId, selectedRunMode)
     }
 
     Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
@@ -54,35 +87,83 @@ fun CaseBrowserScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            label = { Text("Search by code, title, topology") },
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         RunModeSelector(
             selected = selectedRunMode,
             onSelected = { selectedRunMode = it },
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
+
+        FamilyFilterSelector(
+            selectedFamily = selectedFamilyFilter,
+            onSelected = { selectedFamilyFilter = it },
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        TopologyFilterSelector(
+            selectedTopology = selectedTopologyFilter,
+            onSelected = { selectedTopologyFilter = it },
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                text = "Showing ${filteredScenarios.size} of ${scenarios.size} scenarios",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Button(
+                enabled = lastSelectedCase != null,
+                onClick = {
+                    lastSelectedCase?.let { caseId ->
+                        onCaseSelected(caseId, selectedRunMode)
+                    }
+                },
+            ) {
+                Text(lastSelectedCase?.let { "Rerun ${it.code}" } ?: "Rerun last")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         LazyColumn(modifier = Modifier.fillMaxSize()) {
-            CaseFamily.entries.forEach { family ->
-                item(key = "header_${family.prefix}") {
-                    FamilyHeader(family)
+            if (filteredScenarios.isEmpty()) {
+                item(key = "empty_filter_result") {
+                    Text(
+                        text = "No scenarios match the active search/filters.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
-
-                val cases = grouped[family].orEmpty()
-                if (cases.isEmpty()) {
-                    item(key = "empty_${family.prefix}") {
-                        Text(
-                            text = "No scenarios registered",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(start = 16.dp, bottom = 8.dp),
-                        )
-                    }
-                } else {
-                    items(cases, key = { it.id.code }) { scenario ->
-                        CaseRow(
-                            scenario = scenario,
-                            onClick = { onCaseSelected(scenario.id, selectedRunMode) },
-                        )
+            } else {
+                CaseFamily.entries.forEach { family ->
+                    val cases = grouped[family].orEmpty()
+                    if (cases.isNotEmpty()) {
+                        item(key = "header_${family.prefix}") {
+                            FamilyHeader(family)
+                        }
+                        items(cases, key = { it.id.code }) { scenario ->
+                            CaseRow(
+                                scenario = scenario,
+                                onClick = { launchCase(scenario.id) },
+                            )
+                        }
                     }
                 }
             }
@@ -103,6 +184,56 @@ private fun RunModeSelector(
                 selected = mode == selected,
                 onClick = { onSelected(mode) },
                 label = { Text(mode.name.lowercase().replaceFirstChar { it.uppercase() }) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun FamilyFilterSelector(
+    selectedFamily: CaseFamily?,
+    onSelected: (CaseFamily?) -> Unit,
+) {
+    val scrollState = rememberScrollState()
+    Row(
+        modifier = Modifier.fillMaxWidth().horizontalScroll(scrollState),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        FilterChip(
+            selected = selectedFamily == null,
+            onClick = { onSelected(null) },
+            label = { Text("All families") },
+        )
+        CaseFamily.entries.forEach { family ->
+            FilterChip(
+                selected = family == selectedFamily,
+                onClick = { onSelected(family) },
+                label = { Text(family.prefix) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun TopologyFilterSelector(
+    selectedTopology: TopologyId?,
+    onSelected: (TopologyId?) -> Unit,
+) {
+    val scrollState = rememberScrollState()
+    Row(
+        modifier = Modifier.fillMaxWidth().horizontalScroll(scrollState),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        FilterChip(
+            selected = selectedTopology == null,
+            onClick = { onSelected(null) },
+            label = { Text("All topologies") },
+        )
+        TopologyId.entries.forEach { topology ->
+            FilterChip(
+                selected = topology == selectedTopology,
+                onClick = { onSelected(topology) },
+                label = { Text(topology.name) },
             )
         }
     }

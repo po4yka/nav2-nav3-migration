@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
@@ -40,7 +41,10 @@ class NavigationLabActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val traceEvents by engine.traceStore.events.collectAsState()
+            val traceVersion by engine.traceStore.eventVersion.collectAsState()
+            val traceEvents = remember(traceVersion) {
+                engine.traceStore.snapshot()
+            }
             val lastResult by latestResult.collectAsState()
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
