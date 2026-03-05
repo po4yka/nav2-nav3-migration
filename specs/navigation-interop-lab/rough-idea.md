@@ -2,6 +2,15 @@
 
 Implement an Android testing application ("Navigation Interop Lab") to validate risky navigation combinations before touching production code.
 
+## Current Status
+
+This was the initial high-level sketch. Current project status:
+- Implemented directly in this repository
+- Topologies `T1-T8` implemented
+- Scenarios implemented: `A-H` (49) and `R01-R19` (19)
+- CI smoke workflow exists and runs instrumentation tests
+- Primary operational documentation is in [README.md](../../README.md)
+
 ## Source
 
 Based on the architecture blueprint in `navigation_interop_lab_architecture.md` (root of this repository).

@@ -1,11 +1,12 @@
 # Navigation Interop Lab
 
-Standalone Android test app validating Nav2/Nav3 migration patterns in isolated, deterministic scenarios.
+Standalone Android test app for validating Nav2/Nav3 migration and interoperability in isolated scenarios.
 
-## Build
+## Build and Verify
 
 ```bash
 ./gradlew :app:assembleDebug
+./gradlew lintDebug
 ./gradlew :lab-testkit:connectedAndroidTest
 ```
 
@@ -14,40 +15,44 @@ Standalone Android test app validating Nav2/Nav3 migration patterns in isolated,
 | Module | Description |
 |--------|-------------|
 | `app` | Entry point: `NavigationLabActivity`, case browser |
-| `lab-contracts` | Shared types (`LabCaseId`, `LabScenario`, `NavLogger`, etc.) |
-| `lab-engine` | Orchestrator, case browser UI, invariant checks |
-| `lab-host-fragment` | Fragment host topologies and stub fragments |
-| `lab-host-nav2` | Nav2 host, Compose screens, Nav2 graphs |
-| `lab-host-nav3` | Nav3 host, `NavDisplay` integration |
+| `lab-contracts` | Shared contracts and logging (`LabCaseId`, `LabScenario`, `NavLogger`) |
+| `lab-engine` | Scenario orchestration and invariant checks |
+| `lab-host-fragment` | Fragment host topologies |
+| `lab-host-nav2` | Nav2 host topologies |
+| `lab-host-nav3` | Nav3 host topologies |
 | `lab-deeplink` | Deeplink simulator and fake managers |
-| `lab-back` | Back orchestrator and back-handling infrastructure |
-| `lab-results` | Results display, inline trace panel |
-| `lab-recipes` | 19 Nav3 recipe scenarios (R01-R19) |
+| `lab-back` | Back orchestration and related utilities |
+| `lab-results` | Trace/results rendering |
+| `lab-recipes` | Recipe scenarios `R01-R19` |
 | `lab-testkit` | Instrumentation tests (Espresso + Compose) |
-
-All modules depend on `:lab-contracts`. `:app` depends on all modules.
 
 ## Conventions
 
-- Kotlin 2.3.10, AGP 9.1.0, minSdk 24, compileSdk 36, Java 17
-- Compose BOM 2026.02.01, Nav2 2.9.7, Nav3 1.0.1
-- Koin 4.1.1 for DI
-- `@Serializable` `NavKey` for type-safe Nav3 routing
-- Fake screens are minimal colored boxes (see `RecipeStubScreens.kt`)
-- `NavLogger` for structured logging (`TAG="NavRecipe"`)
-- `DefaultTransitions` for consistent animation across recipes
+- Kotlin `2.3.10`, AGP `9.1.0`, Gradle wrapper `9.4.0`
+- minSdk `24`, compileSdk/targetSdk `36`, Java `17`
+- Compose BOM `2026.02.01`, Nav2 `2.9.7`, Nav3 `1.0.1`
+- Koin `4.1.1`
+- Type-safe Nav3 keys use `@Serializable`
+- `NavLogger` emits structured events under `TAG="NavRecipe"`
 
-## Adding a New Recipe
+## Scope Summary
 
-1. Define `@Serializable` `NavKey` data classes in `RecipeKeys.kt`
-2. Add `LabScenario` entry in `RecipeScenarios.kt`
-3. Register scenario list in `RecipeProviders.kt`
-4. Implement host activity in `lab-recipes/hosts/`
-5. Add `NavLogger` calls on navigation actions (push, pop, back, etc.)
+- Topologies: `T1-T8`
+- Interop case families: `A-H` (49 scenarios)
+- Recipe suite: `R01-R19` (19 scenarios)
+- Total scenarios: `68`
 
-## Adding a New Test Case (A-H)
+## Adding a Recipe
 
-1. Define scenario in `navigation_interop_lab_architecture.md` under the appropriate family
-2. Implement in the appropriate host module (`lab-host-fragment`, `lab-host-nav2`, or `lab-host-nav3`)
-3. Add invariant checks in `lab-engine/invariants/`
-4. Add instrumentation test in `lab-testkit` if automatable
+1. Define key(s) in `lab-recipes/.../keys/`
+2. Add scenario metadata in `RecipeScenarios.kt`
+3. Register providers in `RecipeProviders.kt`
+4. Implement host activity/content under `lab-recipes/.../hosts` and `.../content`
+5. Add `NavLogger` calls around navigation events
+
+## Adding an Interop Case (A-H)
+
+1. Add case definition to `navigation_interop_lab_architecture.md`
+2. Implement in relevant host module (`lab-host-fragment`, `lab-host-nav2`, `lab-host-nav3`)
+3. Add invariant checks in `lab-engine`
+4. Add/extend instrumentation coverage in `lab-testkit` when automatable

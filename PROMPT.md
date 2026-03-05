@@ -1,88 +1,93 @@
-# Navigation Interop Lab -- Android Test Application
+# Navigation Interop Lab - Build Prompt (Historical)
 
-> **Note:** This file is the original build prompt/specification used to generate the project. For user-facing documentation, see [`README.md`](README.md).
+This file preserves the original implementation prompt/spec used to bootstrap the project.
+For day-to-day usage and current status, use [README.md](README.md).
 
 ## Objective
 
-Build a multi-module Android test application inside this repository that validates navigation interoperability patterns: Nav2/Nav3 bridging, Fragment/Compose transitions, hybrid back-stack behavior, deeplink handling, and state restore across configuration changes and process death.
+Build a multi-module Android test application in this repository to validate Nav2/Nav3 interoperability:
+- Nav2 <-> Nav3 bridging
+- Fragment <-> Compose transitions
+- hybrid back-stack behavior
+- deeplink handling/fallback
+- state restore across configuration changes and process death
+
+## Current Implementation Snapshot
+
+As of current repository state:
+- Milestones `M1-M5` are implemented
+- Case families `A-H` (49 scenarios) are implemented
+- Recipe suite `R01-R19` (19 scenarios) is implemented
+- CI smoke workflow exists at `.github/workflows/android-instrumentation-smoke.yml`
 
 ## Architecture Reference
 
-Full blueprint: `navigation_interop_lab_architecture.md` (root of repo).
-Requirements Q&A: `specs/navigation-interop-lab/requirements.md`.
+- Full blueprint: [navigation_interop_lab_architecture.md](navigation_interop_lab_architecture.md)
+- Requirements Q&A: [specs/navigation-interop-lab/requirements.md](specs/navigation-interop-lab/requirements.md)
 
-## Key Requirements
+## Baseline Technical Requirements
 
-- **minSdk 24**, latest stable Kotlin / AGP / Gradle.
-- **Koin** for dependency injection.
-- **Nav3**: `androidx.navigation3:*` 1.0.1 (stable) with Material 3 integration.
-- **No sync mechanism** with production repo -- lab is self-contained.
-- **GitHub Actions CI** smoke pipeline for instrumentation tests.
-- **In-memory** `LabTraceStore` (no persistence).
-- Invariant failures logged to **logcat** and shown in **inline trace panel**.
-- Fake screens are **minimal** -- colored boxes with route labels.
+- minSdk `24`, targetSdk/compileSdk `36`
+- Java `17`
+- Kotlin `2.3.10`
+- AGP `9.1.0`
+- Gradle wrapper `9.4.0`
+- Nav3 `1.0.1` (with Material 3 integration)
+- Koin for dependency injection
+- In-memory trace store (`LabTraceStore`)
+- Invariant failures shown in trace panel and logged to logcat
+- Self-contained lab (no direct dependency on production repository modules)
 
 ## Module Layout
 
-```
+```text
 app/                  -- NavigationLabActivity, case browser entry
-lab-contracts/        -- LabCaseId, LabScenario, LabResult, LabRoute, LabTraceEvent
+lab-contracts/        -- LabCaseId, LabScenario, LabResult, LabRoute, LabTraceEvent, NavLogger
 lab-engine/           -- NavigationLabEngine, CaseBrowserScreen, orchestrator, invariants
 lab-host-fragment/    -- Fragment host topologies and stub fragments
 lab-host-nav2/        -- Nav2 host, Compose screens, Nav2 graphs
 lab-host-nav3/        -- Nav3 host, NavDisplay integration
 lab-deeplink/         -- DeeplinkSimulator, fake deeplink managers
-lab-back/             -- BackOrchestrator, back-handling test infrastructure
+lab-back/             -- BackOrchestrator, back-handling infrastructure
 lab-results/          -- Results display, inline trace panel
-lab-testkit/          -- androidTest instrumentation tests (Espresso + Compose)
+lab-recipes/          -- Recipe scenarios R01-R19 and helpers
+lab-testkit/          -- androidTest instrumentation tests
 ```
 
-All modules depend on `:lab-contracts`. `:app` depends on all modules.
+## Host Topologies
 
-## Host Topologies (T1-T8)
+`T1-T8` as documented in the architecture document.
 
-| ID | Description |
-|----|-------------|
-| T1 | Activity(XML) -> FragmentContainerView -> Fragments |
-| T2 | Activity(XML) -> ComposeView -> Nav2 NavHost |
-| T3 | Activity(XML) -> ComposeView -> Nav3 NavDisplay |
-| T4 | Activity(XML) -> ComposeView + overlay FrameLayout (dual containers) |
-| T5 | Nav3 root -> LegacyIslandEntry -> AndroidViewBinding(FragmentContainerView) |
-| T6 | Fragment host -> ComposeView -> internal Nav2 |
-| T7 | Nav2 route -> Nav3 leaf screen |
-| T8 | Nav3 key -> Nav2 leaf graph |
+## Scenario Families
 
-## Test Case Families (A-H)
-
-Implement all cases from the architecture doc:
-- **A** (A01-A07): Container and host ownership
-- **B** (B01-B12): Nav2/Nav3 interoperability
-- **C** (C01-C08): XML <-> Compose screen connection
-- **D** (D01-D09): Dialog/bottom-sheet/overlay semantics
-- **E** (E01-E08): Back handling and nested stacks
-- **F** (F01-F08): Deeplink and fallback behavior
-- **G** (G01-G07): State restore and argument stability
-- **H** (H01-H05): Transaction safety and race conditions
+- `A` (A01-A07): container and host ownership
+- `B` (B01-B12): Nav2/Nav3 interoperability
+- `C` (C01-C08): XML <-> Compose connection
+- `D` (D01-D09): dialog/sheet/overlay semantics
+- `E` (E01-E08): back handling and nested stacks
+- `F` (F01-F08): deeplink and fallback behavior
+- `G` (G01-G07): state restore and argument stability
+- `H` (H01-H05): transaction safety and race conditions
+- `R` (R01-R19): Nav3 recipes and migration patterns
 
 ## Run Modes
 
-- **Manual**: step-by-step from case browser, inline trace panel visible.
-- **Scripted**: auto-advance through steps with configurable delays.
-- **Stress**: rapid repeated execution to detect race conditions.
+- Manual: step-by-step, inline trace visible
+- Scripted: delayed auto-advance
+- Stress: rapid repeated execution
 
-## Acceptance Criteria
+## Acceptance / Verification Commands
 
-- Given the app launches, when the case browser opens, then all case families (A-H) are listed.
-- Given a topology (T1-T8) is selected, when the host is created, then the correct container hierarchy is inflated.
-- Given a case runs in manual mode, when each step completes, then trace events appear in the inline panel.
-- Given a case runs in scripted mode, when started, then steps auto-advance with the configured delay.
-- Given an invariant check fails, when the failure occurs, then it is shown in the trace panel AND logged to logcat.
-- Given all critical-path cases (A*, B*, E*, F*, G*) exist, when `./gradlew :lab-testkit:connectedAndroidTest` runs, then instrumentation tests pass.
-- Given the CI workflow exists, when a PR is opened, then GitHub Actions runs the smoke pipeline.
+```bash
+./gradlew :app:assembleDebug
+./gradlew lintDebug
+./gradlew :lab-testkit:connectedAndroidTest
+```
 
 ## Milestones
 
-1. **M1**: Repo boots (`./gradlew :app:assembleDebug`), case browser opens, T1/T2/T3 topologies work.
-2. **M2**: All A*, B*, C* cases implemented and manually runnable.
-3. **M3**: D*, E*, F* cases implemented; trace logging and pass/fail invariants active.
-4. **M4**: G*, H* cases automated in androidTest; GitHub Actions CI smoke pipeline added.
+1. `M1`: repo boots, case browser, `T1/T2/T3`
+2. `M2`: `A*`, `B*`, `C*` implemented
+3. `M3`: `D*`, `E*`, `F*` + trace/invariants
+4. `M4`: `G*`, `H*` automation + CI smoke
+5. `M5`: `R01-R19` recipes, transitions, app-state helpers, observability

@@ -2,6 +2,15 @@
 
 Questions and answers captured during requirements clarification.
 
+## Current Implementation Status
+
+This requirements log is historical. Current repository status:
+- Lab implemented inside this repository (no separate repo)
+- Milestones `M1-M5` complete
+- Scenario coverage: `A-H` (49) + `R01-R19` (19)
+- Toolchain currently in use: Gradle wrapper `9.4.0`, AGP `9.1.0`, Kotlin `2.3.10`
+- CI instrumentation smoke workflow is active at `.github/workflows/android-instrumentation-smoke.yml`
+
 ---
 
 ## Q1

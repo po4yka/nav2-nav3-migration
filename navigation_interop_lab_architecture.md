@@ -1,8 +1,8 @@
-# Navigation Interop Lab: Separate Android Test Project Architecture
+# Navigation Interop Lab Architecture
 
 ## Purpose
 
-Create in current repository test project to validate risky navigation combinations before touching production flow:
+Define the architecture and case catalog for this repository's Android lab project that validates risky navigation combinations before production migration changes:
 
 - Fragment containers and container visibility ownership
 - Nav2 inside Nav3 host and Nav3 inside Nav2 host
@@ -13,11 +13,35 @@ Create in current repository test project to validate risky navigation combinati
 
 This document is an implementation blueprint for that test project and a complete case catalog.
 
+## Current Status
+
+Last verified against repository state: **2026-03-05**.
+
+- Milestones `M1-M5`: implemented
+- Interop families `A-H`: implemented (`49` scenarios)
+- Recipe suite `R01-R19`: implemented (`19` scenarios)
+- Total scenarios: `68`
+
+Current baseline verification commands:
+
+```bash
+./gradlew :app:assembleDebug
+./gradlew :lab-recipes:assembleDebug
+./gradlew lintDebug
+./gradlew :lab-testkit:connectedAndroidTest
+```
+
+Toolchain snapshot:
+- Gradle wrapper `9.4.0`
+- AGP `9.1.0`
+- Kotlin `2.3.10`
+- minSdk `24`, compileSdk/targetSdk `36`
+
 ---
 
 ## Source Analysis (Current Project Patterns To Reproduce)
 
-The lab must reproduce these real patterns from production code.
+The lab reproduces patterns observed in production code snapshots (external references, not modules in this repo).
 
 | Pattern | Current source |
 |---|---|
@@ -66,7 +90,8 @@ nav2-nav3-migration/
     src/main/
       AndroidManifest.xml
       java/.../NavigationLabActivity.kt
-      res/layout/activity_navigation_lab.xml
+      res/values/themes.xml
+      res/values/strings.xml
   lab-contracts/
     src/main/kotlin/.../
       LabCaseId.kt
@@ -112,7 +137,7 @@ nav2-nav3-migration/
 
 ### Dependency boundary policy
 
-- The lab must **not** depend directly on project internals such as:
+- Non-app lab modules must **not** depend directly on production internals such as:
   - `:app`
   - `:core:*`
   - `:features:*`
@@ -393,10 +418,10 @@ Minimum automated coverage before using lab for migration decisions:
 
 ## Delivery Milestones
 
-| Milestone | Output |
-|---|---|
-| `M1` | New standalone repo boots (`:app`), case browser opens, `T1/T2/T3` topologies implemented. |
-| `M2` | All `A*`, `B*`, `C*` cases implemented and manually runnable. |
-| `M3` | `D*`, `E*`, `F*` cases implemented; trace logging and pass/fail invariants active. |
-| `M4` | `G*`, `H*` cases automated in `androidTest`; CI smoke pipeline added in the standalone repo. |
-| `M5` | Recipe cases R01-R19, NavLogger, transition animations, nav state indicators. |
+| Milestone | Status | Output |
+|---|---|---|
+| `M1` | Done | Repo boots (`:app`), case browser opens, `T1/T2/T3` topologies implemented. |
+| `M2` | Done | All `A*`, `B*`, `C*` cases implemented and manually runnable. |
+| `M3` | Done | `D*`, `E*`, `F*` cases implemented; trace logging and pass/fail invariants active. |
+| `M4` | Done | `G*`, `H*` cases automated in `androidTest`; CI smoke pipeline added. |
+| `M5` | Done | Recipe cases `R01-R19`, NavLogger, transitions, nav-state indicators. |
