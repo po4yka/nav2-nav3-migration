@@ -3,12 +3,13 @@ package com.example.navigationlab.engine.orchestrator
 import com.example.navigationlab.contracts.InvariantResult
 import com.example.navigationlab.contracts.LabResult
 import com.example.navigationlab.contracts.LabScenario
+import com.example.navigationlab.contracts.LabStep
 import com.example.navigationlab.contracts.ResultStatus
 import com.example.navigationlab.contracts.RunMode
 import com.example.navigationlab.contracts.TraceEventType
 import com.example.navigationlab.engine.LabTraceStore
 import com.example.navigationlab.engine.invariants.InvariantChecker
-import com.example.navigationlab.engine.invariants.PassThroughChecker
+import com.example.navigationlab.engine.invariants.TraceInvariantChecker
 import kotlinx.coroutines.delay
 
 /**
@@ -18,7 +19,7 @@ import kotlinx.coroutines.delay
 class DefaultLabOrchestrator(
     private val traceStore: LabTraceStore,
     private val stepExecutor: StepExecutor,
-    private val invariantChecker: InvariantChecker = PassThroughChecker,
+    private val invariantChecker: InvariantChecker = TraceInvariantChecker,
     private val scriptedDelayMs: Long = 500L,
     private val stressRepetitions: Int = 50,
 ) : LabOrchestrator {
@@ -43,22 +44,11 @@ class DefaultLabOrchestrator(
     }
 
     private suspend fun runManual(scenario: LabScenario): LabResult {
-        // In manual mode, steps are driven externally (UI button presses).
-        // This executes all steps for now; the UI layer will gate per-step later.
-        return executeSteps(scenario)
+        return executeSteps(scenario, delayBetweenSteps = false)
     }
 
     private suspend fun runScripted(scenario: LabScenario): LabResult {
-        val invariantResults = mutableListOf<InvariantResult>()
-
-        for (step in scenario.steps) {
-            traceStore.record(TraceEventType.STEP_MARKER, "Step ${step.index}: ${step.instruction}")
-            stepExecutor.execute(step.instruction)
-            invariantResults += checkInvariants(scenario)
-            delay(scriptedDelayMs)
-        }
-
-        return buildResult(scenario, invariantResults)
+        return executeSteps(scenario, delayBetweenSteps = true)
     }
 
     private suspend fun runStress(scenario: LabScenario): LabResult {
@@ -67,25 +57,97 @@ class DefaultLabOrchestrator(
         repeat(stressRepetitions) {
             traceStore.clear()
             traceStore.startCase(scenario.id)
-            for (step in scenario.steps) {
-                stepExecutor.execute(step.instruction)
-            }
-            invariantResults += checkInvariants(scenario)
+            invariantResults += executeStepSequence(
+                scenario = scenario,
+                delayBetweenSteps = false,
+            )
         }
 
         return buildResult(scenario, invariantResults)
     }
 
-    private suspend fun executeSteps(scenario: LabScenario): LabResult {
-        val invariantResults = mutableListOf<InvariantResult>()
+    private suspend fun executeSteps(
+        scenario: LabScenario,
+        delayBetweenSteps: Boolean,
+    ): LabResult {
+        val invariantResults = executeStepSequence(
+            scenario = scenario,
+            delayBetweenSteps = delayBetweenSteps,
+        )
+        return buildResult(scenario, invariantResults)
+    }
 
+    private suspend fun executeStepSequence(
+        scenario: LabScenario,
+        delayBetweenSteps: Boolean,
+    ): List<InvariantResult> {
+        val invariantResults = mutableListOf<InvariantResult>()
         for (step in scenario.steps) {
             traceStore.record(TraceEventType.STEP_MARKER, "Step ${step.index}: ${step.instruction}")
-            stepExecutor.execute(step.instruction)
+            val executionResult = stepExecutor.execute(step)
+            val observedEvents = executionResult.observedEvents.distinct()
+
+            recordObservedEvents(step, observedEvents, executionResult.metadata)
+            invariantResults += validateStepExpectations(step, observedEvents)
             invariantResults += checkInvariants(scenario)
+
+            if (delayBetweenSteps) {
+                delay(scriptedDelayMs)
+            }
+        }
+        return invariantResults
+    }
+
+    private fun recordObservedEvents(
+        step: LabStep,
+        observedEvents: List<TraceEventType>,
+        metadata: Map<String, String>,
+    ) {
+        observedEvents.forEach { type ->
+            traceStore.record(
+                type = type,
+                description = "Observed ${type.name} for step ${step.index}",
+                metadata = mapOf(
+                    "step" to step.index.toString(),
+                    "scope" to "step_observation",
+                ) + metadata,
+            )
+        }
+    }
+
+    private fun validateStepExpectations(
+        step: LabStep,
+        observedEvents: List<TraceEventType>,
+    ): InvariantResult {
+        val missing = step.expectedEvents
+            .distinct()
+            .filterNot { it in observedEvents }
+
+        val passed = missing.isEmpty()
+        val message = if (passed) {
+            null
+        } else {
+            "Missing expected events: ${missing.joinToString { it.name }}"
         }
 
-        return buildResult(scenario, invariantResults)
+        traceStore.record(
+            type = TraceEventType.INVARIANT,
+            description = "Step ${step.index} expected event validation",
+            metadata = buildMap {
+                put("scope", "step_expectation")
+                put("step", step.index.toString())
+                put("passed", passed.toString())
+                put("expected", step.expectedEvents.joinToString(",") { it.name })
+                put("observed", observedEvents.joinToString(",") { it.name })
+                if (!passed) put("missing", missing.joinToString(",") { it.name })
+            },
+        )
+
+        return InvariantResult(
+            description = "Step ${step.index} expected events",
+            passed = passed,
+            failureMessage = message,
+        )
     }
 
     private fun checkInvariants(scenario: LabScenario): List<InvariantResult> {

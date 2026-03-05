@@ -2,7 +2,9 @@ package com.example.navigationlab.engine.orchestrator
 
 import com.example.navigationlab.contracts.LabResult
 import com.example.navigationlab.contracts.LabScenario
+import com.example.navigationlab.contracts.LabStep
 import com.example.navigationlab.contracts.RunMode
+import com.example.navigationlab.contracts.TraceEventType
 
 /**
  * Orchestrates execution of a [LabScenario].
@@ -20,8 +22,19 @@ interface LabOrchestrator {
  */
 fun interface StepExecutor {
     /**
-     * Execute the step described by [instruction].
+     * Execute the given [step].
      * Implementations should record trace events via LabTraceStore.
      */
-    suspend fun execute(instruction: String)
+    suspend fun execute(step: LabStep): StepExecutionResult
 }
+
+/**
+ * Output of a single step execution.
+ *
+ * [observedEvents] should reflect what the executor actually observed while
+ * performing the step, so the orchestrator can validate [LabStep.expectedEvents].
+ */
+data class StepExecutionResult(
+    val observedEvents: List<TraceEventType> = emptyList(),
+    val metadata: Map<String, String> = emptyMap(),
+)
