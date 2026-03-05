@@ -21,6 +21,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.contracts.NavLogger
+import com.example.navigationlab.contracts.parseRunModeOrDefault
 import com.example.navigationlab.recipes.R
 import com.example.navigationlab.recipes.content.HomeScreen
 import com.example.navigationlab.recipes.content.Person
@@ -48,15 +49,21 @@ class RecipeResultsHostActivity : AppCompatActivity() {
             finish()
             return
         }
+        val runMode = parseRunModeOrDefault(intent.getStringExtra(EXTRA_RUN_MODE))
 
-        findViewById<TextView>(R.id.tvTopologyLabel).text = "T3: Recipe Results - $caseCode"
+        findViewById<TextView>(R.id.tvTopologyLabel).text = getString(
+            R.string.topology_label_with_case_mode,
+            getString(R.string.topology_recipe_results),
+            caseCode,
+            runMode,
+        )
 
         val composeView = findViewById<ComposeView>(R.id.composeView)
         composeView.setContent {
             MaterialTheme {
                 when (caseCode) {
-                    "R07" -> ResultEventContent()
-                    "R08" -> ResultStateContent()
+                    "R07" -> ResultEventContent(onExit = { finish() })
+                    "R08" -> ResultStateContent(onExit = { finish() })
                 }
             }
         }
@@ -76,7 +83,7 @@ class RecipeResultsHostActivity : AppCompatActivity() {
 }
 
 @Composable
-private fun ResultEventContent() {
+private fun ResultEventContent(onExit: () -> Unit) {
     val resultBus = remember { ResultEventBus() }
 
     Scaffold { paddingValues ->
@@ -86,9 +93,13 @@ private fun ResultEventContent() {
             backStack = backStack,
             modifier = Modifier.padding(paddingValues),
             onBack = {
-                val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
-                backStack.removeLastOrNull()
-                NavLogger.back("RecipeResultsHost", from, backStack.size)
+                if (backStack.size > 1) {
+                    val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                    backStack.removeLastOrNull()
+                    NavLogger.back("RecipeResultsHost", from, backStack.size)
+                } else {
+                    onExit()
+                }
             },
             transitionSpec = DefaultTransitions.slideForward(),
             popTransitionSpec = DefaultTransitions.slideBack(),
@@ -112,8 +123,12 @@ private fun ResultEventContent() {
                         onSubmit = { person ->
                             resultBus.sendResult<Person>(result = person)
                             NavLogger.result("RecipeResultsHost", "EventBus", "Person")
-                            backStack.removeLastOrNull()
-                            NavLogger.pop("RecipeResultsHost", "ResultPersonDetailsForm", backStack.size)
+                            if (backStack.size > 1) {
+                                backStack.removeLastOrNull()
+                                NavLogger.pop("RecipeResultsHost", "ResultPersonDetailsForm", backStack.size)
+                            } else {
+                                onExit()
+                            }
                         },
                     )
                 }
@@ -123,7 +138,7 @@ private fun ResultEventContent() {
 }
 
 @Composable
-private fun ResultStateContent() {
+private fun ResultStateContent(onExit: () -> Unit) {
     val resultStore = rememberResultStore()
 
     Scaffold { paddingValues ->
@@ -133,9 +148,13 @@ private fun ResultStateContent() {
             backStack = backStack,
             modifier = Modifier.padding(paddingValues),
             onBack = {
-                val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
-                backStack.removeLastOrNull()
-                NavLogger.back("RecipeResultsHost", from, backStack.size)
+                if (backStack.size > 1) {
+                    val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                    backStack.removeLastOrNull()
+                    NavLogger.back("RecipeResultsHost", from, backStack.size)
+                } else {
+                    onExit()
+                }
             },
             transitionSpec = DefaultTransitions.slideForward(),
             popTransitionSpec = DefaultTransitions.slideBack(),
@@ -156,8 +175,12 @@ private fun ResultStateContent() {
                         onSubmit = { person ->
                             resultStore.setResult<Person>(result = person)
                             NavLogger.result("RecipeResultsHost", "StateStore", "Person")
-                            backStack.removeLastOrNull()
-                            NavLogger.pop("RecipeResultsHost", "ResultPersonDetailsForm", backStack.size)
+                            if (backStack.size > 1) {
+                                backStack.removeLastOrNull()
+                                NavLogger.pop("RecipeResultsHost", "ResultPersonDetailsForm", backStack.size)
+                            } else {
+                                onExit()
+                            }
                         },
                     )
                 }

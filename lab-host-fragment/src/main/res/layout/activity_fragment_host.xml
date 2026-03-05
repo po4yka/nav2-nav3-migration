@@ -11,7 +11,7 @@
         android:padding="16dp"
         android:textSize="16sp"
         android:textStyle="bold"
-        android:text="T1: Fragment Host" />
+        android:text="@string/topology_t1" />
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/fragmentContainer"

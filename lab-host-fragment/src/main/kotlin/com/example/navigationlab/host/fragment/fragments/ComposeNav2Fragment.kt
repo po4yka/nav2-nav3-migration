@@ -43,6 +43,10 @@ class ComposeNav2Fragment : Fragment() {
     var navHostController: NavHostController? = null
         private set
 
+    /** Tracked Nav2 depth without using restricted NavController APIs. */
+    var navBackStackDepth: Int = 0
+        private set
+
     /** Last result returned by the Nav2 dialog route (B07). */
     var lastDialogResult: String? = null
         private set
@@ -58,6 +62,7 @@ class ComposeNav2Fragment : Fragment() {
                 MaterialTheme {
                     val controller = rememberNavController()
                     navHostController = controller
+                    navBackStackDepth = 1
 
                     NavHost(
                         navController = controller,
@@ -79,13 +84,13 @@ class ComposeNav2Fragment : Fragment() {
                                     controller.previousBackStackEntry
                                         ?.savedStateHandle
                                         ?.set(DIALOG_RESULT_KEY, "confirmed")
-                                    controller.popBackStack()
+                                    popBack()
                                 },
                             )
                         }
                         dialog(ROUTE_BOTTOM_SHEET) {
                             BottomSheetStubContent(
-                                onDismiss = { controller.popBackStack() },
+                                onDismiss = { popBack() },
                             )
                         }
                         dialog(
@@ -96,13 +101,36 @@ class ComposeNav2Fragment : Fragment() {
                             ),
                         ) {
                             FullScreenDialogStubContent(
-                                onDismiss = { controller.popBackStack() },
+                                onDismiss = { popBack() },
                             )
                         }
                     }
                 }
             }
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        navHostController = null
+        navBackStackDepth = 0
+    }
+
+    /** Navigate to a route inside the fragment Nav2 graph. */
+    fun navigateTo(route: String) {
+        val controller = navHostController ?: return
+        controller.navigate(route)
+        navBackStackDepth += 1
+    }
+
+    /** Pop from the fragment Nav2 graph. */
+    fun popBack(): Boolean {
+        val controller = navHostController ?: return false
+        val result = controller.popBackStack()
+        if (result && navBackStackDepth > 1) {
+            navBackStackDepth -= 1
+        }
+        return result
     }
 
     companion object {

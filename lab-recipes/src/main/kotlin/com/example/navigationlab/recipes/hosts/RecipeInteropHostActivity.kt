@@ -1,6 +1,5 @@
 package com.example.navigationlab.recipes.hosts
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -14,6 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.compose.AndroidFragment
@@ -23,6 +23,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.contracts.NavLogger
+import com.example.navigationlab.contracts.parseRunModeOrDefault
 import com.example.navigationlab.recipes.R
 import com.example.navigationlab.recipes.helpers.DefaultTransitions
 import com.example.navigationlab.recipes.helpers.MyCustomFragment
@@ -35,7 +36,6 @@ import com.example.navigationlab.recipes.keys.InteropViewRoute
  */
 class RecipeInteropHostActivity : FragmentActivity() {
 
-    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_recipe_host)
@@ -45,8 +45,14 @@ class RecipeInteropHostActivity : FragmentActivity() {
             finish()
             return
         }
+        val runMode = parseRunModeOrDefault(intent.getStringExtra(EXTRA_RUN_MODE))
 
-        findViewById<TextView>(R.id.tvTopologyLabel).text = "T5: Recipe Interop - $caseCode"
+        findViewById<TextView>(R.id.tvTopologyLabel).text = getString(
+            R.string.topology_label_with_case_mode,
+            getString(R.string.topology_recipe_interop),
+            caseCode,
+            runMode,
+        )
 
         val composeView = findViewById<ComposeView>(R.id.composeView)
         composeView.setContent {
@@ -56,9 +62,13 @@ class RecipeInteropHostActivity : FragmentActivity() {
                 NavDisplay(
                     backStack = backStack,
                     onBack = {
-                        val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
-                        backStack.removeLastOrNull()
-                        NavLogger.back("RecipeInteropHost", from, backStack.size)
+                        if (backStack.size > 1) {
+                            val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                            backStack.removeLastOrNull()
+                            NavLogger.back("RecipeInteropHost", from, backStack.size)
+                        } else {
+                            finish()
+                        }
                     },
                     transitionSpec = DefaultTransitions.slideForward(),
                     popTransitionSpec = DefaultTransitions.slideBack(),
@@ -71,7 +81,7 @@ class RecipeInteropHostActivity : FragmentActivity() {
                                     backStack.add(InteropViewRoute("123"))
                                     NavLogger.push("RecipeInteropHost", "InteropViewRoute", backStack.size)
                                 }) {
-                                    Text("Go to View")
+                                    Text(stringResource(R.string.interop_go_to_view))
                                 }
                             }
                         }
@@ -80,7 +90,7 @@ class RecipeInteropHostActivity : FragmentActivity() {
                                 modifier = Modifier.fillMaxSize().wrapContentSize(),
                                 factory = { context ->
                                     TextView(context).apply {
-                                        text = "My View with key: ${key.id}"
+                                        text = context.getString(R.string.interop_view_with_key, key.id)
                                     }
                                 },
                             )

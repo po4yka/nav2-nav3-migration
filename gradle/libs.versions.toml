@@ -11,7 +11,7 @@ fragment = "1.8.9"
 lifecycle = "2.10.0"
 material3-adaptive-nav3 = "1.0.0-alpha03"
 core-ktx = "1.17.0"
-kotlinx-serialization = "1.8.1"
+kotlinx-serialization = "1.10.0"
 espresso = "3.7.0"
 test-runner = "1.7.0"
 test-rules = "1.7.0"
@@ -56,6 +56,7 @@ compose-material-icons = { group = "androidx.compose.material", name = "material
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso" }
 test-runner = { group = "androidx.test", name = "runner", version.ref = "test-runner" }
 test-rules = { group = "androidx.test", name = "rules", version.ref = "test-rules" }
+test-core = { group = "androidx.test", name = "core", version.ref = "test-runner" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 
 [plugins]

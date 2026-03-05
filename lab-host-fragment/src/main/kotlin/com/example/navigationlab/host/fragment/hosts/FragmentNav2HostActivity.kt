@@ -7,10 +7,12 @@ import android.util.Log
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.core.view.isVisible
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.graphics.Color
 import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.contracts.NavLogger
+import com.example.navigationlab.contracts.parseRunModeOrDefault
 import com.example.navigationlab.host.fragment.R
 import com.example.navigationlab.host.fragment.fragments.ComposeNav2Fragment
 import com.example.navigationlab.host.fragment.fragments.LabStubFragment
@@ -34,8 +36,14 @@ class FragmentNav2HostActivity : AppCompatActivity() {
             finish()
             return
         }
+        val runMode = parseRunModeOrDefault(intent.getStringExtra(EXTRA_RUN_MODE))
 
-        findViewById<TextView>(R.id.tvTopologyLabel).text = "T6: Fragment->Compose->Nav2 - $caseCode"
+        findViewById<TextView>(R.id.tvTopologyLabel).text = getString(
+            R.string.topology_label_with_case_mode,
+            getString(R.string.topology_t6_nav2),
+            caseCode,
+            runMode,
+        )
 
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
@@ -52,8 +60,9 @@ class FragmentNav2HostActivity : AppCompatActivity() {
 
     /** Navigate to a route within the fragment's Nav2 graph. */
     fun navigateNav2(route: String) {
-        composeFragment?.navHostController?.navigate(route)
-        NavLogger.push(TAG, route, nav2BackStackDepth)
+        val fragment = composeFragment ?: return
+        fragment.navigateTo(route)
+        NavLogger.push(TAG, route, fragment.navBackStackDepth)
     }
 
     /** Open D-family sheet-style route in the fragment Nav2 graph. */
@@ -67,15 +76,16 @@ class FragmentNav2HostActivity : AppCompatActivity() {
 
     /** Pop the fragment's Nav2 back stack. */
     fun popNav2Back(): Boolean {
+        val fragment = composeFragment ?: return false
         val from = currentNav2Route ?: "?"
-        val result = composeFragment?.navHostController?.popBackStack() ?: false
-        if (result) NavLogger.pop(TAG, from, nav2BackStackDepth)
+        val result = fragment.popBack()
+        if (result) NavLogger.pop(TAG, from, fragment.navBackStackDepth)
         return result
     }
 
     /** Nav2 back stack depth inside the fragment. */
     val nav2BackStackDepth: Int
-        get() = composeFragment?.navHostController?.currentBackStack?.value?.size ?: 0
+        get() = composeFragment?.navBackStackDepth ?: 0
 
     /** Current route at top of the fragment's Nav2 graph. */
     val currentNav2Route: String?
@@ -107,7 +117,7 @@ class FragmentNav2HostActivity : AppCompatActivity() {
 
     /** Whether the activity-level overlay is visible. */
     val isOverlayVisible: Boolean
-        get() = findViewById<FrameLayout>(R.id.activityOverlayContainer).visibility == View.VISIBLE
+        get() = findViewById<FrameLayout>(R.id.activityOverlayContainer).isVisible
 
     /** Activity-level overlay back stack depth. */
     val overlayBackStackDepth: Int

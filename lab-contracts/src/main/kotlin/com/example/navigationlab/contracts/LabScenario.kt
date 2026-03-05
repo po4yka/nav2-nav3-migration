@@ -15,6 +15,18 @@ data class LabScenario(
     val preconditions: List<String> = emptyList(),
     /** Ordered execution steps. */
     val steps: List<LabStep>,
-    /** Invariant descriptions checked after each step or at the end. */
+    /**
+     * Legacy human-readable invariant descriptions.
+     * Kept for compatibility and UI/debug readability.
+     */
     val invariants: List<String> = emptyList(),
+    /**
+     * Typed executable invariants.
+     * If omitted, legacy [invariants] are mapped to
+     * [LabInvariantSpec.StepExpectationsSatisfied].
+     */
+    val invariantSpecs: List<LabInvariantSpec> = typedInvariants(invariants),
 )
+
+val LabScenario.effectiveInvariantSpecs: List<LabInvariantSpec>
+    get() = if (invariantSpecs.isNotEmpty()) invariantSpecs else typedInvariants(invariants)

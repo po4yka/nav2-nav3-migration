@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="topology_label_with_case_mode">%1$s - %2$s [%3$s]</string>
+    <string name="topology_t3">T3: Nav3 Host</string>
+    <string name="topology_t5">T5: Nav3-&gt;Fragment Island</string>
+    <string name="topology_t8">T8: Nav3-&gt;Nav2 Interop</string>
+    <string name="topology_b09">B09: Nav3-&gt;Nav2-&gt;Fragment-&gt;Dialog</string>
+</resources>

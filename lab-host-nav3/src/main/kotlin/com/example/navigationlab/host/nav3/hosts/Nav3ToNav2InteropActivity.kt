@@ -24,6 +24,7 @@ import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.contracts.NavLogger
+import com.example.navigationlab.contracts.parseRunModeOrDefault
 import com.example.navigationlab.host.nav3.Nav3Key
 import com.example.navigationlab.host.nav3.R
 import com.example.navigationlab.host.nav3.compose.Nav3StubScreen
@@ -42,6 +43,9 @@ class Nav3ToNav2InteropActivity : AppCompatActivity() {
     var nav2LeafController: NavHostController? = null
         private set
 
+    /** Tracked Nav2 leaf depth without restricted NavController APIs. */
+    private var nav2LeafDepthValue: Int = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_nav3_host)
@@ -51,8 +55,14 @@ class Nav3ToNav2InteropActivity : AppCompatActivity() {
             finish()
             return
         }
+        val runMode = parseRunModeOrDefault(intent.getStringExtra(EXTRA_RUN_MODE))
 
-        findViewById<TextView>(R.id.tvTopologyLabel).text = "T8: Nav3->Nav2 Interop - $caseCode"
+        findViewById<TextView>(R.id.tvTopologyLabel).text = getString(
+            R.string.topology_label_with_case_mode,
+            getString(R.string.topology_t8),
+            caseCode,
+            runMode,
+        )
 
         val composeView = findViewById<ComposeView>(R.id.composeView)
         composeView.setContent {
@@ -60,9 +70,13 @@ class Nav3ToNav2InteropActivity : AppCompatActivity() {
                 NavDisplay(
                     backStack = backStack,
                     onBack = {
-                        val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
-                        backStack.removeLastOrNull()
-                        NavLogger.back(TAG, from, backStack.size)
+                        if (backStack.size > 1) {
+                            val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                            backStack.removeLastOrNull()
+                            NavLogger.back(TAG, from, backStack.size)
+                        } else {
+                            finish()
+                        }
                     },
                     entryProvider = { key ->
                         when (key) {
@@ -75,6 +89,7 @@ class Nav3ToNav2InteropActivity : AppCompatActivity() {
                             is Nav2LeafKey -> NavEntry(key) {
                                 val controller = rememberNavController()
                                 nav2LeafController = controller
+                                nav2LeafDepthValue = 1
                                 NavHost(
                                     navController = controller,
                                     startDestination = LEAF_ROUTE_HOME,
@@ -106,20 +121,34 @@ class Nav3ToNav2InteropActivity : AppCompatActivity() {
     /** Pop the Nav3 root back stack. */
     fun popNav3Back(): Boolean {
         if (backStack.size <= 1) return false
+        val popped = backStack.lastOrNull()
         val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
         backStack.removeLastOrNull()
+        if (popped is Nav2LeafKey) {
+            nav2LeafController = null
+            nav2LeafDepthValue = 0
+        }
         NavLogger.pop(TAG, from, backStack.size)
         return true
     }
 
     /** Navigate within the Nav2 leaf graph. */
     fun navigateNav2Leaf(route: String) {
-        nav2LeafController?.navigate(route)
-        NavLogger.push(TAG, route, nav2LeafController?.currentBackStack?.value?.size ?: 0)
+        val controller = nav2LeafController ?: return
+        controller.navigate(route)
+        nav2LeafDepthValue += 1
+        NavLogger.push(TAG, route, nav2LeafDepthValue)
     }
 
     /** Pop the Nav2 leaf back stack. */
-    fun popNav2LeafBack(): Boolean = nav2LeafController?.popBackStack() ?: false
+    fun popNav2LeafBack(): Boolean {
+        val controller = nav2LeafController ?: return false
+        val result = controller.popBackStack()
+        if (result && nav2LeafDepthValue > 1) {
+            nav2LeafDepthValue -= 1
+        }
+        return result
+    }
 
     /** Nav3 root back stack depth. */
     val nav3BackStackDepth: Int
@@ -127,7 +156,7 @@ class Nav3ToNav2InteropActivity : AppCompatActivity() {
 
     /** Nav2 leaf back stack depth (0 if leaf not active). */
     val nav2LeafBackStackDepth: Int
-        get() = nav2LeafController?.currentBackStack?.value?.size ?: 0
+        get() = nav2LeafDepthValue
 
     companion object {
         private const val TAG = "T8Host"

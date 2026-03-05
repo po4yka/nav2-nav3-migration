@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="topology_label_with_case_mode">%1$s - %2$s [%3$s]</string>
+    <string name="topology_t2">T2: Nav2 Host</string>
+    <string name="topology_t7">T7: Nav2-&gt;Nav3 Interop</string>
+</resources>

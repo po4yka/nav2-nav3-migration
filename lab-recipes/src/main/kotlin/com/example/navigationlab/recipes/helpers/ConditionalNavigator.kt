@@ -37,8 +37,10 @@ class ConditionalNavigator(
         // Remove login entry from back stack
         val lastEntry = backStack.lastOrNull()
         val redirectCode = if (lastEntry is GateLogin) lastEntry.redirectToCode else null
-        NavLogger.pop(HOST, "GateLogin", backStack.size - 1)
-        backStack.removeLastOrNull()
+        if (backStack.size > 1) {
+            NavLogger.pop(HOST, "GateLogin", backStack.size - 1)
+            backStack.removeLastOrNull()
+        }
 
         isLoggedIn = true
 
@@ -59,10 +61,15 @@ class ConditionalNavigator(
         }
     }
 
-    fun goBack() {
-        val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
-        backStack.removeLastOrNull()
-        NavLogger.back(HOST, from, backStack.size)
+    fun goBack(onAtRoot: () -> Unit = {}) {
+        if (backStack.size > 1) {
+            val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+            backStack.removeLastOrNull()
+            NavLogger.back(HOST, from, backStack.size)
+        } else {
+            NavLogger.back(HOST, "root-exit", backStack.size)
+            onAtRoot()
+        }
     }
 
     companion object {

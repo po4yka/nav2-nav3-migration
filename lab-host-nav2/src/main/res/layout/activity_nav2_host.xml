@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:background="#333333"
         android:padding="12dp"
-        android:text="T2: Nav2 Host"
+        android:text="@string/topology_t2"
         android:textColor="#FFFFFF"
         android:textSize="14sp" />
 

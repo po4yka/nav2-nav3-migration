@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:background="#333333"
         android:padding="16dp"
-        android:text="T4: Dual Container Host"
+        android:text="@string/topology_t4"
         android:textColor="#FFFFFF"
         android:textSize="16sp"
         android:textStyle="bold" />

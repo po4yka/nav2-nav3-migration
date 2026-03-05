@@ -1,4 +1,4 @@
-package com.example.navigationlab.scenarios
+package com.example.navigationlab.catalog
 
 import android.content.Context
 import android.content.Intent
@@ -27,10 +27,10 @@ import com.example.navigationlab.recipes.RecipeMigrationProvider
 import com.example.navigationlab.recipes.RecipeResultsProvider
 import com.example.navigationlab.recipes.RecipeTransitionProvider
 
-/** Aggregates app-visible scenarios and launch mapping from all host providers. */
-object AppScenarioCatalog {
+typealias IntentFactory = (Context, LabCaseId, String) -> Intent
 
-    private typealias IntentFactory = (Context, LabCaseId, String) -> Intent
+/** Shared source of truth for all registered scenario providers and host launchers. */
+object LabScenarioCatalog {
 
     private data class ProviderEntry(
         val scenarios: List<LabScenario>,

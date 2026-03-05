@@ -32,9 +32,14 @@ android {
         compose = true
         viewBinding = true
     }
+
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 dependencies {
+    implementation(project(":lab-catalog"))
     implementation(project(":lab-contracts"))
     implementation(project(":lab-engine"))
     implementation(project(":lab-host-fragment"))
@@ -59,6 +64,10 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.core.ktx)
     implementation(libs.appcompat)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.test.core)
 
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)

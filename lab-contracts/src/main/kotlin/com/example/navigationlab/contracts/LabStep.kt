@@ -8,4 +8,11 @@ data class LabStep(
     val instruction: String,
     /** Expected trace events after this step completes. */
     val expectedEvents: List<TraceEventType> = emptyList(),
+    /**
+     * Typed action consumed by executors.
+     *
+     * Defaults to event-driven action derived from [expectedEvents] so existing
+     * scenario definitions remain compatible.
+     */
+    val action: LabAction = LabAction.fromExpectedEvents(expectedEvents),
 )

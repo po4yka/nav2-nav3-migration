@@ -27,6 +27,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.contracts.NavLogger
+import com.example.navigationlab.contracts.parseRunModeOrDefault
 import com.example.navigationlab.recipes.R
 import com.example.navigationlab.recipes.content.DeepLinkHomeScreen
 import com.example.navigationlab.recipes.content.DeepLinkTargetScreen
@@ -49,13 +50,19 @@ class RecipeDeepLinkHostActivity : AppCompatActivity() {
             finish()
             return
         }
+        val runMode = parseRunModeOrDefault(intent.getStringExtra(EXTRA_RUN_MODE))
 
-        findViewById<TextView>(R.id.tvTopologyLabel).text = "T3: Recipe Deep Link - $caseCode"
+        findViewById<TextView>(R.id.tvTopologyLabel).text = getString(
+            R.string.topology_label_with_case_mode,
+            getString(R.string.topology_recipe_deep_link),
+            caseCode,
+            runMode,
+        )
 
         val composeView = findViewById<ComposeView>(R.id.composeView)
         composeView.setContent {
             MaterialTheme {
-                DeepLinkContent()
+                DeepLinkContent(onExit = { finish() })
             }
         }
     }
@@ -83,7 +90,7 @@ class RecipeDeepLinkHostActivity : AppCompatActivity() {
 }
 
 @Composable
-private fun DeepLinkContent() {
+private fun DeepLinkContent(onExit: () -> Unit) {
     val backStack = rememberNavBackStack(DeepLinkHome)
     val context = LocalContext.current
 
@@ -121,9 +128,13 @@ private fun DeepLinkContent() {
                 backStack = backStack,
                 modifier = Modifier.padding(paddingValues),
                 onBack = {
-                    val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
-                    backStack.removeLastOrNull()
-                    NavLogger.back("RecipeDeepLinkHost", from, backStack.size)
+                    if (backStack.size > 1) {
+                        val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                        backStack.removeLastOrNull()
+                        NavLogger.back("RecipeDeepLinkHost", from, backStack.size)
+                    } else {
+                        onExit()
+                    }
                 },
                 transitionSpec = DefaultTransitions.slideForward(),
                 popTransitionSpec = DefaultTransitions.slideBack(),

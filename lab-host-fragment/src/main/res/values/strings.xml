@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="topology_label_with_case_mode">%1$s - %2$s [%3$s]</string>
+    <string name="topology_t1">T1: Fragment Host</string>
+    <string name="topology_t4">T4: Dual Container</string>
+    <string name="topology_t6_nav2">T6: Fragment-&gt;Compose-&gt;Nav2</string>
+    <string name="topology_t6_nav3">T6: Fragment-&gt;Compose-&gt;Nav3</string>
+</resources>

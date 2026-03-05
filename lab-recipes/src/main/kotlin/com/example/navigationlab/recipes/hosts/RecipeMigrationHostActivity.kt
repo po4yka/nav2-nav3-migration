@@ -36,6 +36,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import com.example.navigationlab.contracts.LabCaseId
+import com.example.navigationlab.contracts.parseRunModeOrDefault
 import com.example.navigationlab.recipes.R
 import com.example.navigationlab.recipes.content.MigScreenA
 import com.example.navigationlab.recipes.content.MigScreenA1
@@ -81,16 +82,23 @@ class RecipeMigrationHostActivity : AppCompatActivity() {
             finish()
             return
         }
+        val runMode = parseRunModeOrDefault(intent.getStringExtra(EXTRA_RUN_MODE))
 
-        val topology = if (caseCode == "R05") "T2" else "T3"
-        findViewById<TextView>(R.id.tvTopologyLabel).text = "$topology: Recipe Migration - $caseCode"
+        val topologyLevel = if (caseCode == "R05") 2 else 3
+        val topologyLabel = getString(R.string.topology_recipe_migration, topologyLevel)
+        findViewById<TextView>(R.id.tvTopologyLabel).text = getString(
+            R.string.topology_label_with_case_mode,
+            topologyLabel,
+            caseCode,
+            runMode,
+        )
 
         val composeView = findViewById<ComposeView>(R.id.composeView)
         composeView.setContent {
             MaterialTheme {
                 when (caseCode) {
                     "R05" -> Nav2MigrationBegin()
-                    "R06" -> Nav3MigrationEnd()
+                    "R06" -> Nav3MigrationEnd(onExit = { finish() })
                 }
             }
         }
@@ -201,7 +209,7 @@ private fun NavDestination?.isRouteInHierarchy(route: KClass<*>) =
 // -- R06: Nav3 Migration End --
 
 @androidx.compose.runtime.Composable
-private fun Nav3MigrationEnd() {
+private fun Nav3MigrationEnd(onExit: () -> Unit) {
     val navigationState = rememberNavigationState(
         startRoute = MigEndRouteA,
         topLevelRoutes = MIG_END_TOP_LEVEL_ROUTES.keys,
@@ -249,7 +257,7 @@ private fun Nav3MigrationEnd() {
     }) { paddingValues ->
         NavDisplay(
             entries = navigationState.toDecoratedEntries(entryProvider),
-            onBack = { navigator.goBack() },
+            onBack = { navigator.goBack(onAtRoot = onExit) },
             modifier = Modifier.padding(paddingValues),
             transitionSpec = DefaultTransitions.crossFade(),
             popTransitionSpec = DefaultTransitions.crossFadeBack(),

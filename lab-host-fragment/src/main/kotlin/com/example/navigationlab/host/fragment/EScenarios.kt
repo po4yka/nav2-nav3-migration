@@ -1,6 +1,8 @@
 package com.example.navigationlab.host.fragment
 
 import com.example.navigationlab.contracts.CaseFamily
+import com.example.navigationlab.contracts.LabAction
+import com.example.navigationlab.contracts.LabActionCommand
 import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.contracts.LabScenario
 import com.example.navigationlab.contracts.LabStep
@@ -52,8 +54,18 @@ val E_T4_SCENARIOS: List<LabScenario> = listOf(
                 expectedEvents = listOf(TraceEventType.BACK_EVENT)),
             LabStep(3, "Dispatch back again without reset",
                 expectedEvents = listOf(TraceEventType.BACK_EVENT, TraceEventType.INVARIANT)),
-            LabStep(4, "Reset root-exit gate and dispatch back once more",
-                expectedEvents = listOf(TraceEventType.BACK_EVENT)),
+            LabStep(
+                4,
+                "Reset root-exit gate and dispatch back once more",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT),
+                action = LabAction(
+                    observedEvents = listOf(TraceEventType.BACK_EVENT),
+                    commands = setOf(
+                        LabActionCommand.RESET_ROOT_EXIT_GATE,
+                        LabActionCommand.DISPATCH_BACK,
+                    ),
+                ),
+            ),
         ),
         invariants = listOf(
             "Root exit callback is fired only once while single-shot gate is active",
