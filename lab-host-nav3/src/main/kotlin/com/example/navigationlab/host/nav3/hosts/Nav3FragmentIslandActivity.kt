@@ -16,6 +16,7 @@ import androidx.fragment.app.FragmentContainerView
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import com.example.navigationlab.contracts.LabCaseId
+import com.example.navigationlab.contracts.NavLogger
 import com.example.navigationlab.host.nav3.Nav3Key
 import com.example.navigationlab.host.nav3.R
 import com.example.navigationlab.host.nav3.compose.Nav3StubScreen
@@ -49,7 +50,11 @@ class Nav3FragmentIslandActivity : AppCompatActivity() {
             MaterialTheme {
                 NavDisplay(
                     backStack = backStack,
-                    onBack = { backStack.removeLastOrNull() },
+                    onBack = {
+                        val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                        backStack.removeLastOrNull()
+                        NavLogger.back(TAG, from, backStack.size)
+                    },
                     entryProvider = { key ->
                         when (key) {
                             is Nav3Key.Home -> NavEntry(key) {
@@ -80,12 +85,15 @@ class Nav3FragmentIslandActivity : AppCompatActivity() {
     /** Navigate to a Nav3 key on the root back stack. */
     fun navigateTo(key: Any) {
         backStack.add(key)
+        NavLogger.push(TAG, key::class.simpleName ?: "?", backStack.size)
     }
 
     /** Pop the Nav3 root back stack. */
     fun popNav3Back(): Boolean {
         if (backStack.size <= 1) return false
+        val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
         backStack.removeLastOrNull()
+        NavLogger.pop(TAG, from, backStack.size)
         return true
     }
 

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <activity
+            android:name=".hosts.RecipeBasicHostActivity"
+            android:exported="false" />
+        <activity
+            android:name=".hosts.RecipeInteropHostActivity"
+            android:exported="false" />
+        <activity
+            android:name=".hosts.RecipeMigrationHostActivity"
+            android:exported="false" />
+        <activity
+            android:name=".hosts.RecipeResultsHostActivity"
+            android:exported="false" />
+        <activity
+            android:name=".hosts.RecipeAppStateHostActivity"
+            android:exported="false" />
+        <activity
+            android:name=".hosts.RecipeDeepLinkHostActivity"
+            android:exported="false" />
+        <activity
+            android:name=".hosts.RecipeTransitionHostActivity"
+            android:exported="false" />
+        <activity
+            android:name=".hosts.RecipeAdaptiveHostActivity"
+            android:exported="false" />
+        <activity
+            android:name=".hosts.RecipeConditionalHostActivity"
+            android:exported="false" />
+        <activity
+            android:name=".hosts.RecipeAdvancedDeepLinksActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="recipes"
+                    android:host="advanced" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".hosts.RecipeDeepLinksActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="recipes"
+                    android:host="target" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

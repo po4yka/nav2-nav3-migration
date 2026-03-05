@@ -9,7 +9,8 @@ enum class CaseFamily(val prefix: String, val title: String) {
     E("E", "Back handling and nested stacks"),
     F("F", "Deeplink and fallback behavior"),
     G("G", "State restore and argument stability"),
-    H("H", "Transaction safety and race conditions");
+    H("H", "Transaction safety and race conditions"),
+    R("R", "Nav3 recipe reference implementations");
 
     companion object {
         fun fromPrefix(prefix: String): CaseFamily =

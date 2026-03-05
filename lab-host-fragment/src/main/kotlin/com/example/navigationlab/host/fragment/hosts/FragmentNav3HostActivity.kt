@@ -10,6 +10,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.graphics.Color
 import com.example.navigationlab.contracts.LabCaseId
+import com.example.navigationlab.contracts.NavLogger
 import com.example.navigationlab.host.fragment.R
 import com.example.navigationlab.host.fragment.fragments.ComposeNav3Fragment
 import com.example.navigationlab.host.fragment.fragments.LabStubFragment
@@ -53,6 +54,7 @@ class FragmentNav3HostActivity : AppCompatActivity() {
     /** Navigate to a Nav3 key within the fragment. */
     fun navigateNav3(key: Any) {
         composeFragment?.navigateTo(key)
+        NavLogger.push(TAG, key::class.simpleName ?: "?", nav3BackStackDepth)
     }
 
     /** Navigate to Screen A. */
@@ -66,7 +68,12 @@ class FragmentNav3HostActivity : AppCompatActivity() {
     }
 
     /** Pop the fragment's Nav3 back stack. */
-    fun popNav3Back(): Boolean = composeFragment?.popBack() ?: false
+    fun popNav3Back(): Boolean {
+        val from = composeFragment?.backStack?.lastOrNull()?.let { it::class.simpleName } ?: "?"
+        val result = composeFragment?.popBack() ?: false
+        if (result) NavLogger.pop(TAG, from, nav3BackStackDepth)
+        return result
+    }
 
     /** Nav3 back stack depth inside the fragment. */
     val nav3BackStackDepth: Int

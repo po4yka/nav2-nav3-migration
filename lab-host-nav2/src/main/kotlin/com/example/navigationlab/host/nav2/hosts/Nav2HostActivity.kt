@@ -14,6 +14,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.navigationlab.contracts.LabCaseId
+import com.example.navigationlab.contracts.NavLogger
 import com.example.navigationlab.host.nav2.R
 import com.example.navigationlab.host.nav2.compose.Nav2StubScreen
 
@@ -72,6 +73,7 @@ class Nav2HostActivity : AppCompatActivity() {
         navController.navigate(route) {
             launchSingleTop = singleTop
         }
+        NavLogger.push(TAG, route, navController.currentBackStack.value.size)
     }
 
     /** Navigate to a route, clearing the back stack to root. */
@@ -80,10 +82,16 @@ class Nav2HostActivity : AppCompatActivity() {
             popUpTo(ROUTE_HOME) { inclusive = false }
             launchSingleTop = true
         }
+        NavLogger.push(TAG, route, navController.currentBackStack.value.size)
     }
 
     /** Pop the current destination off the back stack. */
-    fun popBack(): Boolean = navController.popBackStack()
+    fun popBack(): Boolean {
+        val from = navController.currentBackStackEntry?.destination?.route ?: "?"
+        val result = navController.popBackStack()
+        if (result) NavLogger.pop(TAG, from, navController.currentBackStack.value.size)
+        return result
+    }
 
     /** Current back stack depth (approximated via back queue size). */
     val backStackDepth: Int
