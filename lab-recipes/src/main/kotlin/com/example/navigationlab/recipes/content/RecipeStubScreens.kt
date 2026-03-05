@@ -228,6 +228,168 @@ fun DeepLinkTargetScreen(param: String) {
     }
 }
 
+// -- Transition screen composables (R14-R16) --
+
+@Composable
+fun TransitionHomeScreen(
+    onSlide: () -> Unit,
+    onFade: () -> Unit,
+    onDialog: () -> Unit,
+    onSheet: () -> Unit,
+) {
+    ContentGreen("Transition Home") {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Button(onClick = dropUnlessResumed(block = onSlide)) {
+                Text("Slide Transition")
+            }
+            Spacer(Modifier.height(8.dp))
+            Button(onClick = dropUnlessResumed(block = onFade)) {
+                Text("Fade Transition")
+            }
+            Spacer(Modifier.height(8.dp))
+            Button(onClick = dropUnlessResumed(block = onDialog)) {
+                Text("Open Dialog")
+            }
+            Spacer(Modifier.height(8.dp))
+            Button(onClick = dropUnlessResumed(block = onSheet)) {
+                Text("Open Bottom Sheet")
+            }
+        }
+    }
+}
+
+@Composable
+fun TransitionSlideScreen(label: String, onNext: () -> Unit) {
+    ContentBlue("Slide: $label") {
+        Button(onClick = dropUnlessResumed(block = onNext)) {
+            Text("Go to Fade")
+        }
+    }
+}
+
+@Composable
+fun TransitionFadeScreen(label: String) {
+    ContentPurple("Fade: $label")
+}
+
+@Composable
+fun DialogContent(message: String, onDismiss: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(24.dp),
+    ) {
+        Text(
+            fontWeight = FontWeight.Bold,
+            text = "Dialog",
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(message)
+        Spacer(Modifier.height(16.dp))
+        Button(onClick = dropUnlessResumed(block = onDismiss)) {
+            Text("Dismiss")
+        }
+    }
+}
+
+@Composable
+fun SheetContent(title: String, onDismiss: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .padding(24.dp)
+            .fillMaxSize(),
+    ) {
+        Text(
+            fontWeight = FontWeight.Bold,
+            text = "Sheet: $title",
+        )
+        Spacer(Modifier.height(16.dp))
+        Button(onClick = dropUnlessResumed(block = onDismiss)) {
+            Text("Close Sheet")
+        }
+    }
+}
+
+// -- Adaptive layout screen composables (R17) --
+
+@Composable
+fun ItemListScreen(onItemClick: (String) -> Unit) {
+    ContentGreen("Item List") {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            listOf("item-1", "item-2", "item-3").forEach { id ->
+                Button(onClick = dropUnlessResumed { onItemClick(id) }) {
+                    Text("Select $id")
+                }
+                Spacer(Modifier.height(4.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun ItemDetailScreen(id: String, onExtra: () -> Unit) {
+    ContentBlue("Detail: $id") {
+        Button(onClick = dropUnlessResumed(block = onExtra)) {
+            Text("Show Extra Pane")
+        }
+    }
+}
+
+@Composable
+fun ItemExtraScreen(id: String) {
+    ContentMauve("Extra: $id")
+}
+
+// -- Conditional + deep link screen composables (R18-R19) --
+
+@Composable
+fun GateHomeScreen(onProfile: () -> Unit) {
+    ContentGreen("Gate Home") {
+        Button(onClick = dropUnlessResumed(block = onProfile)) {
+            Text("Go to Profile")
+        }
+    }
+}
+
+@Composable
+fun GateProfileScreen(onLogout: () -> Unit) {
+    ContentMauve("Profile (logged in)") {
+        Button(onClick = dropUnlessResumed(block = onLogout)) {
+            Text("Logout")
+        }
+    }
+}
+
+@Composable
+fun GateLoginScreen(onLogin: () -> Unit) {
+    ContentRed("Login Required") {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("Please log in to continue")
+            Spacer(Modifier.height(16.dp))
+            Button(onClick = dropUnlessResumed(block = onLogin)) {
+                Text("Log In")
+            }
+        }
+    }
+}
+
+@Composable
+fun AdvancedDeepHomeScreen(onNavigate: () -> Unit) {
+    ContentGreen("Advanced Deep Home") {
+        Button(onClick = dropUnlessResumed(block = onNavigate)) {
+            Text("Navigate to Target")
+        }
+    }
+}
+
+@Composable
+fun AdvancedDeepTargetScreen(name: String, location: String) {
+    ContentBlue("Advanced Deep Target") {
+        Text("Name: $name")
+        Text("Location: $location")
+    }
+}
+
 // -- Migration screen composables --
 
 @Composable

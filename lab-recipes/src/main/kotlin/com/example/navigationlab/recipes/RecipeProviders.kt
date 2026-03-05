@@ -4,12 +4,15 @@ import android.content.Context
 import android.content.Intent
 import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.contracts.LabScenario
+import com.example.navigationlab.recipes.hosts.RecipeAdaptiveHostActivity
 import com.example.navigationlab.recipes.hosts.RecipeAppStateHostActivity
 import com.example.navigationlab.recipes.hosts.RecipeBasicHostActivity
+import com.example.navigationlab.recipes.hosts.RecipeConditionalHostActivity
 import com.example.navigationlab.recipes.hosts.RecipeDeepLinkHostActivity
 import com.example.navigationlab.recipes.hosts.RecipeInteropHostActivity
 import com.example.navigationlab.recipes.hosts.RecipeMigrationHostActivity
 import com.example.navigationlab.recipes.hosts.RecipeResultsHostActivity
+import com.example.navigationlab.recipes.hosts.RecipeTransitionHostActivity
 
 object RecipeBasicProvider {
 
@@ -57,4 +60,28 @@ object RecipeDeepLinkProvider {
 
     fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
         RecipeDeepLinkHostActivity.createIntent(context, caseId, runMode)
+}
+
+object RecipeTransitionProvider {
+
+    val scenarios: List<LabScenario> = R_TRANSITION_SCENARIOS
+
+    fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
+        RecipeTransitionHostActivity.createIntent(context, caseId, runMode)
+}
+
+object RecipeAdaptiveProvider {
+
+    val scenarios: List<LabScenario> = R_ADAPTIVE_SCENARIOS
+
+    fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
+        RecipeAdaptiveHostActivity.createIntent(context, caseId, runMode)
+}
+
+object RecipeConditionalProvider {
+
+    val scenarios: List<LabScenario> = R_CONDITIONAL_SCENARIOS
+
+    fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
+        RecipeConditionalHostActivity.createIntent(context, caseId, runMode)
 }

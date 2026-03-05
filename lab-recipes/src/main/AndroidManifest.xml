@@ -21,6 +21,27 @@
             android:name=".hosts.RecipeDeepLinkHostActivity"
             android:exported="false" />
         <activity
+            android:name=".hosts.RecipeTransitionHostActivity"
+            android:exported="false" />
+        <activity
+            android:name=".hosts.RecipeAdaptiveHostActivity"
+            android:exported="false" />
+        <activity
+            android:name=".hosts.RecipeConditionalHostActivity"
+            android:exported="false" />
+        <activity
+            android:name=".hosts.RecipeAdvancedDeepLinksActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="recipes"
+                    android:host="advanced" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".hosts.RecipeDeepLinksActivity"
             android:exported="true">
             <intent-filter>

@@ -116,6 +116,50 @@ data object DeepLinkHome : NavKey
 @Serializable
 data class DeepLinkTarget(val param: String) : NavKey
 
+// -- R14-R16: Transition + overlay keys --
+@Serializable
+data object TransitionHome : NavKey
+
+@Serializable
+data class TransitionSlide(val label: String) : NavKey
+
+@Serializable
+data class TransitionFade(val label: String) : NavKey
+
+@Serializable
+data class DialogRoute(val message: String) : NavKey
+
+@Serializable
+data class SheetRoute(val title: String) : NavKey
+
+// -- R17: Adaptive layout keys --
+@Serializable
+data object ItemList : NavKey
+
+@Serializable
+data class ItemDetail(val id: String) : NavKey
+
+@Serializable
+data class ItemExtra(val id: String) : NavKey
+
+// -- R18-R19: Conditional + advanced deep link keys --
+@Serializable
+data object GateHome : NavKey
+
+@Serializable
+data object GateProfile : NavKey {
+    const val requiresLogin: Boolean = true
+}
+
+@Serializable
+data class GateLogin(val redirectToCode: String? = null) : NavKey
+
+@Serializable
+data object AdvancedDeepHome : NavKey
+
+@Serializable
+data class AdvancedDeepTarget(val name: String, val location: String) : NavKey
+
 // -- NavBarItem for migration scenarios --
 class NavBarItem(
     val icon: ImageVector,

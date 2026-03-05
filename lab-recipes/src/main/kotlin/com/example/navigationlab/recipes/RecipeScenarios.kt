@@ -299,6 +299,181 @@ val R_DEEP_LINK_SCENARIOS: List<LabScenario> = listOf(
     ),
 )
 
+val R_TRANSITION_SCENARIOS: List<LabScenario> = listOf(
+    LabScenario(
+        id = LabCaseId(CaseFamily.R, 14),
+        title = "Custom transition animations",
+        topology = TopologyId.T3,
+        preconditions = listOf(
+            "Nav3 NavDisplay with global transitionSpec (horizontal slide)",
+            "Per-entry metadata override on TransitionFade (fade transition)",
+            "predictivePopTransitionSpec for back gesture animation",
+        ),
+        steps = listOf(
+            LabStep(1, "NavDisplay shows TransitionHome",
+                expectedEvents = listOf(TraceEventType.CONTAINER_CHANGE)),
+            LabStep(2, "Tap 'Slide Transition' - observe horizontal slide animation",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE)),
+            LabStep(3, "Tap 'Go to Fade' - observe fade animation (per-entry override)",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE)),
+            LabStep(4, "Press back - observe fade pop animation",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT, TraceEventType.STACK_CHANGE)),
+            LabStep(5, "Press back again - observe horizontal slide pop animation",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT, TraceEventType.STACK_CHANGE)),
+        ),
+        invariants = listOf(
+            "Global transitionSpec applies horizontal slide by default",
+            "Per-entry metadata overrides global transition with fade",
+            "predictivePopTransitionSpec activates on back gesture",
+        ),
+    ),
+    LabScenario(
+        id = LabCaseId(CaseFamily.R, 15),
+        title = "Dialog destination via SceneStrategy",
+        topology = TopologyId.T3,
+        preconditions = listOf(
+            "Nav3 NavDisplay with DialogSceneStrategy",
+            "DialogRoute entry has DialogSceneStrategy.dialog() metadata",
+        ),
+        steps = listOf(
+            LabStep(1, "NavDisplay shows TransitionHome",
+                expectedEvents = listOf(TraceEventType.CONTAINER_CHANGE)),
+            LabStep(2, "Tap 'Open Dialog' - dialog renders as overlay",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE)),
+            LabStep(3, "Verify content behind dialog is visible",
+                expectedEvents = listOf(TraceEventType.INVARIANT)),
+            LabStep(4, "Tap 'Dismiss' - dialog removed from back stack",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT, TraceEventType.STACK_CHANGE)),
+            LabStep(5, "Verify TransitionHome is restored",
+                expectedEvents = listOf(TraceEventType.INVARIANT)),
+        ),
+        invariants = listOf(
+            "DialogSceneStrategy renders entry as dialog overlay",
+            "Dialog dismissal removes entry from backstack",
+            "Underlying content remains visible behind dialog",
+        ),
+    ),
+    LabScenario(
+        id = LabCaseId(CaseFamily.R, 16),
+        title = "Bottom sheet destination via SceneStrategy",
+        topology = TopologyId.T3,
+        preconditions = listOf(
+            "Nav3 NavDisplay with custom BottomSheetSceneStrategy",
+            "SheetRoute entry has BottomSheetSceneStrategy.bottomSheet() metadata",
+            "Strategy chaining: bottomSheetStrategy then dialogStrategy",
+        ),
+        steps = listOf(
+            LabStep(1, "NavDisplay shows TransitionHome",
+                expectedEvents = listOf(TraceEventType.CONTAINER_CHANGE)),
+            LabStep(2, "Tap 'Open Bottom Sheet' - ModalBottomSheet renders",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE)),
+            LabStep(3, "Verify ModalBottomSheet is displayed with content",
+                expectedEvents = listOf(TraceEventType.INVARIANT)),
+            LabStep(4, "Swipe down or tap 'Close Sheet' to dismiss",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT, TraceEventType.STACK_CHANGE)),
+            LabStep(5, "Verify back stack is correct after dismissal",
+                expectedEvents = listOf(TraceEventType.INVARIANT)),
+        ),
+        invariants = listOf(
+            "BottomSheetSceneStrategy renders as ModalBottomSheet",
+            "Swipe dismiss triggers onBack to remove from backstack",
+            "Strategy chaining respects priority order (bottomSheet then dialog)",
+        ),
+    ),
+)
+
+val R_ADAPTIVE_SCENARIOS: List<LabScenario> = listOf(
+    LabScenario(
+        id = LabCaseId(CaseFamily.R, 17),
+        title = "Adaptive list-detail layout",
+        topology = TopologyId.T3,
+        preconditions = listOf(
+            "Nav3 NavDisplay with ListDetailSceneStrategy from material3-adaptive",
+            "ItemList has listPane() metadata, ItemDetail has detailPane() metadata",
+            "WindowSizeClass drives pane count",
+        ),
+        steps = listOf(
+            LabStep(1, "Open list (narrow screen: full-screen list)",
+                expectedEvents = listOf(TraceEventType.CONTAINER_CHANGE)),
+            LabStep(2, "Select item (narrow: pushes detail as full screen)",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE)),
+            LabStep(3, "Rotate to landscape or use tablet (both panes visible side-by-side)",
+                expectedEvents = listOf(TraceEventType.LIFECYCLE)),
+            LabStep(4, "Select different item (detail updates in-place)",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE)),
+            LabStep(5, "Tap 'Show Extra Pane' (expanded: third pane appears)",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE)),
+            LabStep(6, "Press back (returns to list-detail or list only)",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT, TraceEventType.STACK_CHANGE)),
+        ),
+        invariants = listOf(
+            "WindowSizeClass drives pane count",
+            "List + detail render side-by-side on wide screens",
+            "Single pane on narrow screens",
+            "Extra pane supported on expanded screens",
+        ),
+    ),
+)
+
+val R_CONDITIONAL_SCENARIOS: List<LabScenario> = listOf(
+    LabScenario(
+        id = LabCaseId(CaseFamily.R, 18),
+        title = "Conditional navigation (auth gate)",
+        topology = TopologyId.T3,
+        preconditions = listOf(
+            "Nav3 NavDisplay with ConditionalNavigator",
+            "GateProfile has requiresLogin = true",
+            "ConditionalNavigator redirects to GateLogin when not logged in",
+        ),
+        steps = listOf(
+            LabStep(1, "Open GateHome screen",
+                expectedEvents = listOf(TraceEventType.CONTAINER_CHANGE)),
+            LabStep(2, "Tap 'Go to Profile' (not logged in) -> redirected to login",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE)),
+            LabStep(3, "Verify login screen is shown with redirect target preserved",
+                expectedEvents = listOf(TraceEventType.INVARIANT)),
+            LabStep(4, "Tap 'Log In' -> auto-navigated to profile",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE)),
+            LabStep(5, "Verify profile screen is shown (login entry removed from backstack)",
+                expectedEvents = listOf(TraceEventType.INVARIANT)),
+            LabStep(6, "Tap 'Logout' -> back to home",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE)),
+        ),
+        invariants = listOf(
+            "requiresLogin flag triggers redirect to login",
+            "Login preserves redirectToKey for original target",
+            "Successful login navigates to original target",
+            "Login entry removed from backstack after login",
+        ),
+    ),
+    LabScenario(
+        id = LabCaseId(CaseFamily.R, 19),
+        title = "Advanced deep links with synthetic backstack",
+        topology = TopologyId.T3,
+        preconditions = listOf(
+            "RecipeAdvancedDeepLinksActivity trampoline parses recipes://advanced URI",
+            "RecipeConditionalHostActivity handles advanced deep link intent",
+            "Synthetic backstack: [AdvancedDeepHome, AdvancedDeepTarget]",
+        ),
+        steps = listOf(
+            LabStep(1, "Launch via adb: recipes://advanced?name=Alice&location=NYC",
+                expectedEvents = listOf(TraceEventType.CONTAINER_CHANGE)),
+            LabStep(2, "Verify target screen shows name=Alice, location=NYC",
+                expectedEvents = listOf(TraceEventType.INVARIANT)),
+            LabStep(3, "Press back -> returns to AdvancedDeepHome (synthetic backstack)",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT, TraceEventType.STACK_CHANGE)),
+            LabStep(4, "Press back again -> exits activity",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT)),
+        ),
+        invariants = listOf(
+            "Trampoline parses URI params and forwards via Intent extras",
+            "Synthetic backstack includes home -> target",
+            "Back navigation follows synthetic stack",
+            "Up button behavior matches back behavior",
+        ),
+    ),
+)
+
 val R_RESULTS_SCENARIOS: List<LabScenario> = listOf(
     LabScenario(
         id = LabCaseId(CaseFamily.R, 7),
