@@ -39,6 +39,7 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.runtime)
     implementation(libs.appcompat)
+    implementation(libs.material3.adaptive.nav3)
 
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.compose.ui.test.junit4)

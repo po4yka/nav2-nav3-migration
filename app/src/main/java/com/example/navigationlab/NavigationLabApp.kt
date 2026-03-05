@@ -41,7 +41,14 @@ class NavigationLabApp : Application() {
     }
 }
 
-private const val TOPOLOGY_LABEL_ID_NAME = "tvTopologyLabel"
+/**
+ * Edge-to-edge top inset contract for XML-host activities.
+ *
+ * When a layout provides a dedicated top header, it must expose that header
+ * as `R.id.tvTopologyLabel` so status-bar inset is applied to the header
+ * instead of the full content root.
+ */
+private val TOPOLOGY_LABEL_VIEW_ID = R.id.tvTopologyLabel
 
 private fun Activity.applyEdgeToEdgeIfNeeded() {
     (this as? ComponentActivity)?.enableEdgeToEdge(
@@ -57,7 +64,7 @@ private fun Activity.applyEdgeToEdgeIfNeeded() {
 
     val root = findContentRoot() ?: return
     val rootPadding = root.capturePadding()
-    val topologyLabel = findOptionalViewByName(root, TOPOLOGY_LABEL_ID_NAME)
+    val topologyLabel = root.findViewById<View?>(TOPOLOGY_LABEL_VIEW_ID)
     val topologyLabelPadding = topologyLabel?.capturePadding()
 
     ViewCompat.setOnApplyWindowInsetsListener(root) { view, windowInsets ->
@@ -65,16 +72,13 @@ private fun Activity.applyEdgeToEdgeIfNeeded() {
             WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout(),
         )
 
-        view.updatePadding(
-            left = rootPadding.left + systemBarInsets.left,
-            top = if (topologyLabel == null) rootPadding.top + systemBarInsets.top else rootPadding.top,
-            right = rootPadding.right + systemBarInsets.right,
-            bottom = rootPadding.bottom + systemBarInsets.bottom,
+        applyInsets(
+            root = view,
+            rootPadding = rootPadding,
+            topInsetTarget = topologyLabel,
+            topInsetTargetPadding = topologyLabelPadding,
+            systemBarInsets = systemBarInsets,
         )
-
-        if (topologyLabel != null && topologyLabelPadding != null) {
-            topologyLabel.updatePadding(top = topologyLabelPadding.top + systemBarInsets.top)
-        }
 
         windowInsets
     }
@@ -86,12 +90,6 @@ private fun Activity.findContentRoot(): View? {
     return content.getChildAt(0)
 }
 
-private fun Activity.findOptionalViewByName(root: View, viewIdName: String): View? {
-    val id = resources.getIdentifier(viewIdName, "id", packageName)
-    if (id == 0) return null
-    return root.findViewById(id)
-}
-
 private fun View.capturePadding(): ViewPadding = ViewPadding(
     left = paddingLeft,
     top = paddingTop,
@@ -99,7 +97,26 @@ private fun View.capturePadding(): ViewPadding = ViewPadding(
     bottom = paddingBottom,
 )
 
-private data class ViewPadding(
+internal fun applyInsets(
+    root: View,
+    rootPadding: ViewPadding,
+    topInsetTarget: View?,
+    topInsetTargetPadding: ViewPadding?,
+    systemBarInsets: androidx.core.graphics.Insets,
+) {
+    root.updatePadding(
+        left = rootPadding.left + systemBarInsets.left,
+        top = if (topInsetTarget == null) rootPadding.top + systemBarInsets.top else rootPadding.top,
+        right = rootPadding.right + systemBarInsets.right,
+        bottom = rootPadding.bottom + systemBarInsets.bottom,
+    )
+
+    if (topInsetTarget != null && topInsetTargetPadding != null) {
+        topInsetTarget.updatePadding(top = topInsetTargetPadding.top + systemBarInsets.top)
+    }
+}
+
+internal data class ViewPadding(
     val left: Int,
     val top: Int,
     val right: Int,
