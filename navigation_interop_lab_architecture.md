@@ -97,6 +97,12 @@ nav2-nav3-migration/
   lab-back/
     src/main/kotlin/.../
       back/
+  lab-recipes/
+    src/main/kotlin/.../
+      keys/
+      hosts/
+      helpers/
+      content/
   lab-results/
     src/main/kotlin/.../
       results/
@@ -138,6 +144,9 @@ flowchart LR
   Results --> Contracts
   HostNav2 --> Nav2["androidx.navigation:* (Nav2)"]
   HostNav3 --> Nav3["androidx.navigation3:* (Nav3)"]
+  App --> Recipes[":lab-recipes"]
+  Recipes --> Contracts
+  Recipes --> Nav3
   App --> Koin["Koin DI (optional)"]
 ```
 
@@ -185,6 +194,22 @@ Core runtime components:
   - fragment transactions
   - back events
   - deeplink outcomes
+
+7. `NavLogger` (in `:lab-contracts`)
+- Singleton structured logger with `TAG="NavRecipe"`.
+- 8 methods: `push`, `pop`, `back`, `tabSwitch`, `deepLink`, `redirect`, `result`, `visibility`.
+- Used by all recipe host activities for navigation observability.
+
+8. Recipe helpers (in `:lab-recipes`)
+- `DefaultTransitions` -- horizontal slide + per-entry fade overrides for Nav3 `NavDisplay`.
+- `NavStateIndicator` -- debug overlay showing current back stack and nav state.
+- `AppState` -- multi-stack tab orchestrator with `LifoUniqueQueue` history.
+- `NavigationState` -- per-tab back stack manager using `rememberNavBackStack`.
+- `Navigator` -- forward/back dispatcher that updates `NavigationState`.
+- `ConditionalNavigator` -- auth-gate wrapper that redirects when `requiresLogin`.
+- `ResultStore` -- saveable key-value result store for screen-to-screen data passing.
+- `ResultEventBus` -- Channel-based one-shot result delivery.
+- `BottomSheetSceneStrategy` -- custom `SceneStrategy` rendering entries as `ModalBottomSheet`.
 
 ### Host topologies to implement in the lab
 
@@ -314,6 +339,30 @@ Each case must include:
 | `H04` | Concurrent navigation events from two sources (UI + deeplink). |
 | `H05` | Container visibility update races with transaction commit. |
 
+### R. Nav3 Recipe Patterns
+
+| ID | Scenario |
+|---|---|
+| `R01` | Basic Nav3 with `mutableStateListOf` backstack |
+| `R02` | BasicSaveable Nav3 with `rememberNavBackStack` persistence |
+| `R03` | BasicDsl Nav3 with `entryProvider` DSL syntax |
+| `R04` | Nav3 interop: `AndroidFragment` + `AndroidView` |
+| `R05` | Migration baseline: Nav2 with bottom navigation |
+| `R06` | Migration end: Nav3 with `NavigationState` + `Navigator` |
+| `R07` | Results via event bus (Channel-based `ResultEventBus`) |
+| `R08` | Results via state store (saveable `ResultStore`) |
+| `R09` | Multi-stack with tab history (`LifoUniqueQueue`) |
+| `R10` | Bottom bar visibility control |
+| `R11` | ViewModel preservation in Nav3 entries |
+| `R12` | Result consumption with `LaunchedEffect` |
+| `R13` | Deep link bridging to Nav3 (trampoline + synthetic backstack) |
+| `R14` | Custom transition animations (`DefaultTransitions`) |
+| `R15` | Dialog destination via `DialogSceneStrategy` |
+| `R16` | Bottom sheet destination via `BottomSheetSceneStrategy` |
+| `R17` | Adaptive list-detail layout (`ListDetailSceneStrategy`) |
+| `R18` | Conditional navigation (auth gate via `ConditionalNavigator`) |
+| `R19` | Advanced deep links with synthetic backstack |
+
 ---
 
 ## Test Strategy
@@ -350,3 +399,4 @@ Minimum automated coverage before using lab for migration decisions:
 | `M2` | All `A*`, `B*`, `C*` cases implemented and manually runnable. |
 | `M3` | `D*`, `E*`, `F*` cases implemented; trace logging and pass/fail invariants active. |
 | `M4` | `G*`, `H*` cases automated in `androidTest`; CI smoke pipeline added in the standalone repo. |
+| `M5` | Recipe cases R01-R19, NavLogger, transition animations, nav state indicators. |

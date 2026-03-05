@@ -27,6 +27,7 @@ Standalone Android test application that validates Nav2/Nav3 migration patterns 
 | `lab-deeplink` | `DeeplinkSimulator`, fake deeplink managers |
 | `lab-back` | `BackOrchestrator`, back-handling test infrastructure |
 | `lab-results` | Results display, inline trace panel |
+| `lab-recipes` | 19 Nav3 recipe scenarios (R01-R19): back stacks, state persistence, transitions, deep links, adaptive layout |
 | `lab-testkit` | `androidTest` instrumentation tests (Espresso + Compose) |
 
 All modules depend on `:lab-contracts`. `:app` depends on all modules.
@@ -58,6 +59,30 @@ All modules depend on `:lab-contracts`. `:app` depends on all modules.
 | **H** | H01-H05 (5) | Transaction safety and race conditions |
 
 **Total: 49 cases** across 8 families covering the full interop surface.
+
+## Recipe Cases (R01-R19)
+
+The `lab-recipes` module contains 19 standalone Nav3 recipe scenarios grouped by topic:
+
+| Group | Recipes | Description |
+|-------|---------|-------------|
+| **Basic** | R01-R03 | Back stack (`mutableStateListOf`), saveable state (`rememberNavBackStack`), DSL syntax (`entryProvider`) |
+| **Interop** | R04 | Fragment/Compose interop (`AndroidFragment`, `AndroidView`) |
+| **Migration** | R05-R06 | Nav2 baseline with bottom nav vs Nav3 target with `NavigationState`/`Navigator` |
+| **Results** | R07-R08 | Event bus (`ResultEventBus` + Channel) vs state store (`ResultStore` + `rememberSaveable`) |
+| **App State** | R09-R12 | Multi-stack tabs (`LifoUniqueQueue`), bottom bar visibility, ViewModel preservation, result consumption (`LaunchedEffect`) |
+| **Deep Links** | R13 | URI parsing + synthetic backstack via trampoline activity |
+| **Transitions** | R14-R16 | Custom animations (`DefaultTransitions`), dialog (`DialogSceneStrategy`), bottom sheet (`BottomSheetSceneStrategy`) |
+| **Adaptive** | R17 | List-detail layout (`ListDetailSceneStrategy` + `WindowSizeClass`) |
+| **Conditional** | R18-R19 | Auth gate (`ConditionalNavigator`), advanced deep links with synthetic backstack |
+
+## NavLogger
+
+`NavLogger` (`lab-contracts`) provides structured Logcat output under `TAG="NavRecipe"` for navigation observability. Methods:
+
+`push` | `pop` | `back` | `tabSwitch` | `deepLink` | `redirect` | `result` | `visibility`
+
+All recipe host activities use `NavLogger` to emit events on navigation actions.
 
 ## Run Modes
 
@@ -99,6 +124,7 @@ flowchart LR
   App --> Deeplink[":lab-deeplink"]
   App --> Back[":lab-back"]
   App --> Results[":lab-results"]
+  App --> Recipes[":lab-recipes"]
   Engine --> Contracts[":lab-contracts"]
   HostFrag --> Contracts
   HostNav2 --> Contracts
@@ -106,7 +132,19 @@ flowchart LR
   Deeplink --> Contracts
   Back --> Contracts
   Results --> Contracts
+  Recipes --> Contracts
   HostNav2 --> Nav2["androidx.navigation:* (Nav2)"]
   HostNav3 --> Nav3["androidx.navigation3:* (Nav3)"]
+  Recipes --> Nav3
   App --> Koin["Koin DI"]
 ```
+
+## Milestones
+
+| Milestone | Status | Output |
+|-----------|--------|--------|
+| M1 | Done | Standalone repo boots, case browser opens, T1/T2/T3 topologies implemented |
+| M2 | Done | All A\*, B\*, C\* cases implemented and manually runnable |
+| M3 | Done | D\*, E\*, F\* cases implemented; trace logging and pass/fail invariants active |
+| M4 | Done | G\*, H\* cases automated in androidTest; CI smoke pipeline added |
+| M5 | Done | Recipe cases R01-R19, NavLogger, transition animations, nav state indicators |
