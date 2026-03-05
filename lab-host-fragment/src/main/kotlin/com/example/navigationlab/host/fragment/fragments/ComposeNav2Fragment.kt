@@ -17,6 +17,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,6 +52,15 @@ class ComposeNav2Fragment : Fragment() {
     var lastDialogResult: String? = null
         private set
 
+    private var pendingRestoreRoute: String? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        navBackStackDepth = savedInstanceState?.getInt(STATE_NAV_DEPTH, 0) ?: 0
+        lastDialogResult = savedInstanceState?.getString(STATE_LAST_DIALOG_RESULT)
+        pendingRestoreRoute = savedInstanceState?.getString(STATE_PENDING_RESTORE_ROUTE)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -62,7 +72,7 @@ class ComposeNav2Fragment : Fragment() {
                 MaterialTheme {
                     val controller = rememberNavController()
                     navHostController = controller
-                    navBackStackDepth = 1
+                    if (navBackStackDepth <= 0) navBackStackDepth = 1
 
                     NavHost(
                         navController = controller,
@@ -105,8 +115,29 @@ class ComposeNav2Fragment : Fragment() {
                             )
                         }
                     }
+
+                    LaunchedEffect(controller, pendingRestoreRoute) {
+                        val restoreRoute = pendingRestoreRoute ?: return@LaunchedEffect
+                        if (controller.currentBackStackEntry?.destination?.route != ROUTE_HOME) {
+                            pendingRestoreRoute = null
+                            return@LaunchedEffect
+                        }
+                        controller.navigate(restoreRoute)
+                        navBackStackDepth = maxOf(navBackStackDepth, 2)
+                        pendingRestoreRoute = null
+                    }
                 }
             }
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt(STATE_NAV_DEPTH, navBackStackDepth)
+        outState.putString(STATE_LAST_DIALOG_RESULT, lastDialogResult)
+        val route = navHostController?.currentBackStackEntry?.destination?.route
+        if (route != null && route != ROUTE_HOME) {
+            outState.putString(STATE_PENDING_RESTORE_ROUTE, route)
         }
     }
 
@@ -133,6 +164,22 @@ class ComposeNav2Fragment : Fragment() {
         return result
     }
 
+    /** Confirm dialog route and propagate result for B07 instrumentation checks. */
+    fun confirmDialogAndReturnResult(): Boolean {
+        val controller = navHostController ?: return false
+        val isDialogRoute = controller.currentBackStackEntry?.destination?.route == ROUTE_RESULT_DIALOG
+        if (!isDialogRoute) return false
+        lastDialogResult = "confirmed"
+        controller.previousBackStackEntry
+            ?.savedStateHandle
+            ?.set(DIALOG_RESULT_KEY, "confirmed")
+        val popped = controller.popBackStack()
+        if (popped && navBackStackDepth > 1) {
+            navBackStackDepth -= 1
+        }
+        return popped
+    }
+
     companion object {
         const val ROUTE_HOME = "home"
         const val ROUTE_SCREEN_A = "screen_a"
@@ -141,6 +188,9 @@ class ComposeNav2Fragment : Fragment() {
         const val ROUTE_BOTTOM_SHEET = "bottom_sheet"
         const val ROUTE_FULL_SCREEN_DIALOG = "full_screen_dialog"
         const val DIALOG_RESULT_KEY = "dialog_result"
+        private const val STATE_NAV_DEPTH = "state_nav_depth"
+        private const val STATE_LAST_DIALOG_RESULT = "state_last_dialog_result"
+        private const val STATE_PENDING_RESTORE_ROUTE = "state_pending_restore_route"
 
         val COLORS = listOf(
             Color(0xFF6200EE), // Purple

@@ -36,6 +36,11 @@ import com.example.navigationlab.recipes.keys.InteropViewRoute
  */
 class RecipeInteropHostActivity : FragmentActivity() {
 
+    private var navigateToViewAction: (() -> Unit)? = null
+    private var popBackAction: (() -> Boolean)? = null
+    private var currentRouteProvider: (() -> Any?)? = null
+    private var backStackDepthProvider: (() -> Int)? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_recipe_host)
@@ -58,6 +63,22 @@ class RecipeInteropHostActivity : FragmentActivity() {
         composeView.setContent {
             MaterialTheme {
                 val backStack = rememberNavBackStack(InteropFragmentRoute)
+                navigateToViewAction = {
+                    backStack.add(InteropViewRoute("123"))
+                    NavLogger.push("RecipeInteropHost", "InteropViewRoute", backStack.size)
+                }
+                popBackAction = {
+                    if (backStack.size > 1) {
+                        val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                        backStack.removeLastOrNull()
+                        NavLogger.back("RecipeInteropHost", from, backStack.size)
+                        true
+                    } else {
+                        false
+                    }
+                }
+                currentRouteProvider = { backStack.lastOrNull() }
+                backStackDepthProvider = { backStack.size }
 
                 NavDisplay(
                     backStack = backStack,
@@ -78,8 +99,7 @@ class RecipeInteropHostActivity : FragmentActivity() {
                             Column(Modifier.fillMaxSize().wrapContentSize()) {
                                 AndroidFragment<MyCustomFragment>()
                                 Button(onClick = dropUnlessResumed {
-                                    backStack.add(InteropViewRoute("123"))
-                                    NavLogger.push("RecipeInteropHost", "InteropViewRoute", backStack.size)
+                                    navigateToViewAction?.invoke()
                                 }) {
                                     Text(stringResource(R.string.interop_go_to_view))
                                 }
@@ -100,6 +120,21 @@ class RecipeInteropHostActivity : FragmentActivity() {
             }
         }
     }
+
+    fun navigateToView() {
+        navigateToViewAction?.invoke()
+    }
+
+    fun popBack(): Boolean = popBackAction?.invoke() ?: false
+
+    val backStackDepth: Int
+        get() = backStackDepthProvider?.invoke() ?: 0
+
+    val currentRouteName: String?
+        get() = currentRouteProvider?.invoke()?.let { it::class.simpleName }
+
+    val currentViewRouteId: String?
+        get() = (currentRouteProvider?.invoke() as? InteropViewRoute)?.id
 
     companion object {
         private const val TAG = "RecipeInteropHost"

@@ -17,6 +17,10 @@ import androidx.fragment.app.Fragment
  */
 class IslandStubFragment : Fragment() {
 
+    /** Debug label used by instrumentation tests to validate restore/order semantics. */
+    val debugLabel: String?
+        get() = arguments?.getString(ARG_LABEL)
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,

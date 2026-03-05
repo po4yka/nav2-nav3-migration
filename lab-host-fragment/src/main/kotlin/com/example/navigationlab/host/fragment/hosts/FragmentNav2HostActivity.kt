@@ -27,6 +27,8 @@ import com.example.navigationlab.host.fragment.fragments.LabStubFragment
  */
 class FragmentNav2HostActivity : AppCompatActivity() {
 
+    private var restoreOverlayRequested: Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_fragment_nav2_host)
@@ -50,6 +52,22 @@ class FragmentNav2HostActivity : AppCompatActivity() {
                 .add(R.id.mainFragmentContainer, ComposeNav2Fragment.newInstance(), TAG_COMPOSE_FRAGMENT)
                 .commit()
         }
+
+        restoreOverlayRequested = savedInstanceState?.getBoolean(STATE_OVERLAY_VISIBLE, false) == true
+        if (restoreOverlayRequested) {
+            findViewById<FrameLayout>(R.id.activityOverlayContainer).visibility = View.VISIBLE
+        }
+        syncOverlayVisibilityWithBackStack()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        syncOverlayVisibilityWithBackStack()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(STATE_OVERLAY_VISIBLE, isOverlayVisible)
     }
 
     /** The hosted ComposeNav2Fragment, if available. */
@@ -112,7 +130,7 @@ class FragmentNav2HostActivity : AppCompatActivity() {
         supportFragmentManager.beginTransaction()
             .add(R.id.activityOverlayContainer, fragment)
             .addToBackStack("activity_overlay")
-            .commit()
+            .commitAllowingStateLoss()
     }
 
     /** Whether the activity-level overlay is visible. */
@@ -125,10 +143,24 @@ class FragmentNav2HostActivity : AppCompatActivity() {
 
     /** Dismiss the activity-level overlay. */
     fun dismissOverlay() {
+        restoreOverlayRequested = false
         if (supportFragmentManager.backStackEntryCount > 0) {
-            supportFragmentManager.popBackStack()
+            runCatching { supportFragmentManager.popBackStack() }
         }
         findViewById<FrameLayout>(R.id.activityOverlayContainer).visibility = View.GONE
+    }
+
+    private fun syncOverlayVisibilityWithBackStack() {
+        val overlay = findViewById<FrameLayout>(R.id.activityOverlayContainer)
+        val shouldBeVisible = supportFragmentManager.backStackEntryCount > 0 || restoreOverlayRequested
+        overlay.visibility = if (shouldBeVisible) {
+            View.VISIBLE
+        } else {
+            View.GONE
+        }
+        if (supportFragmentManager.backStackEntryCount > 0) {
+            restoreOverlayRequested = false
+        }
     }
 
     // --- Dialog result (B07) ---
@@ -137,9 +169,16 @@ class FragmentNav2HostActivity : AppCompatActivity() {
     val lastDialogResult: String?
         get() = composeFragment?.lastDialogResult
 
+    /** Confirm dialog route and return result in the hosted fragment Nav2 graph. */
+    fun confirmDialogResult(): Boolean {
+        val fragment = composeFragment ?: return false
+        return fragment.confirmDialogAndReturnResult()
+    }
+
     companion object {
         private const val TAG = "T6Host"
         private const val TAG_COMPOSE_FRAGMENT = "compose_nav2_fragment"
+        private const val STATE_OVERLAY_VISIBLE = "overlay_visible"
         const val EXTRA_CASE_ID = "case_id"
         const val EXTRA_RUN_MODE = "run_mode"
 

@@ -48,6 +48,14 @@ import com.example.navigationlab.recipes.keys.TransitionSlide
  */
 class RecipeTransitionHostActivity : AppCompatActivity() {
 
+    internal var openSlideAction: (() -> Unit)? = null
+    internal var openFadeAction: (() -> Unit)? = null
+    internal var openDialogAction: (() -> Unit)? = null
+    internal var openSheetAction: (() -> Unit)? = null
+    internal var popBackAction: (() -> Boolean)? = null
+    internal var currentRouteProvider: (() -> Any?)? = null
+    internal var backStackDepthProvider: (() -> Int)? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_recipe_host)
@@ -69,10 +77,43 @@ class RecipeTransitionHostActivity : AppCompatActivity() {
         val composeView = findViewById<ComposeView>(R.id.composeView)
         composeView.setContent {
             MaterialTheme {
-                TransitionContent(onExit = { finish() })
+                TransitionContent(
+                    host = this@RecipeTransitionHostActivity,
+                    onExit = { finish() },
+                )
             }
         }
     }
+
+    fun openSlideTransition() {
+        openSlideAction?.invoke()
+    }
+
+    fun openFadeTransition() {
+        openFadeAction?.invoke()
+    }
+
+    fun openDialog() {
+        openDialogAction?.invoke()
+    }
+
+    fun openBottomSheet() {
+        openSheetAction?.invoke()
+    }
+
+    fun popBack(): Boolean = popBackAction?.invoke() ?: false
+
+    val currentRouteName: String?
+        get() = currentRouteProvider?.invoke()?.let { it::class.simpleName }
+
+    val backStackDepth: Int
+        get() = backStackDepthProvider?.invoke() ?: 0
+
+    val isDialogVisible: Boolean
+        get() = currentRouteProvider?.invoke() is DialogRoute
+
+    val isBottomSheetVisible: Boolean
+        get() = currentRouteProvider?.invoke() is SheetRoute
 
     companion object {
         private const val TAG = "RecipeTransitionHost"
@@ -88,8 +129,36 @@ class RecipeTransitionHostActivity : AppCompatActivity() {
 }
 
 @Composable
-private fun TransitionContent(onExit: () -> Unit) {
+private fun TransitionContent(host: RecipeTransitionHostActivity, onExit: () -> Unit) {
     val backStack = rememberNavBackStack(TransitionHome)
+    host.openSlideAction = {
+        backStack.add(TransitionSlide("slide-1"))
+        NavLogger.push("RecipeTransitionHost", "TransitionSlide", backStack.size)
+    }
+    host.openFadeAction = {
+        backStack.add(TransitionFade("fade-1"))
+        NavLogger.push("RecipeTransitionHost", "TransitionFade", backStack.size)
+    }
+    host.openDialogAction = {
+        backStack.add(DialogRoute("Hello from dialog!"))
+        NavLogger.push("RecipeTransitionHost", "DialogRoute", backStack.size)
+    }
+    host.openSheetAction = {
+        backStack.add(SheetRoute("My Sheet"))
+        NavLogger.push("RecipeTransitionHost", "SheetRoute", backStack.size)
+    }
+    host.popBackAction = {
+        if (backStack.size > 1) {
+            val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+            backStack.removeLastOrNull()
+            NavLogger.back("RecipeTransitionHost", from, backStack.size)
+            true
+        } else {
+            false
+        }
+    }
+    host.currentRouteProvider = { backStack.lastOrNull() }
+    host.backStackDepthProvider = { backStack.size }
 
     // Scene strategies
     val bottomSheetStrategy = BottomSheetSceneStrategy()
@@ -115,22 +184,10 @@ private fun TransitionContent(onExit: () -> Unit) {
             entryProvider = entryProvider {
                 entry<TransitionHome> {
                     TransitionHomeScreen(
-                        onSlide = {
-                            backStack.add(TransitionSlide("slide-1"))
-                            NavLogger.push("RecipeTransitionHost", "TransitionSlide", backStack.size)
-                        },
-                        onFade = {
-                            backStack.add(TransitionFade("fade-1"))
-                            NavLogger.push("RecipeTransitionHost", "TransitionFade", backStack.size)
-                        },
-                        onDialog = {
-                            backStack.add(DialogRoute("Hello from dialog!"))
-                            NavLogger.push("RecipeTransitionHost", "DialogRoute", backStack.size)
-                        },
-                        onSheet = {
-                            backStack.add(SheetRoute("My Sheet"))
-                            NavLogger.push("RecipeTransitionHost", "SheetRoute", backStack.size)
-                        },
+                        onSlide = { host.openSlideAction?.invoke() },
+                        onFade = { host.openFadeAction?.invoke() },
+                        onDialog = { host.openDialogAction?.invoke() },
+                        onSheet = { host.openSheetAction?.invoke() },
                     )
                 }
                 entry<TransitionSlide> { key ->

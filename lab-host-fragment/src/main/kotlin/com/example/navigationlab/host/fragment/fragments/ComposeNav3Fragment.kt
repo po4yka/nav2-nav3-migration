@@ -101,6 +101,17 @@ class ComposeNav3Fragment : Fragment() {
         return true
     }
 
+    /** Confirm modal key and return result for B08 instrumentation checks. */
+    fun confirmModalAndReturnResult(): Boolean {
+        if (backStack.lastOrNull() !is Nav3ModalKey.ResultModal) return false
+        lastModalResult = "confirmed"
+        if (backStack.size > 1) {
+            backStack.removeLastOrNull()
+            return true
+        }
+        return false
+    }
+
     companion object {
         val COLORS = listOf(
             Color(0xFF6200EE), // Purple

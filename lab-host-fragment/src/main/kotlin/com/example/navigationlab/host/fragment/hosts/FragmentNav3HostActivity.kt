@@ -91,6 +91,12 @@ class FragmentNav3HostActivity : AppCompatActivity() {
     val lastModalResult: String?
         get() = composeFragment?.lastModalResult
 
+    /** Confirm active modal entry and return result in the hosted fragment Nav3 stack. */
+    fun confirmModalResult(): Boolean {
+        val fragment = composeFragment ?: return false
+        return fragment.confirmModalAndReturnResult()
+    }
+
     /** Whether Nav3 modal key is currently top-most in fragment Nav3 stack. */
     val isModalVisible: Boolean
         get() = composeFragment?.backStack?.lastOrNull() is Nav3ModalKey.ResultModal
@@ -104,7 +110,7 @@ class FragmentNav3HostActivity : AppCompatActivity() {
         supportFragmentManager.beginTransaction()
             .add(R.id.activityOverlayContainer, fragment)
             .addToBackStack("activity_overlay")
-            .commit()
+            .commitAllowingStateLoss()
     }
 
     /** Whether the activity-level overlay is visible. */
@@ -118,7 +124,7 @@ class FragmentNav3HostActivity : AppCompatActivity() {
     /** Dismiss the activity-level overlay. */
     fun dismissOverlay() {
         if (supportFragmentManager.backStackEntryCount > 0) {
-            supportFragmentManager.popBackStack()
+            runCatching { supportFragmentManager.popBackStack() }
         }
         findViewById<FrameLayout>(R.id.activityOverlayContainer).visibility = View.GONE
     }

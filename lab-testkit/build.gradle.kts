@@ -29,6 +29,7 @@ android {
 dependencies {
     implementation(project(":lab-catalog"))
     implementation(project(":lab-contracts"))
+    implementation(project(":lab-deeplink"))
     implementation(project(":lab-engine"))
     implementation(project(":lab-host-fragment"))
     implementation(project(":lab-host-nav2"))

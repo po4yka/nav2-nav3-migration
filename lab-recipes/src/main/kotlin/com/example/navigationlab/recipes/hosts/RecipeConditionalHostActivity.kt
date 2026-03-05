@@ -49,6 +49,17 @@ import com.example.navigationlab.recipes.keys.GateProfile
  */
 class RecipeConditionalHostActivity : AppCompatActivity() {
 
+    internal var navigateProfileAction: (() -> Unit)? = null
+    internal var loginAction: (() -> Unit)? = null
+    internal var logoutAction: (() -> Unit)? = null
+    internal var navigateAdvancedTargetAction: (() -> Unit)? = null
+    internal var popBackAction: (() -> Boolean)? = null
+    internal var currentRouteProvider: (() -> Any?)? = null
+    internal var backStackDepthProvider: (() -> Int)? = null
+    internal var loggedInProvider: (() -> Boolean)? = null
+    internal var advancedNameProvider: (() -> String?)? = null
+    internal var advancedLocationProvider: (() -> String?)? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_recipe_host)
@@ -71,12 +82,51 @@ class RecipeConditionalHostActivity : AppCompatActivity() {
         composeView.setContent {
             MaterialTheme {
                 when (caseCode) {
-                    "R18" -> ConditionalContent(onExit = { finish() })
-                    "R19" -> AdvancedDeepLinkContent(onExit = { finish() })
+                    "R18" -> ConditionalContent(
+                        host = this@RecipeConditionalHostActivity,
+                        onExit = { finish() },
+                    )
+                    "R19" -> AdvancedDeepLinkContent(
+                        host = this@RecipeConditionalHostActivity,
+                        onExit = { finish() },
+                    )
                 }
             }
         }
     }
+
+    fun navigateToProfile() {
+        navigateProfileAction?.invoke()
+    }
+
+    fun login() {
+        loginAction?.invoke()
+    }
+
+    fun logout() {
+        logoutAction?.invoke()
+    }
+
+    fun navigateToAdvancedTarget() {
+        navigateAdvancedTargetAction?.invoke()
+    }
+
+    fun popBack(): Boolean = popBackAction?.invoke() ?: false
+
+    val currentRouteName: String?
+        get() = currentRouteProvider?.invoke()?.let { it::class.simpleName }
+
+    val backStackDepth: Int
+        get() = backStackDepthProvider?.invoke() ?: 0
+
+    val isLoggedIn: Boolean
+        get() = loggedInProvider?.invoke() ?: false
+
+    val advancedTargetName: String?
+        get() = advancedNameProvider?.invoke()
+
+    val advancedTargetLocation: String?
+        get() = advancedLocationProvider?.invoke()
 
     companion object {
         private const val TAG = "RecipeConditionalHost"
@@ -103,9 +153,26 @@ class RecipeConditionalHostActivity : AppCompatActivity() {
 }
 
 @Composable
-private fun ConditionalContent(onExit: () -> Unit) {
+private fun ConditionalContent(host: RecipeConditionalHostActivity, onExit: () -> Unit) {
     val backStack = rememberNavBackStack(GateHome)
     val navigator = remember { ConditionalNavigator(backStack) }
+    host.navigateProfileAction = { navigator.navigate(GateProfile) }
+    host.loginAction = { navigator.onLoginSuccess() }
+    host.logoutAction = { navigator.onLogout() }
+    host.navigateAdvancedTargetAction = null
+    host.popBackAction = {
+        if (backStack.size > 1) {
+            navigator.goBack(onAtRoot = onExit)
+            true
+        } else {
+            false
+        }
+    }
+    host.currentRouteProvider = { backStack.lastOrNull() }
+    host.backStackDepthProvider = { backStack.size }
+    host.loggedInProvider = { navigator.isLoggedIn }
+    host.advancedNameProvider = null
+    host.advancedLocationProvider = null
 
     Scaffold { paddingValues ->
         Box(Modifier.padding(paddingValues).fillMaxSize()) {
@@ -118,7 +185,7 @@ private fun ConditionalContent(onExit: () -> Unit) {
                 entryProvider = entryProvider {
                     entry<GateHome> {
                         GateHomeScreen(
-                            onProfile = { navigator.navigate(GateProfile) },
+                            onProfile = { host.navigateProfileAction?.invoke() },
                         )
                     }
                     entry<GateProfile> {
@@ -128,7 +195,7 @@ private fun ConditionalContent(onExit: () -> Unit) {
                     }
                     entry<GateLogin> {
                         GateLoginScreen(
-                            onLogin = { navigator.onLoginSuccess() },
+                            onLogin = { host.loginAction?.invoke() },
                         )
                     }
                 },
@@ -143,9 +210,42 @@ private fun ConditionalContent(onExit: () -> Unit) {
 }
 
 @Composable
-private fun AdvancedDeepLinkContent(onExit: () -> Unit) {
+private fun AdvancedDeepLinkContent(host: RecipeConditionalHostActivity, onExit: () -> Unit) {
     val backStack = rememberNavBackStack(AdvancedDeepHome)
     val context = LocalContext.current
+    var latestName by rememberSaveable { mutableStateOf<String?>(null) }
+    var latestLocation by rememberSaveable { mutableStateOf<String?>(null) }
+
+    host.navigateProfileAction = null
+    host.loginAction = null
+    host.logoutAction = null
+    host.navigateAdvancedTargetAction = {
+        val name = "Manual"
+        val location = "Local"
+        backStack.add(AdvancedDeepTarget(name = name, location = location))
+        latestName = name
+        latestLocation = location
+        NavLogger.push("RecipeConditionalHost", "AdvancedDeepTarget", backStack.size)
+    }
+    host.popBackAction = {
+        if (backStack.size > 1) {
+            val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+            backStack.removeLastOrNull()
+            NavLogger.back("RecipeConditionalHost", from, backStack.size)
+            true
+        } else {
+            false
+        }
+    }
+    host.currentRouteProvider = { backStack.lastOrNull() }
+    host.backStackDepthProvider = { backStack.size }
+    host.loggedInProvider = null
+    host.advancedNameProvider = {
+        (backStack.lastOrNull() as? AdvancedDeepTarget)?.name ?: latestName
+    }
+    host.advancedLocationProvider = {
+        (backStack.lastOrNull() as? AdvancedDeepTarget)?.location ?: latestLocation
+    }
 
     // Handle advanced deep link intent once
     var isDeepLinkConsumed by rememberSaveable { mutableStateOf(false) }
@@ -164,6 +264,8 @@ private fun AdvancedDeepLinkContent(onExit: () -> Unit) {
             NavLogger.deepLink("RecipeConditionalHost", RecipeConditionalHostActivity.ACTION_ADVANCED_DEEP, mapOf("name" to name, "location" to location))
             // Synthetic backstack: home is already the start, add target on top
             backStack.add(AdvancedDeepTarget(name = name, location = location))
+            latestName = name
+            latestLocation = location
             NavLogger.push("RecipeConditionalHost", "AdvancedDeepTarget", backStack.size)
             isDeepLinkConsumed = true
         }
@@ -198,8 +300,7 @@ private fun AdvancedDeepLinkContent(onExit: () -> Unit) {
                     entry<AdvancedDeepHome> {
                         AdvancedDeepHomeScreen(
                             onNavigate = {
-                                backStack.add(AdvancedDeepTarget(name = "Manual", location = "Local"))
-                                NavLogger.push("RecipeConditionalHost", "AdvancedDeepTarget", backStack.size)
+                                host.navigateAdvancedTargetAction?.invoke()
                             },
                         )
                     }

@@ -51,6 +51,7 @@ class Nav3FragmentIslandActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_nav3_host)
+        restoreBackStack(savedInstanceState)
 
         val caseCode = intent.getStringExtra(EXTRA_CASE_ID) ?: run {
             Log.e(TAG, "No case ID provided")
@@ -120,6 +121,41 @@ class Nav3FragmentIslandActivity : AppCompatActivity() {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putStringArrayList(
+            STATE_BACK_STACK_KEYS,
+            ArrayList(backStack.mapNotNull(::keyToToken)),
+        )
+    }
+
+    private fun restoreBackStack(savedState: Bundle?) {
+        val tokens = savedState?.getStringArrayList(STATE_BACK_STACK_KEYS) ?: return
+        if (tokens.isEmpty()) return
+        val restored = tokens.mapNotNull(::tokenToKey)
+        if (restored.isEmpty()) return
+        backStack.clear()
+        backStack.addAll(restored)
+    }
+
+    private fun keyToToken(key: Any): String? = when (key) {
+        is Nav3Key.Home -> TOKEN_HOME
+        is Nav3Key.ScreenA -> TOKEN_SCREEN_A
+        is Nav3Key.DialogModal -> TOKEN_DIALOG
+        is Nav3Key.PopupOverlay -> TOKEN_POPUP
+        is LegacyIslandKey -> TOKEN_ISLAND
+        else -> null
+    }
+
+    private fun tokenToKey(token: String): Any? = when (token) {
+        TOKEN_HOME -> Nav3Key.Home
+        TOKEN_SCREEN_A -> Nav3Key.ScreenA
+        TOKEN_DIALOG -> Nav3Key.DialogModal
+        TOKEN_POPUP -> Nav3Key.PopupOverlay
+        TOKEN_ISLAND -> LegacyIslandKey
+        else -> null
+    }
+
     /** Navigate to a Nav3 key on the root back stack. */
     fun navigateTo(key: Any) {
         backStack.add(key)
@@ -136,13 +172,14 @@ class Nav3FragmentIslandActivity : AppCompatActivity() {
     }
 
     /** Add a fragment to the legacy island container. */
-    fun showIslandFragment(fragment: Fragment) {
-        if (!isLegacyIslandVisible) return
-        if (findViewById<FragmentContainerView?>(R.id.legacyFragmentContainer) == null) return
+    fun showIslandFragment(fragment: Fragment): Boolean {
+        if (!isLegacyIslandVisible) return false
+        if (findViewById<FragmentContainerView?>(R.id.legacyFragmentContainer) == null) return false
         supportFragmentManager.beginTransaction()
             .replace(R.id.legacyFragmentContainer, fragment)
             .addToBackStack("island")
-            .commit()
+            .commitAllowingStateLoss()
+        return true
     }
 
     /** Open the legacy fragment island key in Nav3 stack. */
@@ -184,9 +221,14 @@ class Nav3FragmentIslandActivity : AppCompatActivity() {
     /** Pop the fragment island back stack. */
     fun popIslandFragmentBack(): Boolean {
         if (supportFragmentManager.backStackEntryCount > 0) {
-            supportFragmentManager.popBackStack()
-            NavLogger.pop(TAG, "IslandFragment", supportFragmentManager.backStackEntryCount - 1)
-            return true
+            val popped = runCatching {
+                supportFragmentManager.popBackStack()
+                true
+            }.getOrDefault(false)
+            if (popped) {
+                NavLogger.pop(TAG, "IslandFragment", supportFragmentManager.backStackEntryCount - 1)
+                return true
+            }
         }
         return false
     }
@@ -203,6 +245,10 @@ class Nav3FragmentIslandActivity : AppCompatActivity() {
     val isLegacyIslandVisible: Boolean
         get() = backStack.lastOrNull() is LegacyIslandKey
 
+    /** Whether legacy island FragmentContainerView is currently attached. */
+    val isLegacyIslandContainerReady: Boolean
+        get() = findViewById<FragmentContainerView?>(R.id.legacyFragmentContainer) != null
+
     /** Whether parent dialog-style modal is top-most. */
     val isParentDialogVisible: Boolean
         get() = backStack.lastOrNull() is Nav3Key.DialogModal
@@ -217,11 +263,23 @@ class Nav3FragmentIslandActivity : AppCompatActivity() {
             ?.dialog
             ?.isShowing == true
 
+    /** Label argument of current fragment in island container, if present. */
+    val currentIslandFragmentLabel: String?
+        get() = (supportFragmentManager.findFragmentById(R.id.legacyFragmentContainer) as? IslandStubFragment)
+            ?.debugLabel
+
     companion object {
         private const val TAG = "T5Host"
         const val EXTRA_CASE_ID = "case_id"
         const val EXTRA_RUN_MODE = "run_mode"
         private const val ISLAND_MODAL_TAG = "island_modal"
+        private const val STATE_BACK_STACK_KEYS = "state_back_stack_keys"
+
+        private const val TOKEN_HOME = "home"
+        private const val TOKEN_SCREEN_A = "screen_a"
+        private const val TOKEN_DIALOG = "dialog"
+        private const val TOKEN_POPUP = "popup"
+        private const val TOKEN_ISLAND = "legacy_island"
 
         val COLORS = listOf(
             Color(0xFF6200EE), // Purple
