@@ -54,12 +54,37 @@ class FragmentNav2HostActivity : AppCompatActivity() {
         composeFragment?.navHostController?.navigate(route)
     }
 
+    /** Open D-family sheet-style route in the fragment Nav2 graph. */
+    fun openBottomSheet() = navigateNav2(ComposeNav2Fragment.ROUTE_BOTTOM_SHEET)
+
+    /** Open D-family dialog route in the fragment Nav2 graph. */
+    fun openDialog() = navigateNav2(ComposeNav2Fragment.ROUTE_RESULT_DIALOG)
+
+    /** Open D-family fullscreen dialog route in the fragment Nav2 graph. */
+    fun openFullScreenDialog() = navigateNav2(ComposeNav2Fragment.ROUTE_FULL_SCREEN_DIALOG)
+
     /** Pop the fragment's Nav2 back stack. */
     fun popNav2Back(): Boolean = composeFragment?.navHostController?.popBackStack() ?: false
 
     /** Nav2 back stack depth inside the fragment. */
     val nav2BackStackDepth: Int
         get() = composeFragment?.navHostController?.currentBackStack?.value?.size ?: 0
+
+    /** Current route at top of the fragment's Nav2 graph. */
+    val currentNav2Route: String?
+        get() = composeFragment?.navHostController?.currentBackStackEntry?.destination?.route
+
+    /** Whether the sheet-style route is currently top-most. */
+    val isBottomSheetVisible: Boolean
+        get() = currentNav2Route == ComposeNav2Fragment.ROUTE_BOTTOM_SHEET
+
+    /** Whether the dialog route is currently top-most. */
+    val isDialogVisible: Boolean
+        get() = currentNav2Route == ComposeNav2Fragment.ROUTE_RESULT_DIALOG
+
+    /** Whether the fullscreen dialog route is currently top-most. */
+    val isFullScreenDialogVisible: Boolean
+        get() = currentNav2Route == ComposeNav2Fragment.ROUTE_FULL_SCREEN_DIALOG
 
     // --- Activity-level overlay (B06) ---
 

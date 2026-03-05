@@ -4,12 +4,15 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.graphics.Color
 import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.host.fragment.R
 import com.example.navigationlab.host.fragment.fragments.ComposeNav3Fragment
+import com.example.navigationlab.host.fragment.fragments.LabStubFragment
 import com.example.navigationlab.host.fragment.fragments.Nav3ModalKey
 
 /**
@@ -72,6 +75,38 @@ class FragmentNav3HostActivity : AppCompatActivity() {
     /** Last result returned by the Nav3 modal entry. */
     val lastModalResult: String?
         get() = composeFragment?.lastModalResult
+
+    /** Whether Nav3 modal key is currently top-most in fragment Nav3 stack. */
+    val isModalVisible: Boolean
+        get() = composeFragment?.backStack?.lastOrNull() is Nav3ModalKey.ResultModal
+
+    // --- Activity-level overlay for D05 ---
+
+    /** Add a fragment to the activity-level overlay container. */
+    fun showOverlayFragment(fragment: LabStubFragment) {
+        val overlay = findViewById<FrameLayout>(R.id.activityOverlayContainer)
+        overlay.visibility = View.VISIBLE
+        supportFragmentManager.beginTransaction()
+            .add(R.id.activityOverlayContainer, fragment)
+            .addToBackStack("activity_overlay")
+            .commit()
+    }
+
+    /** Whether the activity-level overlay is visible. */
+    val isOverlayVisible: Boolean
+        get() = findViewById<FrameLayout>(R.id.activityOverlayContainer).visibility == View.VISIBLE
+
+    /** Activity-level overlay back stack depth. */
+    val overlayBackStackDepth: Int
+        get() = supportFragmentManager.backStackEntryCount
+
+    /** Dismiss the activity-level overlay. */
+    fun dismissOverlay() {
+        if (supportFragmentManager.backStackEntryCount > 0) {
+            supportFragmentManager.popBackStack()
+        }
+        findViewById<FrameLayout>(R.id.activityOverlayContainer).visibility = View.GONE
+    }
 
     companion object {
         private const val TAG = "B08Host"

@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -34,8 +35,7 @@ import androidx.navigation.compose.rememberNavController
  * T6 topology: Fragment host -> ComposeView -> internal Nav2.
  * This Fragment contains a ComposeView with a Nav2 NavHost inside.
  *
- * Used for B06 (Nav2 triggers activity-level fragment transaction) and
- * B07 (Nav2 dialog returns result).
+ * Used for B06/B07 and D-family dialog/sheet semantics.
  */
 class ComposeNav2Fragment : Fragment() {
 
@@ -83,6 +83,22 @@ class ComposeNav2Fragment : Fragment() {
                                 },
                             )
                         }
+                        dialog(ROUTE_BOTTOM_SHEET) {
+                            BottomSheetStubContent(
+                                onDismiss = { controller.popBackStack() },
+                            )
+                        }
+                        dialog(
+                            route = ROUTE_FULL_SCREEN_DIALOG,
+                            dialogProperties = DialogProperties(
+                                usePlatformDefaultWidth = false,
+                                decorFitsSystemWindows = false,
+                            ),
+                        ) {
+                            FullScreenDialogStubContent(
+                                onDismiss = { controller.popBackStack() },
+                            )
+                        }
                     }
                 }
             }
@@ -94,6 +110,8 @@ class ComposeNav2Fragment : Fragment() {
         const val ROUTE_SCREEN_A = "screen_a"
         const val ROUTE_SCREEN_B = "screen_b"
         const val ROUTE_RESULT_DIALOG = "result_dialog"
+        const val ROUTE_BOTTOM_SHEET = "bottom_sheet"
+        const val ROUTE_FULL_SCREEN_DIALOG = "full_screen_dialog"
         const val DIALOG_RESULT_KEY = "dialog_result"
 
         val COLORS = listOf(
@@ -143,6 +161,70 @@ private fun DialogStubContent(onConfirm: () -> Unit) {
             Spacer(modifier = Modifier.height(16.dp))
             Button(onClick = onConfirm) {
                 Text("Confirm & Return Result")
+            }
+        }
+    }
+}
+
+/** Sheet-styled dialog content for D-family bottom-sheet semantics. */
+@Composable
+private fun BottomSheetStubContent(onDismiss: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.35f)),
+        contentAlignment = Alignment.BottomCenter,
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                .padding(24.dp),
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Nav2 Sheet",
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(onClick = onDismiss) {
+                    Text("Dismiss Sheet")
+                }
+            }
+        }
+    }
+}
+
+/** Full-screen dialog content for D-family transparent dialog semantics. */
+@Composable
+private fun FullScreenDialogStubContent(onDismiss: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.2f))
+            .padding(24.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White.copy(alpha = 0.94f), shape = RoundedCornerShape(20.dp))
+                .padding(24.dp),
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Nav2 Fullscreen Dialog",
+                    style = MaterialTheme.typography.headlineMedium,
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Transparent backdrop preserved",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(onClick = onDismiss) {
+                    Text("Close Dialog")
+                }
             }
         }
     }
