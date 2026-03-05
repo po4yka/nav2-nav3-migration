@@ -28,6 +28,7 @@ dependencyResolutionManagement {
 rootProject.name = "NavigationInteropLab"
 
 include(":app")
+include(":lab-catalog")
 include(":lab-contracts")
 include(":lab-engine")
 include(":lab-host-fragment")

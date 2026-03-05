@@ -27,6 +27,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":lab-catalog"))
     implementation(project(":lab-contracts"))
     implementation(project(":lab-engine"))
     implementation(project(":lab-host-fragment"))

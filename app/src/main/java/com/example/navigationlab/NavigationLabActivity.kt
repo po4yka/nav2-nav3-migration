@@ -49,6 +49,18 @@ class NavigationLabActivity : ComponentActivity() {
                             scenarios = engine.scenarios,
                             onCaseSelected = { caseId, runMode ->
                                 Log.i(TAG, "Case selected: ${caseId.code}, mode: $runMode")
+                                val launched = caseHostLauncher.launch(this@NavigationLabActivity, caseId, runMode)
+                                if (!launched) {
+                                    val error = "No host launcher registered for case ${caseId.code}"
+                                    Log.e(TAG, error)
+                                    _latestResult.value = LabResult(
+                                        caseId = caseId,
+                                        status = ResultStatus.ERROR,
+                                        errorMessage = error,
+                                    )
+                                    return@CaseBrowserScreen
+                                }
+
                                 executionJob?.cancel()
                                 executionJob = lifecycleScope.launch {
                                     val result = engine.execute(caseId, runMode, LabRuntimeStepExecutor())
@@ -71,11 +83,6 @@ class NavigationLabActivity : ComponentActivity() {
                                             )
                                         }
                                     }
-                                }
-
-                                val launched = caseHostLauncher.launch(this@NavigationLabActivity, caseId, runMode)
-                                if (!launched) {
-                                    Log.e(TAG, "No host launcher registered for case ${caseId.code}")
                                 }
                             },
                             modifier = Modifier.weight(1f),
