@@ -2,6 +2,15 @@
 
 Questions and answers captured during requirements clarification.
 
+## Current Implementation Status
+
+This requirements log is historical. Current repository status:
+- Lab implemented inside this repository (no separate repo)
+- Milestones `M1-M5` complete
+- Scenario coverage: `A-H` (76) + `R01-R25` (25)
+- Toolchain currently in use: Gradle wrapper `9.4.0`, AGP `9.1.0`, Kotlin `2.3.10`
+- CI instrumentation smoke workflow is active at `.github/workflows/android-instrumentation-smoke.yml`
+
 ---
 
 ## Q1
@@ -32,7 +41,7 @@ Questions and answers captured during requirements clarification.
 
 **Q:** For the Nav3 dependency -- Navigation 3 is currently in alpha (`androidx.navigation3:*`). Are you okay using the latest alpha version, and do you have a specific version in mind? Also, should the lab use the Compose Material 3 integration for Nav3, or just the core Nav3 APIs?
 
-**A:** Yes, use the latest alpha version. No specific version pinned -- use whatever is latest stable alpha. (Material 3 integration not explicitly addressed -- default to including it for completeness.)
+**A:** Yes. Nav3 1.0.1 (stable) is now used. Material 3 integration included for completeness.
 
 ---
 

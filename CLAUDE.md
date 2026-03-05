@@ -38,9 +38,9 @@ Standalone Android test app for validating Nav2/Nav3 migration and interoperabil
 ## Scope Summary
 
 - Topologies: `T1-T8`
-- Interop case families: `A-H` (61 scenarios)
+- Interop case families: `A-H` (76 scenarios)
 - Recipe suite: `R01-R25` (25 scenarios)
-- Total scenarios: `86`
+- Total scenarios: `101`
 
 ## Adding a Recipe
 

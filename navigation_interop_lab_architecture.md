@@ -18,9 +18,9 @@ This document is an implementation blueprint for that test project and a complet
 Last verified against repository state: **2026-03-05**.
 
 - Milestones `M1-M5`: implemented
-- Interop families `A-H`: implemented (`61` scenarios)
+- Interop families `A-H`: implemented (`76` scenarios)
 - Recipe suite `R01-R25`: implemented (`25` scenarios)
-- Total scenarios: `86`
+- Total scenarios: `101`
 
 Current baseline verification commands:
 
