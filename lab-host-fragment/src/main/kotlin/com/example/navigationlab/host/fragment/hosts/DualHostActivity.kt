@@ -40,6 +40,12 @@ class DualHostActivity : AppCompatActivity() {
     var baseColorIndex by mutableIntStateOf(0)
         private set
 
+    /** Number of root-exit callbacks emitted while using single-shot back gate (E06). */
+    var rootExitEventCount: Int = 0
+        private set
+
+    private var rootExitGateConsumed: Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dual_host)
@@ -132,7 +138,7 @@ class DualHostActivity : AppCompatActivity() {
     /** Remove overlay: pop fragment back stack and hide overlay container. */
     fun dismissOverlay() {
         if (supportFragmentManager.backStackEntryCount > 0) {
-            supportFragmentManager.popBackStack()
+            runCatching { supportFragmentManager.popBackStack() }
         }
         hideOverlayContainer()
     }
@@ -191,6 +197,19 @@ class DualHostActivity : AppCompatActivity() {
     /** Whether overlay was visible before the last config change (saved in onSaveInstanceState). */
     var overlayVisibleBeforeConfigChange: Boolean = false
         private set
+
+    /** Dispatch root-level back with single-shot gate semantics for E06 assertions. */
+    fun dispatchRootBackSingleShot(): Boolean {
+        if (rootExitGateConsumed) return false
+        rootExitGateConsumed = true
+        rootExitEventCount += 1
+        return true
+    }
+
+    /** Reset the root back gate to allow one more root-exit emission. */
+    fun resetRootExitGate() {
+        rootExitGateConsumed = false
+    }
 
     companion object {
         private const val TAG = "T4Host"

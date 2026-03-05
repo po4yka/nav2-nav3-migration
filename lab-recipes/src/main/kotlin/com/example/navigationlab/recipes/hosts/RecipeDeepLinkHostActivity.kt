@@ -41,6 +41,12 @@ import com.example.navigationlab.recipes.keys.DeepLinkTarget
  */
 class RecipeDeepLinkHostActivity : AppCompatActivity() {
 
+    internal var navigateToTargetAction: (() -> Unit)? = null
+    internal var popBackAction: (() -> Boolean)? = null
+    internal var currentRouteProvider: (() -> Any?)? = null
+    internal var backStackDepthProvider: (() -> Int)? = null
+    internal var currentParamProvider: (() -> String?)? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_recipe_host)
@@ -62,10 +68,28 @@ class RecipeDeepLinkHostActivity : AppCompatActivity() {
         val composeView = findViewById<ComposeView>(R.id.composeView)
         composeView.setContent {
             MaterialTheme {
-                DeepLinkContent(onExit = { finish() })
+                DeepLinkContent(
+                    host = this@RecipeDeepLinkHostActivity,
+                    onExit = { finish() },
+                )
             }
         }
     }
+
+    fun navigateToTarget() {
+        navigateToTargetAction?.invoke()
+    }
+
+    fun popBack(): Boolean = popBackAction?.invoke() ?: false
+
+    val currentRouteName: String?
+        get() = currentRouteProvider?.invoke()?.let { it::class.simpleName }
+
+    val backStackDepth: Int
+        get() = backStackDepthProvider?.invoke() ?: 0
+
+    val currentTargetParam: String?
+        get() = currentParamProvider?.invoke()
 
     companion object {
         private const val TAG = "RecipeDeepLinkHost"
@@ -90,9 +114,31 @@ class RecipeDeepLinkHostActivity : AppCompatActivity() {
 }
 
 @Composable
-private fun DeepLinkContent(onExit: () -> Unit) {
+private fun DeepLinkContent(host: RecipeDeepLinkHostActivity, onExit: () -> Unit) {
     val backStack = rememberNavBackStack(DeepLinkHome)
     val context = LocalContext.current
+    var latestParam by rememberSaveable { mutableStateOf<String?>(null) }
+
+    host.navigateToTargetAction = {
+        backStack.add(DeepLinkTarget(param = "manual"))
+        latestParam = "manual"
+        NavLogger.push("RecipeDeepLinkHost", "DeepLinkTarget", backStack.size)
+    }
+    host.popBackAction = {
+        if (backStack.size > 1) {
+            val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+            backStack.removeLastOrNull()
+            NavLogger.back("RecipeDeepLinkHost", from, backStack.size)
+            true
+        } else {
+            false
+        }
+    }
+    host.currentRouteProvider = { backStack.lastOrNull() }
+    host.backStackDepthProvider = { backStack.size }
+    host.currentParamProvider = {
+        (backStack.lastOrNull() as? DeepLinkTarget)?.param ?: latestParam
+    }
 
     // Handle deep link intent once
     var isDeepLinkConsumed by rememberSaveable { mutableStateOf(false) }
@@ -109,6 +155,7 @@ private fun DeepLinkContent(onExit: () -> Unit) {
             val param = intent.getStringExtra(RecipeDeepLinkHostActivity.KEY_PARAM) ?: return@LaunchedEffect
             NavLogger.deepLink("RecipeDeepLinkHost", RecipeDeepLinkHostActivity.ACTION_SHOW_TARGET, mapOf("param" to param))
             backStack.add(DeepLinkTarget(param = param))
+            latestParam = param
             NavLogger.push("RecipeDeepLinkHost", "DeepLinkTarget", backStack.size)
             isDeepLinkConsumed = true
         }
@@ -143,8 +190,7 @@ private fun DeepLinkContent(onExit: () -> Unit) {
                     entry<DeepLinkHome> {
                         DeepLinkHomeScreen(
                             onNavigate = {
-                                backStack.add(DeepLinkTarget(param = "manual"))
-                                NavLogger.push("RecipeDeepLinkHost", "DeepLinkTarget", backStack.size)
+                                host.navigateToTargetAction?.invoke()
                             },
                         )
                     }

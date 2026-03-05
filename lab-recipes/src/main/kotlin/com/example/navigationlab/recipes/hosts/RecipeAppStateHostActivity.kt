@@ -72,6 +72,17 @@ import com.example.navigationlab.recipes.keys.TabGammaDetail
  */
 class RecipeAppStateHostActivity : AppCompatActivity() {
 
+    internal var selectTopLevelAction: ((TopLevelDestination) -> Unit)? = null
+    internal var navigateAction: ((NavKey) -> Unit)? = null
+    internal var backAction: (() -> Unit)? = null
+    internal var submitAlphaEditResultAction: ((String) -> Unit)? = null
+    internal var currentTopLevelProvider: (() -> TopLevelDestination)? = null
+    internal var currentRouteProvider: (() -> NavKey?)? = null
+    internal var currentStackDepthProvider: (() -> Int)? = null
+    internal var shouldShowNavigationProvider: (() -> Boolean)? = null
+    internal var pendingEditResultProvider: (() -> String?)? = null
+    internal var gammaViewModelResultProvider: (() -> String?)? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_recipe_host)
@@ -93,10 +104,55 @@ class RecipeAppStateHostActivity : AppCompatActivity() {
         val composeView = findViewById<ComposeView>(R.id.composeView)
         composeView.setContent {
             MaterialTheme {
-                AppStateContent(onExit = { finish() })
+                AppStateContent(
+                    host = this@RecipeAppStateHostActivity,
+                    onExit = { finish() },
+                )
             }
         }
     }
+
+    fun selectTopLevelAlpha() {
+        selectTopLevelAction?.invoke(TopLevelDestination.ALPHA)
+    }
+
+    fun selectTopLevelBeta() {
+        selectTopLevelAction?.invoke(TopLevelDestination.BETA)
+    }
+
+    fun selectTopLevelGamma() {
+        selectTopLevelAction?.invoke(TopLevelDestination.GAMMA)
+    }
+
+    fun navigate(route: NavKey) {
+        navigateAction?.invoke(route)
+    }
+
+    fun back() {
+        backAction?.invoke()
+    }
+
+    fun submitAlphaEditResult(value: String) {
+        submitAlphaEditResultAction?.invoke(value)
+    }
+
+    val currentTopLevelLabel: String?
+        get() = currentTopLevelProvider?.invoke()?.label
+
+    val currentRoute: NavKey?
+        get() = currentRouteProvider?.invoke()
+
+    val currentStackDepth: Int
+        get() = currentStackDepthProvider?.invoke() ?: 0
+
+    val isBottomNavigationVisible: Boolean
+        get() = shouldShowNavigationProvider?.invoke() ?: true
+
+    val pendingEditResult: String?
+        get() = pendingEditResultProvider?.invoke()
+
+    val gammaViewModelResult: String?
+        get() = gammaViewModelResultProvider?.invoke()
 
     companion object {
         private const val TAG = "RecipeAppStateHost"
@@ -120,9 +176,28 @@ private val TAB_ICONS = mapOf(
 )
 
 @Composable
-private fun AppStateContent(onExit: () -> Unit) {
+private fun AppStateContent(host: RecipeAppStateHostActivity, onExit: () -> Unit) {
     val appState = rememberAppState()
     val resultStore = rememberResultStore()
+    var latestGammaViewModelResult by remember { mutableStateOf<String?>(null) }
+
+    host.selectTopLevelAction = { destination -> appState.onSelectTopLevelDestination(destination) }
+    host.navigateAction = { route -> appState.navigate(route) }
+    host.backAction = { appState.onBack(onExit) }
+    host.submitAlphaEditResultAction = { result ->
+        resultStore.setResult(EDIT_RESULT_KEY, result)
+        appState.onBack(onExit)
+    }
+    host.currentTopLevelProvider = { appState.currentTopLevelDestination }
+    host.currentRouteProvider = {
+        appState.navigationState.backStacks[appState.navigationState.topLevelRoute]?.lastOrNull()
+    }
+    host.currentStackDepthProvider = {
+        appState.navigationState.backStacks[appState.navigationState.topLevelRoute]?.size ?: 0
+    }
+    host.shouldShowNavigationProvider = { appState.shouldShowNavigation }
+    host.pendingEditResultProvider = { resultStore.getResultState<String?>(EDIT_RESULT_KEY) }
+    host.gammaViewModelResultProvider = { latestGammaViewModelResult }
 
     val entryProvider = entryProvider {
         // Tab Alpha
@@ -176,6 +251,7 @@ private fun AppStateContent(onExit: () -> Unit) {
         }
         entry<TabGammaDetail> { key ->
             val vm = viewModel<RecipeViewModel> { RecipeViewModel(key) }
+            latestGammaViewModelResult = vm.result
             TabGammaDetailScreen(result = vm.result)
         }
     }

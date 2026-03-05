@@ -75,7 +75,7 @@ class FragmentHostActivity : AppCompatActivity() {
         if (addToBackStack) {
             tx.addToBackStack(null)
         }
-        tx.commit()
+        tx.commitAllowingStateLoss()
         NavLogger.push(TAG, fragment::class.simpleName ?: "Fragment", supportFragmentManager.backStackEntryCount + if (addToBackStack) 1 else 0)
     }
 

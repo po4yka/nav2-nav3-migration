@@ -43,6 +43,12 @@ import com.example.navigationlab.recipes.keys.SaveableRouteB
  */
 class RecipeBasicHostActivity : AppCompatActivity() {
 
+    private var pushDetailAction: (() -> Unit)? = null
+    private var popBackAction: (() -> Boolean)? = null
+    private var currentRouteProvider: (() -> Any?)? = null
+    private var backStackDepthProvider: (() -> Int)? = null
+    private var activeCaseCode: String? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_recipe_host)
@@ -52,6 +58,7 @@ class RecipeBasicHostActivity : AppCompatActivity() {
             finish()
             return
         }
+        activeCaseCode = caseCode
         val runMode = parseRunModeOrDefault(intent.getStringExtra(EXTRA_RUN_MODE))
 
         findViewById<TextView>(R.id.tvTopologyLabel).text = getString(
@@ -69,6 +76,22 @@ class RecipeBasicHostActivity : AppCompatActivity() {
                         // R01: Basic Nav3 with mutableStateListOf
                         // No typed transitions: backStack is List<Any>, transition specs require typed Scene<T>
                         val backStack = remember { mutableStateListOf<Any>(BasicRouteA) }
+                        pushDetailAction = {
+                            backStack.add(BasicRouteB("123"))
+                            NavLogger.push(TAG, "BasicRouteB", backStack.size)
+                        }
+                        popBackAction = {
+                            if (backStack.size > 1) {
+                                val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                                backStack.removeLastOrNull()
+                                NavLogger.back(TAG, from, backStack.size)
+                                true
+                            } else {
+                                false
+                            }
+                        }
+                        currentRouteProvider = { backStack.lastOrNull() }
+                        backStackDepthProvider = { backStack.size }
                         Box(Modifier.fillMaxSize()) {
                         NavDisplay(
                             backStack = backStack,
@@ -86,8 +109,7 @@ class RecipeBasicHostActivity : AppCompatActivity() {
                                     is BasicRouteA -> NavEntry(key) {
                                         ContentGreen("Welcome to Nav3") {
                                             Button(onClick = dropUnlessResumed {
-                                                backStack.add(BasicRouteB("123"))
-                                                NavLogger.push(TAG, "BasicRouteB", backStack.size)
+                                                pushDetailAction?.invoke()
                                             }) { Text("Click to navigate") }
                                         }
                                     }
@@ -108,6 +130,22 @@ class RecipeBasicHostActivity : AppCompatActivity() {
                     "R02" -> {
                         // R02: BasicSaveable with rememberNavBackStack
                         val backStack = rememberNavBackStack(SaveableRouteA)
+                        pushDetailAction = {
+                            backStack.add(SaveableRouteB("123"))
+                            NavLogger.push(TAG, "SaveableRouteB", backStack.size)
+                        }
+                        popBackAction = {
+                            if (backStack.size > 1) {
+                                val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                                backStack.removeLastOrNull()
+                                NavLogger.back(TAG, from, backStack.size)
+                                true
+                            } else {
+                                false
+                            }
+                        }
+                        currentRouteProvider = { backStack.lastOrNull() }
+                        backStackDepthProvider = { backStack.size }
                         Box(Modifier.fillMaxSize()) {
                         NavDisplay(
                             backStack = backStack,
@@ -128,8 +166,7 @@ class RecipeBasicHostActivity : AppCompatActivity() {
                                     is SaveableRouteA -> NavEntry(key) {
                                         ContentGreen("Welcome to Nav3") {
                                             Button(onClick = dropUnlessResumed {
-                                                backStack.add(SaveableRouteB("123"))
-                                                NavLogger.push(TAG, "SaveableRouteB", backStack.size)
+                                                pushDetailAction?.invoke()
                                             }) { Text("Click to navigate") }
                                         }
                                     }
@@ -150,6 +187,22 @@ class RecipeBasicHostActivity : AppCompatActivity() {
                     "R03" -> {
                         // R03: BasicDsl with entryProvider DSL
                         val backStack = rememberNavBackStack(DslRouteA)
+                        pushDetailAction = {
+                            backStack.add(DslRouteB("123"))
+                            NavLogger.push(TAG, "DslRouteB", backStack.size)
+                        }
+                        popBackAction = {
+                            if (backStack.size > 1) {
+                                val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                                backStack.removeLastOrNull()
+                                NavLogger.back(TAG, from, backStack.size)
+                                true
+                            } else {
+                                false
+                            }
+                        }
+                        currentRouteProvider = { backStack.lastOrNull() }
+                        backStackDepthProvider = { backStack.size }
                         Box(Modifier.fillMaxSize()) {
                         NavDisplay(
                             backStack = backStack,
@@ -169,8 +222,7 @@ class RecipeBasicHostActivity : AppCompatActivity() {
                                 entry<DslRouteA> {
                                     ContentGreen("Welcome to Nav3") {
                                         Button(onClick = dropUnlessResumed {
-                                            backStack.add(DslRouteB("123"))
-                                            NavLogger.push(TAG, "DslRouteB", backStack.size)
+                                            pushDetailAction?.invoke()
                                         }) { Text("Click to navigate") }
                                     }
                                 }
@@ -190,6 +242,29 @@ class RecipeBasicHostActivity : AppCompatActivity() {
             }
         }
     }
+
+    fun navigateToDetail() {
+        pushDetailAction?.invoke()
+    }
+
+    fun popBack(): Boolean = popBackAction?.invoke() ?: false
+
+    val backStackDepth: Int
+        get() = backStackDepthProvider?.invoke() ?: 0
+
+    val currentRouteName: String?
+        get() = currentRouteProvider?.invoke()?.let { it::class.simpleName }
+
+    val currentRouteId: String?
+        get() = when (val route = currentRouteProvider?.invoke()) {
+            is BasicRouteB -> route.id
+            is SaveableRouteB -> route.id
+            is DslRouteB -> route.id
+            else -> null
+        }
+
+    val caseCode: String?
+        get() = activeCaseCode
 
     companion object {
         private const val TAG = "RecipeBasicHost"
