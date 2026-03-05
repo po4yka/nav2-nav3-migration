@@ -39,6 +39,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import com.example.navigationlab.contracts.LabCaseId
+import com.example.navigationlab.contracts.parseRunModeOrDefault
 import com.example.navigationlab.recipes.R
 import com.example.navigationlab.recipes.content.TabAlphaDetailScreen
 import com.example.navigationlab.recipes.content.TabAlphaEditScreen
@@ -80,13 +81,14 @@ class RecipeAppStateHostActivity : AppCompatActivity() {
             finish()
             return
         }
+        val runMode = parseRunModeOrDefault(intent.getStringExtra(EXTRA_RUN_MODE))
 
-        findViewById<TextView>(R.id.tvTopologyLabel).text = "T3: Recipe AppState - $caseCode"
+        findViewById<TextView>(R.id.tvTopologyLabel).text = "T3: Recipe AppState - $caseCode [$runMode]"
 
         val composeView = findViewById<ComposeView>(R.id.composeView)
         composeView.setContent {
             MaterialTheme {
-                AppStateContent()
+                AppStateContent(onExit = { finish() })
             }
         }
     }
@@ -113,7 +115,7 @@ private val TAB_ICONS = mapOf(
 )
 
 @Composable
-private fun AppStateContent() {
+private fun AppStateContent(onExit: () -> Unit) {
     val appState = rememberAppState()
     val resultStore = rememberResultStore()
 
@@ -222,7 +224,7 @@ private fun AppStateContent() {
         Box(Modifier.padding(paddingValues).fillMaxSize()) {
             NavDisplay(
                 entries = entries,
-                onBack = { appState.onBack { /* activity finish handled by system back */ } },
+                onBack = { appState.onBack(onExit) },
                 transitionSpec = DefaultTransitions.crossFade(),
                 popTransitionSpec = DefaultTransitions.crossFadeBack(),
                 predictivePopTransitionSpec = DefaultTransitions.predictiveCrossFadeBack(),

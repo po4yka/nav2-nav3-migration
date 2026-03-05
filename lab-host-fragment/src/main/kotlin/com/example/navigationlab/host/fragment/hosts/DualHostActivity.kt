@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.contracts.NavLogger
+import com.example.navigationlab.contracts.parseRunModeOrDefault
 import com.example.navigationlab.host.fragment.R
 import com.example.navigationlab.host.fragment.compose.DualStubScreen
 import com.example.navigationlab.host.fragment.fragments.LabStubFragment
@@ -46,10 +47,11 @@ class DualHostActivity : AppCompatActivity() {
             finish()
             return
         }
+        val runMode = parseRunModeOrDefault(intent.getStringExtra(EXTRA_RUN_MODE))
 
         val deferInflation = intent.getBooleanExtra(EXTRA_DEFER_INFLATION, false)
 
-        findViewById<TextView>(R.id.tvTopologyLabel).text = "T4: Dual Container - $caseCode"
+        findViewById<TextView>(R.id.tvTopologyLabel).text = "T4: Dual Container - $caseCode [$runMode]"
 
         // Restore overlay visibility after config change (A07)
         if (savedInstanceState != null) {

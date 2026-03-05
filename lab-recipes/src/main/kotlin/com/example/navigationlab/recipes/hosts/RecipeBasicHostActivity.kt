@@ -24,6 +24,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.contracts.NavLogger
+import com.example.navigationlab.contracts.parseRunModeOrDefault
 import com.example.navigationlab.recipes.R
 import com.example.navigationlab.recipes.content.ContentBlue
 import com.example.navigationlab.recipes.content.ContentGreen
@@ -51,8 +52,9 @@ class RecipeBasicHostActivity : AppCompatActivity() {
             finish()
             return
         }
+        val runMode = parseRunModeOrDefault(intent.getStringExtra(EXTRA_RUN_MODE))
 
-        findViewById<TextView>(R.id.tvTopologyLabel).text = "T3: Recipe Basic - $caseCode"
+        findViewById<TextView>(R.id.tvTopologyLabel).text = "T3: Recipe Basic - $caseCode [$runMode]"
 
         val composeView = findViewById<ComposeView>(R.id.composeView)
         composeView.setContent {
@@ -66,9 +68,13 @@ class RecipeBasicHostActivity : AppCompatActivity() {
                         NavDisplay(
                             backStack = backStack,
                             onBack = {
-                                val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
-                                backStack.removeLastOrNull()
-                                NavLogger.back(TAG, from, backStack.size)
+                                if (backStack.size > 1) {
+                                    val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                                    backStack.removeLastOrNull()
+                                    NavLogger.back(TAG, from, backStack.size)
+                                } else {
+                                    this@RecipeBasicHostActivity.finish()
+                                }
                             },
                             entryProvider = { key ->
                                 when (key) {
@@ -101,9 +107,13 @@ class RecipeBasicHostActivity : AppCompatActivity() {
                         NavDisplay(
                             backStack = backStack,
                             onBack = {
-                                val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
-                                backStack.removeLastOrNull()
-                                NavLogger.back(TAG, from, backStack.size)
+                                if (backStack.size > 1) {
+                                    val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                                    backStack.removeLastOrNull()
+                                    NavLogger.back(TAG, from, backStack.size)
+                                } else {
+                                    this@RecipeBasicHostActivity.finish()
+                                }
                             },
                             transitionSpec = DefaultTransitions.slideForward(),
                             popTransitionSpec = DefaultTransitions.slideBack(),
@@ -139,9 +149,13 @@ class RecipeBasicHostActivity : AppCompatActivity() {
                         NavDisplay(
                             backStack = backStack,
                             onBack = {
-                                val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
-                                backStack.removeLastOrNull()
-                                NavLogger.back(TAG, from, backStack.size)
+                                if (backStack.size > 1) {
+                                    val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                                    backStack.removeLastOrNull()
+                                    NavLogger.back(TAG, from, backStack.size)
+                                } else {
+                                    this@RecipeBasicHostActivity.finish()
+                                }
                             },
                             transitionSpec = DefaultTransitions.slideForward(),
                             popTransitionSpec = DefaultTransitions.slideBack(),

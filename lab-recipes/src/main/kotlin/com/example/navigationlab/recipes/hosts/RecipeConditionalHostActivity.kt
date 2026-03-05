@@ -28,6 +28,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.contracts.NavLogger
+import com.example.navigationlab.contracts.parseRunModeOrDefault
 import com.example.navigationlab.recipes.R
 import com.example.navigationlab.recipes.content.AdvancedDeepHomeScreen
 import com.example.navigationlab.recipes.content.AdvancedDeepTargetScreen
@@ -57,15 +58,16 @@ class RecipeConditionalHostActivity : AppCompatActivity() {
             finish()
             return
         }
+        val runMode = parseRunModeOrDefault(intent.getStringExtra(EXTRA_RUN_MODE))
 
-        findViewById<TextView>(R.id.tvTopologyLabel).text = "T3: Recipe Conditional - $caseCode"
+        findViewById<TextView>(R.id.tvTopologyLabel).text = "T3: Recipe Conditional - $caseCode [$runMode]"
 
         val composeView = findViewById<ComposeView>(R.id.composeView)
         composeView.setContent {
             MaterialTheme {
                 when (caseCode) {
-                    "R18" -> ConditionalContent()
-                    "R19" -> AdvancedDeepLinkContent()
+                    "R18" -> ConditionalContent(onExit = { finish() })
+                    "R19" -> AdvancedDeepLinkContent(onExit = { finish() })
                 }
             }
         }
@@ -96,7 +98,7 @@ class RecipeConditionalHostActivity : AppCompatActivity() {
 }
 
 @Composable
-private fun ConditionalContent() {
+private fun ConditionalContent(onExit: () -> Unit) {
     val backStack = rememberNavBackStack(GateHome)
     val navigator = remember { ConditionalNavigator(backStack) }
 
@@ -104,7 +106,7 @@ private fun ConditionalContent() {
         Box(Modifier.padding(paddingValues).fillMaxSize()) {
             NavDisplay(
                 backStack = backStack,
-                onBack = { navigator.goBack() },
+                onBack = { navigator.goBack(onAtRoot = onExit) },
                 transitionSpec = DefaultTransitions.slideForward(),
                 popTransitionSpec = DefaultTransitions.slideBack(),
                 predictivePopTransitionSpec = DefaultTransitions.predictiveSlideBack(),
@@ -136,7 +138,7 @@ private fun ConditionalContent() {
 }
 
 @Composable
-private fun AdvancedDeepLinkContent() {
+private fun AdvancedDeepLinkContent(onExit: () -> Unit) {
     val backStack = rememberNavBackStack(AdvancedDeepHome)
     val context = LocalContext.current
 
@@ -176,9 +178,13 @@ private fun AdvancedDeepLinkContent() {
                 backStack = backStack,
                 modifier = Modifier.padding(paddingValues),
                 onBack = {
-                    val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
-                    backStack.removeLastOrNull()
-                    NavLogger.back("RecipeConditionalHost", from, backStack.size)
+                    if (backStack.size > 1) {
+                        val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                        backStack.removeLastOrNull()
+                        NavLogger.back("RecipeConditionalHost", from, backStack.size)
+                    } else {
+                        onExit()
+                    }
                 },
                 transitionSpec = DefaultTransitions.slideForward(),
                 popTransitionSpec = DefaultTransitions.slideBack(),

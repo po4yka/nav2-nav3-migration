@@ -55,7 +55,11 @@ class ComposeNav3Fragment : Fragment() {
                 MaterialTheme {
                     NavDisplay(
                         backStack = backStack,
-                        onBack = { backStack.removeLastOrNull() },
+                        onBack = {
+                            if (backStack.size > 1) {
+                                backStack.removeLastOrNull()
+                            }
+                        },
                         entryProvider = { key ->
                             when (key) {
                                 is Nav3ModalKey.Home -> NavEntry(key) {
@@ -68,7 +72,9 @@ class ComposeNav3Fragment : Fragment() {
                                     Nav3ModalStubContent(
                                         onConfirm = {
                                             lastModalResult = "confirmed"
-                                            backStack.removeLastOrNull()
+                                            if (backStack.size > 1) {
+                                                backStack.removeLastOrNull()
+                                            }
                                         },
                                     )
                                 }

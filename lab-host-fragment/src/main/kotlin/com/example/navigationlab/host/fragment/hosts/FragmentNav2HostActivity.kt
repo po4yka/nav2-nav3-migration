@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.graphics.Color
 import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.contracts.NavLogger
+import com.example.navigationlab.contracts.parseRunModeOrDefault
 import com.example.navigationlab.host.fragment.R
 import com.example.navigationlab.host.fragment.fragments.ComposeNav2Fragment
 import com.example.navigationlab.host.fragment.fragments.LabStubFragment
@@ -34,8 +35,9 @@ class FragmentNav2HostActivity : AppCompatActivity() {
             finish()
             return
         }
+        val runMode = parseRunModeOrDefault(intent.getStringExtra(EXTRA_RUN_MODE))
 
-        findViewById<TextView>(R.id.tvTopologyLabel).text = "T6: Fragment->Compose->Nav2 - $caseCode"
+        findViewById<TextView>(R.id.tvTopologyLabel).text = "T6: Fragment->Compose->Nav2 - $caseCode [$runMode]"
 
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()

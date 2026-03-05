@@ -14,6 +14,7 @@ import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.contracts.NavLogger
+import com.example.navigationlab.contracts.parseRunModeOrDefault
 import com.example.navigationlab.host.nav3.Nav3Key
 import com.example.navigationlab.host.nav3.R
 import com.example.navigationlab.host.nav3.compose.Nav3StubScreen
@@ -37,8 +38,9 @@ class Nav3HostActivity : AppCompatActivity() {
             finish()
             return
         }
+        val runMode = parseRunModeOrDefault(intent.getStringExtra(EXTRA_RUN_MODE))
 
-        findViewById<TextView>(R.id.tvTopologyLabel).text = "T3: Nav3 Host - $caseCode"
+        findViewById<TextView>(R.id.tvTopologyLabel).text = "T3: Nav3 Host - $caseCode [$runMode]"
 
         val composeView = findViewById<ComposeView>(R.id.composeView)
         composeView.setContent {
@@ -46,9 +48,13 @@ class Nav3HostActivity : AppCompatActivity() {
                 NavDisplay(
                     backStack = backStack,
                     onBack = {
-                        val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
-                        backStack.removeLastOrNull()
-                        NavLogger.back(TAG, from, backStack.size)
+                        if (backStack.size > 1) {
+                            val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                            backStack.removeLastOrNull()
+                            NavLogger.back(TAG, from, backStack.size)
+                        } else {
+                            finish()
+                        }
                     },
                     entryProvider = { key ->
                         when (key) {

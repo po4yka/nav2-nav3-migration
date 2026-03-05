@@ -17,14 +17,19 @@ class Navigator(val state: NavigationState) {
         }
     }
 
-    fun goBack() {
+    fun goBack(onAtRoot: () -> Unit = {}) {
         val currentStack = state.backStacks[state.topLevelRoute]
             ?: error("Stack for ${state.topLevelRoute} not found")
         val currentRoute = currentStack.last()
 
         if (currentRoute == state.topLevelRoute) {
-            NavLogger.tabSwitch(HOST, state.topLevelRoute::class.simpleName ?: "?", state.startRoute::class.simpleName ?: "?")
-            state.topLevelRoute = state.startRoute
+            if (state.topLevelRoute != state.startRoute) {
+                NavLogger.tabSwitch(HOST, state.topLevelRoute::class.simpleName ?: "?", state.startRoute::class.simpleName ?: "?")
+                state.topLevelRoute = state.startRoute
+            } else {
+                NavLogger.back(HOST, "root-exit", currentStack.size)
+                onAtRoot()
+            }
         } else {
             NavLogger.back(HOST, currentRoute::class.simpleName ?: "?", currentStack.size - 1)
             currentStack.removeLastOrNull()

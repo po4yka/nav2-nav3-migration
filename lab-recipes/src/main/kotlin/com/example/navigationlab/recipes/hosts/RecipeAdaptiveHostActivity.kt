@@ -21,6 +21,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.contracts.NavLogger
+import com.example.navigationlab.contracts.parseRunModeOrDefault
 import com.example.navigationlab.recipes.R
 import com.example.navigationlab.recipes.content.ItemDetailScreen
 import com.example.navigationlab.recipes.content.ItemExtraScreen
@@ -46,13 +47,16 @@ class RecipeAdaptiveHostActivity : AppCompatActivity() {
             finish()
             return
         }
+        val runMode = parseRunModeOrDefault(intent.getStringExtra(EXTRA_RUN_MODE))
 
-        findViewById<TextView>(R.id.tvTopologyLabel).text = "T3: Recipe Adaptive - $caseCode"
+        findViewById<TextView>(R.id.tvTopologyLabel).text = "T3: Recipe Adaptive - $caseCode [$runMode]"
 
         val composeView = findViewById<ComposeView>(R.id.composeView)
         composeView.setContent {
             MaterialTheme {
-                AdaptiveContent()
+                AdaptiveContent(
+                    onExit = { finish() },
+                )
             }
         }
     }
@@ -72,7 +76,7 @@ class RecipeAdaptiveHostActivity : AppCompatActivity() {
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
-private fun AdaptiveContent() {
+private fun AdaptiveContent(onExit: () -> Unit) {
     val backStack = rememberNavBackStack(ItemList)
     val listDetailStrategy = rememberListDetailSceneStrategy<NavKey>()
 
@@ -81,9 +85,13 @@ private fun AdaptiveContent() {
             backStack = backStack,
             modifier = Modifier.padding(paddingValues),
             onBack = {
-                val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
-                backStack.removeLastOrNull()
-                NavLogger.back("RecipeAdaptiveHost", from, backStack.size)
+                if (backStack.size > 1) {
+                    val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                    backStack.removeLastOrNull()
+                    NavLogger.back("RecipeAdaptiveHost", from, backStack.size)
+                } else {
+                    onExit()
+                }
             },
             transitionSpec = DefaultTransitions.crossFade(),
             popTransitionSpec = DefaultTransitions.crossFadeBack(),

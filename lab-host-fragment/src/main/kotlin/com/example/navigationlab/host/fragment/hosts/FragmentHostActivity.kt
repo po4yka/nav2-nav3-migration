@@ -7,6 +7,7 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.contracts.NavLogger
+import com.example.navigationlab.contracts.parseRunModeOrDefault
 import com.example.navigationlab.host.fragment.R
 import com.example.navigationlab.host.fragment.databinding.ActivityFragmentHostBinding
 import com.example.navigationlab.host.fragment.fragments.LabStubFragment
@@ -30,8 +31,9 @@ class FragmentHostActivity : AppCompatActivity() {
             finish()
             return
         }
+        val runMode = parseRunModeOrDefault(intent.getStringExtra(EXTRA_RUN_MODE))
 
-        binding.tvTopologyLabel.text = "T1: Fragment Host - $caseCode"
+        binding.tvTopologyLabel.text = "T1: Fragment Host - $caseCode [$runMode]"
 
         if (savedInstanceState == null) {
             showFragment(

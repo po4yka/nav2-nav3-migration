@@ -26,6 +26,7 @@ import androidx.navigation3.scene.DialogSceneStrategy
 import androidx.navigation3.ui.NavDisplay
 import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.contracts.NavLogger
+import com.example.navigationlab.contracts.parseRunModeOrDefault
 import com.example.navigationlab.recipes.R
 import com.example.navigationlab.recipes.content.DialogContent
 import com.example.navigationlab.recipes.content.SheetContent
@@ -56,13 +57,14 @@ class RecipeTransitionHostActivity : AppCompatActivity() {
             finish()
             return
         }
+        val runMode = parseRunModeOrDefault(intent.getStringExtra(EXTRA_RUN_MODE))
 
-        findViewById<TextView>(R.id.tvTopologyLabel).text = "T3: Recipe Transition - $caseCode"
+        findViewById<TextView>(R.id.tvTopologyLabel).text = "T3: Recipe Transition - $caseCode [$runMode]"
 
         val composeView = findViewById<ComposeView>(R.id.composeView)
         composeView.setContent {
             MaterialTheme {
-                TransitionContent()
+                TransitionContent(onExit = { finish() })
             }
         }
     }
@@ -81,7 +83,7 @@ class RecipeTransitionHostActivity : AppCompatActivity() {
 }
 
 @Composable
-private fun TransitionContent() {
+private fun TransitionContent(onExit: () -> Unit) {
     val backStack = rememberNavBackStack(TransitionHome)
 
     // Scene strategies
@@ -93,9 +95,13 @@ private fun TransitionContent() {
         NavDisplay(
             backStack = backStack,
             onBack = {
-                val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
-                backStack.removeLastOrNull()
-                NavLogger.back("RecipeTransitionHost", from, backStack.size)
+                if (backStack.size > 1) {
+                    val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                    backStack.removeLastOrNull()
+                    NavLogger.back("RecipeTransitionHost", from, backStack.size)
+                } else {
+                    onExit()
+                }
             },
             transitionSpec = DefaultTransitions.slideForward(),
             popTransitionSpec = DefaultTransitions.slideBack(),
@@ -148,7 +154,13 @@ private fun TransitionContent() {
                 ) { key ->
                     DialogContent(
                         message = key.message,
-                        onDismiss = { backStack.removeLastOrNull() },
+                        onDismiss = {
+                            if (backStack.size > 1) {
+                                backStack.removeLastOrNull()
+                            } else {
+                                onExit()
+                            }
+                        },
                     )
                 }
                 entry<SheetRoute>(
@@ -156,7 +168,13 @@ private fun TransitionContent() {
                 ) { key ->
                     SheetContent(
                         title = key.title,
-                        onDismiss = { backStack.removeLastOrNull() },
+                        onDismiss = {
+                            if (backStack.size > 1) {
+                                backStack.removeLastOrNull()
+                            } else {
+                                onExit()
+                            }
+                        },
                     )
                 }
             },

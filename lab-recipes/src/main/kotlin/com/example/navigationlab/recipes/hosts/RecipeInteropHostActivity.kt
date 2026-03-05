@@ -23,6 +23,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.contracts.NavLogger
+import com.example.navigationlab.contracts.parseRunModeOrDefault
 import com.example.navigationlab.recipes.R
 import com.example.navigationlab.recipes.helpers.DefaultTransitions
 import com.example.navigationlab.recipes.helpers.MyCustomFragment
@@ -45,8 +46,9 @@ class RecipeInteropHostActivity : FragmentActivity() {
             finish()
             return
         }
+        val runMode = parseRunModeOrDefault(intent.getStringExtra(EXTRA_RUN_MODE))
 
-        findViewById<TextView>(R.id.tvTopologyLabel).text = "T5: Recipe Interop - $caseCode"
+        findViewById<TextView>(R.id.tvTopologyLabel).text = "T5: Recipe Interop - $caseCode [$runMode]"
 
         val composeView = findViewById<ComposeView>(R.id.composeView)
         composeView.setContent {
@@ -56,9 +58,13 @@ class RecipeInteropHostActivity : FragmentActivity() {
                 NavDisplay(
                     backStack = backStack,
                     onBack = {
-                        val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
-                        backStack.removeLastOrNull()
-                        NavLogger.back("RecipeInteropHost", from, backStack.size)
+                        if (backStack.size > 1) {
+                            val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                            backStack.removeLastOrNull()
+                            NavLogger.back("RecipeInteropHost", from, backStack.size)
+                        } else {
+                            finish()
+                        }
                     },
                     transitionSpec = DefaultTransitions.slideForward(),
                     popTransitionSpec = DefaultTransitions.slideBack(),
