@@ -70,7 +70,7 @@ All modules depend on `:lab-contracts`. `:app` depends on all feature/test modul
 
 ## Scenario Coverage
 
-### A-H interop families (61 scenarios)
+### A-H interop families (76 scenarios)
 
 | Family | Cases | Focus |
 |--------|-------|-------|
@@ -97,7 +97,7 @@ All modules depend on `:lab-contracts`. `:app` depends on all feature/test modul
 - Conditional (`R18-R19`)
 - Modal interop matrix (`R20-R25`)
 
-Total implemented scenarios: **86** (`61 + 25`).
+Total implemented scenarios: **101** (`76 + 25`).
 
 ## Verification Baseline
 

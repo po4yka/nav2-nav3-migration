@@ -19,7 +19,7 @@ class FullCatalogLaunchSmokeTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val scenarios = LabScenarioCatalog.scenarios
 
-        assertTrue("Catalog should contain at least the documented 86 scenarios", scenarios.size >= 86)
+        assertTrue("Catalog should contain at least the documented 101 scenarios", scenarios.size >= 101)
         val duplicates = scenarios.groupBy { it.id.code }.filterValues { it.size > 1 }
         assertTrue("Duplicate case codes found: ${duplicates.keys}", duplicates.isEmpty())
         scenarios
