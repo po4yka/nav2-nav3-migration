@@ -4,7 +4,9 @@
     <application
         android:name=".NavigationLabApp"
         android:allowBackup="true"
-        android:label="Navigation Lab"
+        android:icon="@drawable/ic_navigation_lab"
+        android:label="@string/app_name"
+        android:roundIcon="@drawable/ic_navigation_lab"
         android:supportsRtl="true"
         android:theme="@style/Theme.NavigationLab">
 

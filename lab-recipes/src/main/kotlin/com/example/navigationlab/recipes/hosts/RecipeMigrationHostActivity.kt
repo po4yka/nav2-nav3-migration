@@ -84,8 +84,14 @@ class RecipeMigrationHostActivity : AppCompatActivity() {
         }
         val runMode = parseRunModeOrDefault(intent.getStringExtra(EXTRA_RUN_MODE))
 
-        val topology = if (caseCode == "R05") "T2" else "T3"
-        findViewById<TextView>(R.id.tvTopologyLabel).text = "$topology: Recipe Migration - $caseCode [$runMode]"
+        val topologyLevel = if (caseCode == "R05") 2 else 3
+        val topologyLabel = getString(R.string.topology_recipe_migration, topologyLevel)
+        findViewById<TextView>(R.id.tvTopologyLabel).text = getString(
+            R.string.topology_label_with_case_mode,
+            topologyLabel,
+            caseCode,
+            runMode,
+        )
 
         val composeView = findViewById<ComposeView>(R.id.composeView)
         composeView.setContent {

@@ -33,7 +33,12 @@ class FragmentHostActivity : AppCompatActivity() {
         }
         val runMode = parseRunModeOrDefault(intent.getStringExtra(EXTRA_RUN_MODE))
 
-        binding.tvTopologyLabel.text = "T1: Fragment Host - $caseCode [$runMode]"
+        binding.tvTopologyLabel.text = getString(
+            R.string.topology_label_with_case_mode,
+            getString(R.string.topology_t1),
+            caseCode,
+            runMode,
+        )
 
         if (savedInstanceState == null) {
             showFragment(

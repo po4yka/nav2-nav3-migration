@@ -7,9 +7,11 @@ import android.util.Log
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.core.view.isVisible
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
@@ -35,7 +37,7 @@ class DualHostActivity : AppCompatActivity() {
         private set
 
     /** Current color index for the Compose base container. */
-    var baseColorIndex by mutableStateOf(0)
+    var baseColorIndex by mutableIntStateOf(0)
         private set
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,7 +53,12 @@ class DualHostActivity : AppCompatActivity() {
 
         val deferInflation = intent.getBooleanExtra(EXTRA_DEFER_INFLATION, false)
 
-        findViewById<TextView>(R.id.tvTopologyLabel).text = "T4: Dual Container - $caseCode [$runMode]"
+        findViewById<TextView>(R.id.tvTopologyLabel).text = getString(
+            R.string.topology_label_with_case_mode,
+            getString(R.string.topology_t4),
+            caseCode,
+            runMode,
+        )
 
         // Restore overlay visibility after config change (A07)
         if (savedInstanceState != null) {
@@ -112,7 +119,7 @@ class DualHostActivity : AppCompatActivity() {
 
     /** Whether the overlay container is currently visible. */
     val isOverlayVisible: Boolean
-        get() = findViewById<FrameLayout>(R.id.overlayContainer).visibility == View.VISIBLE
+        get() = findViewById<FrameLayout>(R.id.overlayContainer).isVisible
 
     /** Current overlay fragment backstack depth. */
     val overlayBackStackDepth: Int
@@ -128,7 +135,7 @@ class DualHostActivity : AppCompatActivity() {
 
     /** Whether the Compose base container is visible. */
     val isBaseVisible: Boolean
-        get() = findViewById<ComposeView>(R.id.composeView).visibility == View.VISIBLE
+        get() = findViewById<ComposeView>(R.id.composeView).isVisible
 
     // --- A06: deferred host setup + navigation queue ---
 

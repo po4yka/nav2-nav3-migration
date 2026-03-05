@@ -88,7 +88,12 @@ class Nav3NestedChainActivity : AppCompatActivity() {
         }
         val runMode = parseRunModeOrDefault(intent.getStringExtra(EXTRA_RUN_MODE))
 
-        findViewById<TextView>(R.id.tvTopologyLabel).text = "B09: Nav3->Nav2->Fragment->Dialog - $caseCode [$runMode]"
+        findViewById<TextView>(R.id.tvTopologyLabel).text = getString(
+            R.string.topology_label_with_case_mode,
+            getString(R.string.topology_b09),
+            caseCode,
+            runMode,
+        )
 
         val composeView = findViewById<ComposeView>(R.id.composeView)
         composeView.setContent {

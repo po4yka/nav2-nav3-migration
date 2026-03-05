@@ -57,7 +57,12 @@ class Nav3ToNav2InteropActivity : AppCompatActivity() {
         }
         val runMode = parseRunModeOrDefault(intent.getStringExtra(EXTRA_RUN_MODE))
 
-        findViewById<TextView>(R.id.tvTopologyLabel).text = "T8: Nav3->Nav2 Interop - $caseCode [$runMode]"
+        findViewById<TextView>(R.id.tvTopologyLabel).text = getString(
+            R.string.topology_label_with_case_mode,
+            getString(R.string.topology_t8),
+            caseCode,
+            runMode,
+        )
 
         val composeView = findViewById<ComposeView>(R.id.composeView)
         composeView.setContent {

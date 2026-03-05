@@ -45,7 +45,12 @@ class Nav3FragmentIslandActivity : AppCompatActivity() {
         }
         val runMode = parseRunModeOrDefault(intent.getStringExtra(EXTRA_RUN_MODE))
 
-        findViewById<TextView>(R.id.tvTopologyLabel).text = "T5: Nav3->Fragment Island - $caseCode [$runMode]"
+        findViewById<TextView>(R.id.tvTopologyLabel).text = getString(
+            R.string.topology_label_with_case_mode,
+            getString(R.string.topology_t5),
+            caseCode,
+            runMode,
+        )
 
         val composeView = findViewById<ComposeView>(R.id.composeView)
         composeView.setContent {

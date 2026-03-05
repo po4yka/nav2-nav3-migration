@@ -41,7 +41,7 @@ dependencies {
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.compose.ui.test.junit4)
     androidTestImplementation(libs.espresso.core)
-    androidTestImplementation("androidx.test:core:1.7.0")
+    androidTestImplementation(libs.test.core)
     androidTestImplementation(libs.test.runner)
     androidTestImplementation(libs.test.rules)
     androidTestImplementation(libs.junit)

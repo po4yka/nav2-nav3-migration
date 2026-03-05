@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.core.view.isVisible
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.graphics.Color
 import com.example.navigationlab.contracts.LabCaseId
@@ -38,7 +39,12 @@ class FragmentNav3HostActivity : AppCompatActivity() {
         }
         val runMode = parseRunModeOrDefault(intent.getStringExtra(EXTRA_RUN_MODE))
 
-        findViewById<TextView>(R.id.tvTopologyLabel).text = "T6: Fragment->Compose->Nav3 - $caseCode [$runMode]"
+        findViewById<TextView>(R.id.tvTopologyLabel).text = getString(
+            R.string.topology_label_with_case_mode,
+            getString(R.string.topology_t6_nav3),
+            caseCode,
+            runMode,
+        )
 
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
@@ -103,7 +109,7 @@ class FragmentNav3HostActivity : AppCompatActivity() {
 
     /** Whether the activity-level overlay is visible. */
     val isOverlayVisible: Boolean
-        get() = findViewById<FrameLayout>(R.id.activityOverlayContainer).visibility == View.VISIBLE
+        get() = findViewById<FrameLayout>(R.id.activityOverlayContainer).isVisible
 
     /** Activity-level overlay back stack depth. */
     val overlayBackStackDepth: Int

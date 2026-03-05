@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="topology_label_with_case_mode">%1$s - %2$s [%3$s]</string>
+    <string name="topology_recipe_host_placeholder">Recipe Host</string>
+    <string name="topology_recipe_basic">T3: Recipe Basic</string>
+    <string name="topology_recipe_interop">T5: Recipe Interop</string>
+    <string name="topology_recipe_results">T3: Recipe Results</string>
+    <string name="topology_recipe_adaptive">T3: Recipe Adaptive</string>
+    <string name="topology_recipe_appstate">T3: Recipe AppState</string>
+    <string name="topology_recipe_deep_link">T3: Recipe Deep Link</string>
+    <string name="topology_recipe_transition">T3: Recipe Transition</string>
+    <string name="topology_recipe_conditional">T3: Recipe Conditional</string>
+    <string name="topology_recipe_migration">T%1$d: Recipe Migration</string>
+    <string name="interop_go_to_view">Go to View</string>
+    <string name="interop_view_with_key">My View with key: %1$s</string>
+</resources>

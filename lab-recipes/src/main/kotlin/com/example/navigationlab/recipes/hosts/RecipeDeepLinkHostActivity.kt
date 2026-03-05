@@ -52,7 +52,12 @@ class RecipeDeepLinkHostActivity : AppCompatActivity() {
         }
         val runMode = parseRunModeOrDefault(intent.getStringExtra(EXTRA_RUN_MODE))
 
-        findViewById<TextView>(R.id.tvTopologyLabel).text = "T3: Recipe Deep Link - $caseCode [$runMode]"
+        findViewById<TextView>(R.id.tvTopologyLabel).text = getString(
+            R.string.topology_label_with_case_mode,
+            getString(R.string.topology_recipe_deep_link),
+            caseCode,
+            runMode,
+        )
 
         val composeView = findViewById<ComposeView>(R.id.composeView)
         composeView.setContent {
