@@ -133,6 +133,22 @@ class ComposeNav2Fragment : Fragment() {
         return result
     }
 
+    /** Confirm dialog route and propagate result for B07 instrumentation checks. */
+    fun confirmDialogAndReturnResult(): Boolean {
+        val controller = navHostController ?: return false
+        val isDialogRoute = controller.currentBackStackEntry?.destination?.route == ROUTE_RESULT_DIALOG
+        if (!isDialogRoute) return false
+        lastDialogResult = "confirmed"
+        controller.previousBackStackEntry
+            ?.savedStateHandle
+            ?.set(DIALOG_RESULT_KEY, "confirmed")
+        val popped = controller.popBackStack()
+        if (popped && navBackStackDepth > 1) {
+            navBackStackDepth -= 1
+        }
+        return popped
+    }
+
     companion object {
         const val ROUTE_HOME = "home"
         const val ROUTE_SCREEN_A = "screen_a"

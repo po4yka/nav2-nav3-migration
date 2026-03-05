@@ -136,13 +136,14 @@ class Nav3FragmentIslandActivity : AppCompatActivity() {
     }
 
     /** Add a fragment to the legacy island container. */
-    fun showIslandFragment(fragment: Fragment) {
-        if (!isLegacyIslandVisible) return
-        if (findViewById<FragmentContainerView?>(R.id.legacyFragmentContainer) == null) return
+    fun showIslandFragment(fragment: Fragment): Boolean {
+        if (!isLegacyIslandVisible) return false
+        if (findViewById<FragmentContainerView?>(R.id.legacyFragmentContainer) == null) return false
         supportFragmentManager.beginTransaction()
             .replace(R.id.legacyFragmentContainer, fragment)
             .addToBackStack("island")
-            .commit()
+            .commitAllowingStateLoss()
+        return true
     }
 
     /** Open the legacy fragment island key in Nav3 stack. */
@@ -184,9 +185,14 @@ class Nav3FragmentIslandActivity : AppCompatActivity() {
     /** Pop the fragment island back stack. */
     fun popIslandFragmentBack(): Boolean {
         if (supportFragmentManager.backStackEntryCount > 0) {
-            supportFragmentManager.popBackStack()
-            NavLogger.pop(TAG, "IslandFragment", supportFragmentManager.backStackEntryCount - 1)
-            return true
+            val popped = runCatching {
+                supportFragmentManager.popBackStack()
+                true
+            }.getOrDefault(false)
+            if (popped) {
+                NavLogger.pop(TAG, "IslandFragment", supportFragmentManager.backStackEntryCount - 1)
+                return true
+            }
         }
         return false
     }
@@ -202,6 +208,10 @@ class Nav3FragmentIslandActivity : AppCompatActivity() {
     /** Whether legacy island key is top-most in Nav3 back stack. */
     val isLegacyIslandVisible: Boolean
         get() = backStack.lastOrNull() is LegacyIslandKey
+
+    /** Whether legacy island FragmentContainerView is currently attached. */
+    val isLegacyIslandContainerReady: Boolean
+        get() = findViewById<FragmentContainerView?>(R.id.legacyFragmentContainer) != null
 
     /** Whether parent dialog-style modal is top-most. */
     val isParentDialogVisible: Boolean

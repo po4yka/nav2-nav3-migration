@@ -112,7 +112,7 @@ class FragmentNav2HostActivity : AppCompatActivity() {
         supportFragmentManager.beginTransaction()
             .add(R.id.activityOverlayContainer, fragment)
             .addToBackStack("activity_overlay")
-            .commit()
+            .commitAllowingStateLoss()
     }
 
     /** Whether the activity-level overlay is visible. */
@@ -126,7 +126,7 @@ class FragmentNav2HostActivity : AppCompatActivity() {
     /** Dismiss the activity-level overlay. */
     fun dismissOverlay() {
         if (supportFragmentManager.backStackEntryCount > 0) {
-            supportFragmentManager.popBackStack()
+            runCatching { supportFragmentManager.popBackStack() }
         }
         findViewById<FrameLayout>(R.id.activityOverlayContainer).visibility = View.GONE
     }
@@ -136,6 +136,12 @@ class FragmentNav2HostActivity : AppCompatActivity() {
     /** Last result returned by the Nav2 dialog inside the fragment. */
     val lastDialogResult: String?
         get() = composeFragment?.lastDialogResult
+
+    /** Confirm dialog route and return result in the hosted fragment Nav2 graph. */
+    fun confirmDialogResult(): Boolean {
+        val fragment = composeFragment ?: return false
+        return fragment.confirmDialogAndReturnResult()
+    }
 
     companion object {
         private const val TAG = "T6Host"

@@ -156,7 +156,7 @@ class Nav3NestedChainActivity : AppCompatActivity() {
                                 }
                                 supportFragmentManager.beginTransaction()
                                     .replace(id, fragment, TAG_CHAIN_FRAGMENT)
-                                    .commit()
+                                    .commitAllowingStateLoss()
                             }
                         }
                     },
@@ -233,6 +233,22 @@ class Nav3NestedChainActivity : AppCompatActivity() {
 
     val nav3Depth: Int get() = nav3BackStack.size
     val nav2ChainDepth: Int get() = nav2ChainDepthValue
+    val fragmentNav2Depth: Int get() = fragmentNav2DepthValue
+    val currentNav2ChainRoute: String? get() = nav2ChainController?.currentBackStackEntry?.destination?.route
+    val currentFragmentNav2Route: String? get() = fragmentNav2Controller?.currentBackStackEntry?.destination?.route
+    val isFragmentLayerReady: Boolean get() = fragmentNav2Controller != null
+
+    /** Confirm dialog in fragment layer and propagate result for B09 checks. */
+    fun confirmFragmentDialogResult(): Boolean {
+        val controller = fragmentNav2Controller ?: return false
+        if (controller.currentBackStackEntry?.destination?.route != FRAG_ROUTE_DIALOG) return false
+        lastDialogResult = "confirmed"
+        val popped = controller.popBackStack()
+        if (popped && fragmentNav2DepthValue > 1) {
+            fragmentNav2DepthValue -= 1
+        }
+        return popped
+    }
 
     companion object {
         private const val TAG = "B09Host"
