@@ -6,9 +6,6 @@ import com.example.navigationlab.back.BackOrchestrator
 import com.example.navigationlab.back.BackOutcome
 import com.example.navigationlab.back.BackPopper
 import com.example.navigationlab.back.RootExitPolicy
-import com.example.navigationlab.contracts.LabAction
-import com.example.navigationlab.contracts.LabActionCommand
-import com.example.navigationlab.contracts.LabDeeplinkSource
 import com.example.navigationlab.contracts.LabStep
 import com.example.navigationlab.contracts.TraceEventType
 import com.example.navigationlab.deeplink.DeeplinkDispatchResult
@@ -18,12 +15,13 @@ import com.example.navigationlab.deeplink.DeeplinkSource
 import com.example.navigationlab.engine.orchestrator.HeuristicStepExecutor
 import com.example.navigationlab.engine.orchestrator.StepExecutionResult
 import com.example.navigationlab.engine.orchestrator.StepExecutor
+import java.util.Locale
 
 /**
- * Runtime step executor that integrates lab infrastructure:
+ * Runtime step executor that integrates real lab infrastructure:
  * - [BackOrchestrator] for deterministic back resolution.
  * - [DeeplinkSimulator] for F-family deeplink routing simulation.
- * - [HeuristicStepExecutor] as action-driven baseline event provider.
+ * - [HeuristicStepExecutor] as baseline event inference.
  */
 class LabRuntimeStepExecutor(
     private val fallbackExecutor: StepExecutor = HeuristicStepExecutor(),
@@ -70,17 +68,17 @@ class LabRuntimeStepExecutor(
         val baseline = fallbackExecutor.execute(step)
         val observed = linkedSetOf<TraceEventType>().apply { addAll(baseline.observedEvents) }
         val metadata = linkedMapOf<String, String>().apply { putAll(baseline.metadata) }
-        val commands = step.action.commands
+        val text = step.instruction.lowercase(Locale.ROOT)
 
-        trackForwardDepths(step.action)
+        trackForwardDepths(text)
 
-        if (LabActionCommand.RESET_ROOT_EXIT_GATE in commands) {
+        if (containsAny(text, "reset root-exit gate")) {
             backOrchestrator.resetRootExitGate()
             metadata["back_gate_reset"] = "true"
         }
 
-        if (LabActionCommand.DISPATCH_DEEPLINK in commands) {
-            val deeplinkResult = dispatchDeeplink(step.action)
+        if (containsAny(text, "deeplink")) {
+            val deeplinkResult = dispatchDeeplink(text)
             observed += TraceEventType.DEEPLINK
             if (deeplinkResult.route != null) {
                 observed += TraceEventType.STACK_CHANGE
@@ -96,7 +94,7 @@ class LabRuntimeStepExecutor(
                 deeplinkResult.restoredAfterProcessDeath.toString()
         }
 
-        if (LabActionCommand.DISPATCH_BACK in commands) {
+        if (containsAny(text, "back", "pop", "dismiss")) {
             val outcome = backOrchestrator.onBackPressed()
             observed += TraceEventType.BACK_EVENT
             when (outcome) {
@@ -135,32 +133,60 @@ class LabRuntimeStepExecutor(
         )
     }
 
-    private fun trackForwardDepths(action: LabAction) {
-        if (LabActionCommand.TRACK_FORWARD_STACK in action.commands) {
+    private fun trackForwardDepths(text: String) {
+        if (containsAny(text, "navigate", "push", "switch") && !containsAny(text, "back", "pop")) {
             navDepth += 1
         }
 
-        if (LabActionCommand.TRACK_OVERLAY_OPEN in action.commands) {
+        if (containsAny(
+                text,
+                "show overlay",
+                "add overlay",
+                "open overlay",
+                "overlay fragment",
+                "open dialog",
+                "show dialog",
+                "open sheet",
+                "show sheet",
+                "open modal",
+                "show modal",
+                "open popup",
+                "show popup",
+            )
+        ) {
             overlayDepth += 1
         }
 
-        if (LabActionCommand.TRACK_CHILD_PUSH in action.commands) {
+        if (containsAny(text, "fragment")
+            && containsAny(text, "replace", "add ", "show")
+            && !containsAny(text, "overlay")
+        ) {
             childDepth += 1
         }
     }
 
-    private fun dispatchDeeplink(action: LabAction): DeeplinkDispatchResult {
-        val deeplink = action.deeplink
+    private fun dispatchDeeplink(text: String): DeeplinkDispatchResult {
+        val source = if (containsAny(text, "internal source", "source=internal")) {
+            DeeplinkSource.INTERNAL
+        } else {
+            DeeplinkSource.INTENT
+        }
+
+        val path = Regex("/[a-z0-9_\\-/]*[a-z0-9_\\-]")
+            .find(text)
+            ?.value
+            ?: "/unknown/feature-entry"
+
         val request = DeeplinkRequest(
-            path = deeplink.path,
-            source = when (deeplink.source) {
-                LabDeeplinkSource.INTERNAL -> DeeplinkSource.INTERNAL
-                LabDeeplinkSource.INTENT -> DeeplinkSource.INTENT
-            },
-            hostReady = deeplink.hostReady,
-            sendToChannelActive = deeplink.sendToChannelActive,
-            restoredAfterProcessDeath = deeplink.restoredAfterProcessDeath,
+            path = path,
+            source = source,
+            hostReady = !containsAny(text, "host not ready"),
+            sendToChannelActive = containsAny(text, "channel active", "sendtochannelactive=true"),
+            restoredAfterProcessDeath = containsAny(text, "process death", "restore flag", "restored"),
         )
         return deeplinkSimulator.dispatch(request)
     }
+
+    private fun containsAny(text: String, vararg tokens: String): Boolean =
+        tokens.any { token -> text.contains(token) }
 }

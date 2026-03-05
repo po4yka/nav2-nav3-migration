@@ -474,6 +474,142 @@ val R_CONDITIONAL_SCENARIOS: List<LabScenario> = listOf(
     ),
 )
 
+val R_MODAL_MATRIX_SCENARIOS: List<LabScenario> = listOf(
+    LabScenario(
+        id = LabCaseId(CaseFamily.R, 20),
+        title = "Nav2 modal reference (dialog/sheet/fullscreen)",
+        topology = TopologyId.T2,
+        preconditions = listOf(
+            "RecipeModalMatrixHostActivity runs in Nav2 reference mode",
+            "Dialog, sheet, and fullscreen routes are available in one Nav2 graph",
+        ),
+        steps = listOf(
+            LabStep(1, "Open Nav2 dialog route, then dismiss",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE, TraceEventType.CONTAINER_CHANGE, TraceEventType.BACK_EVENT)),
+            LabStep(2, "Open Nav2 sheet route, then dismiss",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE, TraceEventType.CONTAINER_CHANGE, TraceEventType.BACK_EVENT)),
+            LabStep(3, "Open Nav2 fullscreen dialog route, then dismiss",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE, TraceEventType.CONTAINER_CHANGE, TraceEventType.BACK_EVENT)),
+            LabStep(4, "Verify parent route depth returns to baseline after each dismiss",
+                expectedEvents = listOf(TraceEventType.INVARIANT)),
+        ),
+        invariants = listOf(
+            "Each modal type is independently launchable in Nav2",
+            "Dismiss pops only the modal route",
+            "Parent stack remains stable across all modal permutations",
+        ),
+    ),
+    LabScenario(
+        id = LabCaseId(CaseFamily.R, 21),
+        title = "Nav3 modal reference (dialog-style + sheet-style)",
+        topology = TopologyId.T3,
+        preconditions = listOf(
+            "RecipeModalMatrixHostActivity runs in Nav3 reference mode",
+            "Dialog-style and sheet-style modal keys are configured",
+        ),
+        steps = listOf(
+            LabStep(1, "Push Nav3 dialog modal key and dismiss",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE, TraceEventType.CONTAINER_CHANGE, TraceEventType.BACK_EVENT)),
+            LabStep(2, "Push Nav3 sheet modal key and dismiss",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE, TraceEventType.CONTAINER_CHANGE, TraceEventType.BACK_EVENT)),
+            LabStep(3, "Verify parent Nav3 key ordering is preserved",
+                expectedEvents = listOf(TraceEventType.INVARIANT)),
+        ),
+        invariants = listOf(
+            "Dialog and sheet overlays behave as top-most Nav3 entries",
+            "Modal dismissal preserves parent key ordering",
+        ),
+    ),
+    LabScenario(
+        id = LabCaseId(CaseFamily.R, 22),
+        title = "Nav2 -> Nav3 modal interop reference",
+        topology = TopologyId.T7,
+        preconditions = listOf(
+            "RecipeModalMatrixHostActivity runs in Nav2 parent / Nav3 leaf mode",
+            "Parent Nav2 and child Nav3 modal operations are both available",
+        ),
+        steps = listOf(
+            LabStep(1, "Navigate Nav2 parent into Nav3 leaf route and open child dialog modal",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE, TraceEventType.CONTAINER_CHANGE)),
+            LabStep(2, "Open parent Nav2 dialog while child modal is active, then dismiss parent",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE, TraceEventType.CONTAINER_CHANGE, TraceEventType.BACK_EVENT)),
+            LabStep(3, "Dismiss child modal and verify parent stack remains intact",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT, TraceEventType.STACK_CHANGE, TraceEventType.INVARIANT)),
+        ),
+        invariants = listOf(
+            "Parent Nav2 modal lifecycle does not corrupt child Nav3 leaf stack",
+            "Child modal dismiss does not mutate Nav2 parent history",
+        ),
+    ),
+    LabScenario(
+        id = LabCaseId(CaseFamily.R, 23),
+        title = "Nav3 -> Nav2 modal interop reference",
+        topology = TopologyId.T8,
+        preconditions = listOf(
+            "RecipeModalMatrixHostActivity runs in Nav3 parent / Nav2 leaf mode",
+            "Parent Nav3 popup/dialog and child Nav2 modal routes are both available",
+        ),
+        steps = listOf(
+            LabStep(1, "Navigate Nav3 parent into Nav2 leaf and open child sheet",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE, TraceEventType.CONTAINER_CHANGE)),
+            LabStep(2, "Open parent Nav3 popup above child modal, then dismiss popup",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE, TraceEventType.CONTAINER_CHANGE, TraceEventType.BACK_EVENT)),
+            LabStep(3, "Dismiss child modal and verify parent Nav3 stack is unchanged",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT, TraceEventType.STACK_CHANGE, TraceEventType.INVARIANT)),
+        ),
+        invariants = listOf(
+            "Parent Nav3 overlays do not mutate child Nav2 routes",
+            "Child modal dismiss preserves Nav3 parent depth and key order",
+        ),
+    ),
+    LabScenario(
+        id = LabCaseId(CaseFamily.R, 24),
+        title = "Nav3 legacy island + popup/dialog reference",
+        topology = TopologyId.T5,
+        preconditions = listOf(
+            "RecipeModalMatrixHostActivity runs in legacy island mode",
+            "Fragment island, island dialog fragment, and parent popup/dialog overlays are enabled",
+        ),
+        steps = listOf(
+            LabStep(1, "Enter legacy island and attach island fragment content",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE, TraceEventType.CONTAINER_CHANGE, TraceEventType.FRAGMENT_TRANSACTION)),
+            LabStep(2, "Open island DialogFragment and parent popup overlay",
+                expectedEvents = listOf(TraceEventType.CONTAINER_CHANGE, TraceEventType.FRAGMENT_TRANSACTION, TraceEventType.STACK_CHANGE)),
+            LabStep(3, "Dismiss popup then dialog fragment, verify island remains active",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT, TraceEventType.CONTAINER_CHANGE, TraceEventType.INVARIANT)),
+        ),
+        invariants = listOf(
+            "Legacy island modal and parent popup can coexist safely",
+            "Dismiss order is top-most overlay first",
+            "Island fragment stack remains healthy after overlay chain",
+        ),
+    ),
+    LabScenario(
+        id = LabCaseId(CaseFamily.R, 25),
+        title = "Restore/unwind reference for stacked modals across engines",
+        topology = TopologyId.T8,
+        preconditions = listOf(
+            "RecipeModalMatrixHostActivity supports child-modal restore metadata",
+            "Parent Nav3 and child Nav2 stacks are active before recreation",
+        ),
+        steps = listOf(
+            LabStep(1, "Navigate into child Nav2 leaf and open child dialog modal",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE, TraceEventType.CONTAINER_CHANGE)),
+            LabStep(2, "Open parent Nav3 dialog above child modal and recreate host",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE, TraceEventType.CONTAINER_CHANGE, TraceEventType.LIFECYCLE)),
+            LabStep(3, "Restore parent/child modal state and unwind in deterministic order",
+                expectedEvents = listOf(TraceEventType.LIFECYCLE, TraceEventType.BACK_EVENT, TraceEventType.STACK_CHANGE)),
+            LabStep(4, "Verify no duplicated parent keys or child routes after restore",
+                expectedEvents = listOf(TraceEventType.INVARIANT)),
+        ),
+        invariants = listOf(
+            "Restore keeps child modal and parent stack consistent",
+            "Back unwind remains child-first/parent-second after recreation",
+            "No duplicate modal entries appear during replay",
+        ),
+    ),
+)
+
 val R_RESULTS_SCENARIOS: List<LabScenario> = listOf(
     LabScenario(
         id = LabCaseId(CaseFamily.R, 7),

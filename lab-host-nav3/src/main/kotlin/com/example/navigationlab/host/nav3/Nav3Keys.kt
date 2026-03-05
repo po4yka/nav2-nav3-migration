@@ -6,4 +6,7 @@ sealed interface Nav3Key {
     data object ScreenA : Nav3Key
     data object ScreenB : Nav3Key
     data object ScreenC : Nav3Key
+    data object DialogModal : Nav3Key
+    data object SheetModal : Nav3Key
+    data object PopupOverlay : Nav3Key
 }

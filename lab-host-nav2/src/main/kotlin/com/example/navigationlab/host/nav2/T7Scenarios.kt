@@ -42,4 +42,52 @@ val T7_SCENARIOS: List<LabScenario> = listOf(
             "Nav2 back stack intact after Nav3 leaf interaction",
         ),
     ),
+    LabScenario(
+        id = LabCaseId(CaseFamily.B, 13),
+        title = "Nav2 parent dialog over Nav3 leaf with stack isolation",
+        topology = TopologyId.T7,
+        preconditions = listOf(
+            "Nav2ToNav3InteropActivity supports parent dialog route and Nav3 leaf keys",
+            "Nav2 parent and Nav3 leaf stacks are independently inspectable",
+        ),
+        steps = listOf(
+            LabStep(1, "Navigate Nav2 Home -> nav3_leaf and push Nav3 LeafDetail",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE, TraceEventType.CONTAINER_CHANGE)),
+            LabStep(2, "Open parent Nav2 dialog while Nav3 leaf remains active underneath",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE, TraceEventType.CONTAINER_CHANGE)),
+            LabStep(3, "Dismiss parent dialog and verify Nav3 leaf stack depth unchanged",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT, TraceEventType.STACK_CHANGE, TraceEventType.INVARIANT)),
+            LabStep(4, "Pop Nav3 leaf back to LeafHome, then pop Nav2 to parent route",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT, TraceEventType.STACK_CHANGE)),
+        ),
+        invariants = listOf(
+            "Parent dialog open/dismiss does not mutate Nav3 leaf stack entries",
+            "Child leaf stack isolation is preserved across parent modal transitions",
+            "Back unwind order remains deterministic after parent dialog lifecycle",
+        ),
+    ),
+    LabScenario(
+        id = LabCaseId(CaseFamily.B, 14),
+        title = "Nav3 leaf modal flow returns to Nav2 parent without corruption",
+        topology = TopologyId.T7,
+        preconditions = listOf(
+            "Nav3 leaf supports dialog and sheet modal keys",
+            "Nav2 parent route remains active while leaf modals are shown",
+        ),
+        steps = listOf(
+            LabStep(1, "Navigate Nav2 Home -> nav3_leaf and open Nav3 leaf dialog modal",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE, TraceEventType.CONTAINER_CHANGE)),
+            LabStep(2, "Dismiss leaf dialog, open leaf sheet modal, then dismiss sheet",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT, TraceEventType.STACK_CHANGE, TraceEventType.CONTAINER_CHANGE)),
+            LabStep(3, "Pop Nav3 leaf to root and then pop Nav2 back to parent screen",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT, TraceEventType.STACK_CHANGE)),
+            LabStep(4, "Verify Nav2 parent stack depth equals pre-leaf depth",
+                expectedEvents = listOf(TraceEventType.INVARIANT)),
+        ),
+        invariants = listOf(
+            "Leaf modal lifecycle does not corrupt Nav2 parent history",
+            "Leaf modal dismiss pops only child entries",
+            "Returning from child leaf restores parent stack intact",
+        ),
+    ),
 )

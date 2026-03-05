@@ -24,6 +24,7 @@ import com.example.navigationlab.recipes.RecipeConditionalProvider
 import com.example.navigationlab.recipes.RecipeDeepLinkProvider
 import com.example.navigationlab.recipes.RecipeInteropProvider
 import com.example.navigationlab.recipes.RecipeMigrationProvider
+import com.example.navigationlab.recipes.RecipeModalMatrixProvider
 import com.example.navigationlab.recipes.RecipeResultsProvider
 import com.example.navigationlab.recipes.RecipeTransitionProvider
 
@@ -60,6 +61,7 @@ object LabScenarioCatalog {
         ProviderEntry(RecipeTransitionProvider.scenarios, RecipeTransitionProvider::createHostIntent),
         ProviderEntry(RecipeAdaptiveProvider.scenarios, RecipeAdaptiveProvider::createHostIntent),
         ProviderEntry(RecipeConditionalProvider.scenarios, RecipeConditionalProvider::createHostIntent),
+        ProviderEntry(RecipeModalMatrixProvider.scenarios, RecipeModalMatrixProvider::createHostIntent),
     )
 
     val scenarios: List<LabScenario> = providers

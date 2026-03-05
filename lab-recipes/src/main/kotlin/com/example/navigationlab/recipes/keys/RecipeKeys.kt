@@ -160,6 +160,34 @@ data object AdvancedDeepHome : NavKey
 @Serializable
 data class AdvancedDeepTarget(val name: String, val location: String) : NavKey
 
+// -- R20-R25: Modal interoperability matrix keys --
+@Serializable
+data object ModalNav3Home : NavKey
+
+@Serializable
+data object ModalNav3Detail : NavKey
+
+@Serializable
+data object ModalNav3Dialog : NavKey
+
+@Serializable
+data object ModalNav3Sheet : NavKey
+
+@Serializable
+data object ModalNav3Popup : NavKey
+
+@Serializable
+data object ModalNav3LeafNav2 : NavKey
+
+@Serializable
+data object ModalNav3Island : NavKey
+
+@Serializable
+data object ModalNav3ParentDialog : NavKey
+
+@Serializable
+data object ModalNav3ParentPopup : NavKey
+
 // -- NavBarItem for migration scenarios --
 class NavBarItem(
     val icon: ImageVector,

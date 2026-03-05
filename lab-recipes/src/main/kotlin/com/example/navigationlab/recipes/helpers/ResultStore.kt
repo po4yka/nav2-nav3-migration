@@ -30,8 +30,16 @@ class ResultStore {
     }
 }
 
-private fun ResultStoreSaver(): Saver<ResultStore, *> =
+private fun ResultStoreSaver(): Saver<ResultStore, Map<String, Any?>> =
     Saver(
-        save = { it.resultStateMap },
-        restore = { ResultStore().apply { resultStateMap.putAll(it) } },
+        save = { store ->
+            store.resultStateMap.mapValues { (_, state) -> state.value }
+        },
+        restore = { savedValues ->
+            ResultStore().apply {
+                savedValues.forEach { (key, value) ->
+                    resultStateMap[key] = mutableStateOf(value)
+                }
+            }
+        },
     )

@@ -33,6 +33,7 @@ dependencies {
     implementation(project(":lab-host-fragment"))
     implementation(project(":lab-host-nav2"))
     implementation(project(":lab-host-nav3"))
+    implementation(project(":lab-recipes"))
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)

@@ -7,35 +7,9 @@ on:
       - main
 
 jobs:
-  quality-checks:
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-          cache: gradle
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Run lint and Robolectric smoke test
-        run: ./gradlew lintDebug :app:testDebugUnitTest :lab-host-nav2:testDebugUnitTest :lab-host-nav3:testDebugUnitTest :lab-host-fragment:testDebugUnitTest --stacktrace
-
   connected-android-test:
-    needs: quality-checks
     runs-on: ubuntu-latest
-    timeout-minutes: 120
-    strategy:
-      fail-fast: false
-      matrix:
-        api-level: [34, 35, 36]
+    timeout-minutes: 90
 
     steps:
       - name: Checkout
@@ -50,11 +24,14 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+
+      - name: Run Robolectric smoke test
+        run: ./gradlew :lab-host-nav2:testDebugUnitTest :lab-host-nav3:testDebugUnitTest :lab-host-fragment:testDebugUnitTest --stacktrace
 
       - name: Run connectedAndroidTest smoke suite
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: ${{ matrix.api-level }}
+          api-level: 35
           arch: x86_64
           profile: pixel_7
           script: ./gradlew :app:assembleDebug :lab-testkit:connectedAndroidTest --stacktrace

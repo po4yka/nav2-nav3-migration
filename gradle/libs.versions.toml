@@ -16,6 +16,7 @@ espresso = "3.7.0"
 test-runner = "1.7.0"
 test-rules = "1.7.0"
 junit = "4.13.2"
+robolectric = "4.14.1"
 
 [libraries]
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-bom" }
@@ -58,6 +59,7 @@ test-runner = { group = "androidx.test", name = "runner", version.ref = "test-ru
 test-rules = { group = "androidx.test", name = "rules", version.ref = "test-rules" }
 test-core = { group = "androidx.test", name = "core", version.ref = "test-runner" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

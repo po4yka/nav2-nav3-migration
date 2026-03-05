@@ -78,4 +78,52 @@ val T8_SCENARIOS: List<LabScenario> = listOf(
             "Cross-engine boundary is cleanly maintained",
         ),
     ),
+    LabScenario(
+        id = LabCaseId(CaseFamily.B, 15),
+        title = "Parent-level modal/popup while Nav2 leaf is active",
+        topology = TopologyId.T8,
+        preconditions = listOf(
+            "Nav3ToNav2InteropActivity supports parent dialog/popup entries",
+            "Nav2 leaf can stay active while parent overlays are pushed",
+        ),
+        steps = listOf(
+            LabStep(1, "Navigate Nav3 Home -> Nav2Leaf and push Nav2 leaf_detail",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE, TraceEventType.CONTAINER_CHANGE)),
+            LabStep(2, "Open parent dialog and then parent popup while child leaf stays active",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE, TraceEventType.CONTAINER_CHANGE)),
+            LabStep(3, "Dismiss popup then dialog, verify Nav2 leaf route still leaf_detail",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT, TraceEventType.STACK_CHANGE, TraceEventType.INVARIANT)),
+            LabStep(4, "Pop child Nav2 leaf detail and return to Nav3 parent key",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT, TraceEventType.STACK_CHANGE)),
+        ),
+        invariants = listOf(
+            "Parent overlays do not mutate child Nav2 leaf route or depth",
+            "Overlay unwind order is LIFO at parent level",
+            "Child navigation remains deterministic after parent overlay lifecycle",
+        ),
+    ),
+    LabScenario(
+        id = LabCaseId(CaseFamily.B, 16),
+        title = "Nav2 leaf modal dismiss without mutating Nav3 parent stack",
+        topology = TopologyId.T8,
+        preconditions = listOf(
+            "Nav2 leaf supports dialog/sheet/fullscreen modal routes",
+            "Nav3 parent stack has at least one non-root key before entering child",
+        ),
+        steps = listOf(
+            LabStep(1, "Navigate Nav3 Home -> ScreenA -> Nav2Leaf",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE, TraceEventType.CONTAINER_CHANGE)),
+            LabStep(2, "Open Nav2 leaf dialog, sheet, and fullscreen dialog routes in sequence",
+                expectedEvents = listOf(TraceEventType.STACK_CHANGE, TraceEventType.CONTAINER_CHANGE)),
+            LabStep(3, "Dismiss each child modal and verify Nav3 parent depth unchanged",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT, TraceEventType.STACK_CHANGE, TraceEventType.INVARIANT)),
+            LabStep(4, "Pop Nav3 child key and confirm parent stack returns to ScreenA",
+                expectedEvents = listOf(TraceEventType.BACK_EVENT, TraceEventType.STACK_CHANGE)),
+        ),
+        invariants = listOf(
+            "Child modal dismiss pops child stack only",
+            "Nav3 parent stack is not mutated by Nav2 leaf modal lifecycle",
+            "Parent navigation resumes correctly after child modal unwind",
+        ),
+    ),
 )

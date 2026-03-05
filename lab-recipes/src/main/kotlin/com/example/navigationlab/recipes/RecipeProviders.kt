@@ -11,6 +11,7 @@ import com.example.navigationlab.recipes.hosts.RecipeConditionalHostActivity
 import com.example.navigationlab.recipes.hosts.RecipeDeepLinkHostActivity
 import com.example.navigationlab.recipes.hosts.RecipeInteropHostActivity
 import com.example.navigationlab.recipes.hosts.RecipeMigrationHostActivity
+import com.example.navigationlab.recipes.hosts.RecipeModalMatrixHostActivity
 import com.example.navigationlab.recipes.hosts.RecipeResultsHostActivity
 import com.example.navigationlab.recipes.hosts.RecipeTransitionHostActivity
 
@@ -84,4 +85,12 @@ object RecipeConditionalProvider {
 
     fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
         RecipeConditionalHostActivity.createIntent(context, caseId, runMode)
+}
+
+object RecipeModalMatrixProvider {
+
+    val scenarios: List<LabScenario> = R_MODAL_MATRIX_SCENARIOS
+
+    fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
+        RecipeModalMatrixHostActivity.createIntent(context, caseId, runMode)
 }

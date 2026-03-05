@@ -8,17 +8,28 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.dialog
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
@@ -46,9 +57,15 @@ class Nav3ToNav2InteropActivity : AppCompatActivity() {
     /** Tracked Nav2 leaf depth without restricted NavController APIs. */
     private var nav2LeafDepthValue: Int = 0
 
+    /** Pending child-modal route to restore after recreation (G08). */
+    private var pendingLeafModalRestoreRoute: String? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_nav3_host)
+
+        restoreParentBackStack(savedInstanceState)
+        pendingLeafModalRestoreRoute = savedInstanceState?.getString(STATE_PENDING_LEAF_MODAL_ROUTE)
 
         val caseCode = intent.getStringExtra(EXTRA_CASE_ID) ?: run {
             Log.e(TAG, "No case ID provided")
@@ -86,10 +103,26 @@ class Nav3ToNav2InteropActivity : AppCompatActivity() {
                             is Nav3Key.ScreenA -> NavEntry(key) {
                                 Nav3StubScreen("Screen A", COLORS[1])
                             }
+                            is Nav3Key.DialogModal -> NavEntry(key) {
+                                ParentDialogModalContent(
+                                    onDismiss = { this@Nav3ToNav2InteropActivity.popNav3Back() },
+                                )
+                            }
+                            is Nav3Key.PopupOverlay -> NavEntry(key) {
+                                ParentPopupOverlayContent(
+                                    onDismiss = { this@Nav3ToNav2InteropActivity.popNav3Back() },
+                                )
+                            }
                             is Nav2LeafKey -> NavEntry(key) {
                                 val controller = rememberNavController()
                                 nav2LeafController = controller
                                 nav2LeafDepthValue = 1
+                                LaunchedEffect(controller, pendingLeafModalRestoreRoute) {
+                                    val restoreRoute = pendingLeafModalRestoreRoute ?: return@LaunchedEffect
+                                    controller.navigate(restoreRoute)
+                                    nav2LeafDepthValue += 1
+                                    pendingLeafModalRestoreRoute = null
+                                }
                                 NavHost(
                                     navController = controller,
                                     startDestination = LEAF_ROUTE_HOME,
@@ -99,6 +132,27 @@ class Nav3ToNav2InteropActivity : AppCompatActivity() {
                                     }
                                     composable(LEAF_ROUTE_DETAIL) {
                                         Nav2LeafStubScreen("Nav2 Leaf Detail", COLORS[3])
+                                    }
+                                    dialog(LEAF_ROUTE_DIALOG) {
+                                        LeafDialogModalContent(
+                                            onDismiss = { this@Nav3ToNav2InteropActivity.popNav2LeafBack() },
+                                        )
+                                    }
+                                    dialog(LEAF_ROUTE_SHEET) {
+                                        LeafSheetModalContent(
+                                            onDismiss = { this@Nav3ToNav2InteropActivity.popNav2LeafBack() },
+                                        )
+                                    }
+                                    dialog(
+                                        route = LEAF_ROUTE_FULL_SCREEN_DIALOG,
+                                        dialogProperties = DialogProperties(
+                                            usePlatformDefaultWidth = false,
+                                            decorFitsSystemWindows = false,
+                                        ),
+                                    ) {
+                                        LeafFullScreenDialogModalContent(
+                                            onDismiss = { this@Nav3ToNav2InteropActivity.popNav2LeafBack() },
+                                        )
                                     }
                                 }
                             }
@@ -158,6 +212,106 @@ class Nav3ToNav2InteropActivity : AppCompatActivity() {
     val nav2LeafBackStackDepth: Int
         get() = nav2LeafDepthValue
 
+    /** Current Nav2 leaf route (null if leaf not active). */
+    val currentLeafRoute: String?
+        get() = nav2LeafController?.currentBackStackEntry?.destination?.route
+
+    /** Open parent dialog-style Nav3 modal entry. */
+    fun openParentDialog() {
+        navigateTo(Nav3Key.DialogModal)
+    }
+
+    /** Open parent popup-style Nav3 overlay entry. */
+    fun openParentPopup() {
+        navigateTo(Nav3Key.PopupOverlay)
+    }
+
+    /** Dismiss parent modal/popup entry if present. */
+    fun dismissParentModalOrPopup(): Boolean {
+        if (!isParentDialogVisible && !isParentPopupVisible) return false
+        return popNav3Back()
+    }
+
+    /** Whether parent dialog-style entry is visible. */
+    val isParentDialogVisible: Boolean
+        get() = backStack.lastOrNull() is Nav3Key.DialogModal
+
+    /** Whether parent popup-style entry is visible. */
+    val isParentPopupVisible: Boolean
+        get() = backStack.lastOrNull() is Nav3Key.PopupOverlay
+
+    /** Open child dialog-style Nav2 route inside leaf. */
+    fun openLeafDialog() {
+        navigateNav2Leaf(LEAF_ROUTE_DIALOG)
+    }
+
+    /** Open child sheet-style Nav2 route inside leaf. */
+    fun openLeafSheet() {
+        navigateNav2Leaf(LEAF_ROUTE_SHEET)
+    }
+
+    /** Open child fullscreen dialog Nav2 route inside leaf. */
+    fun openLeafFullScreenDialog() {
+        navigateNav2Leaf(LEAF_ROUTE_FULL_SCREEN_DIALOG)
+    }
+
+    /** Dismiss child modal route when visible. */
+    fun dismissLeafModal(): Boolean {
+        if (!isLeafDialogVisible && !isLeafSheetVisible && !isLeafFullScreenDialogVisible) return false
+        return popNav2LeafBack()
+    }
+
+    /** Whether child dialog-style route is visible. */
+    val isLeafDialogVisible: Boolean
+        get() = currentLeafRoute == LEAF_ROUTE_DIALOG
+
+    /** Whether child sheet-style route is visible. */
+    val isLeafSheetVisible: Boolean
+        get() = currentLeafRoute == LEAF_ROUTE_SHEET
+
+    /** Whether child fullscreen dialog route is visible. */
+    val isLeafFullScreenDialogVisible: Boolean
+        get() = currentLeafRoute == LEAF_ROUTE_FULL_SCREEN_DIALOG
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putStringArrayList(
+            STATE_PARENT_BACK_STACK_KEYS,
+            ArrayList(backStack.mapNotNull(::keyToToken)),
+        )
+        val route = currentLeafRoute
+        if (route == LEAF_ROUTE_DIALOG || route == LEAF_ROUTE_SHEET || route == LEAF_ROUTE_FULL_SCREEN_DIALOG) {
+            outState.putString(STATE_PENDING_LEAF_MODAL_ROUTE, route)
+        }
+    }
+
+    private fun restoreParentBackStack(savedState: Bundle?) {
+        val tokens = savedState?.getStringArrayList(STATE_PARENT_BACK_STACK_KEYS) ?: return
+        if (tokens.isEmpty()) return
+        val restored = tokens.mapNotNull(::tokenToKey)
+        if (restored.isEmpty()) return
+        backStack.clear()
+        backStack.addAll(restored)
+    }
+
+    private fun keyToToken(key: Any): String? = when (key) {
+        is Nav3Key.Home -> TOKEN_HOME
+        is Nav3Key.ScreenA -> TOKEN_SCREEN_A
+        is Nav3Key.DialogModal -> TOKEN_DIALOG
+        is Nav3Key.PopupOverlay -> TOKEN_POPUP
+        is Nav2LeafKey -> TOKEN_NAV2_LEAF
+        else -> null
+    }
+
+    private fun tokenToKey(token: String): Any? = when (token) {
+        TOKEN_HOME -> Nav3Key.Home
+        TOKEN_SCREEN_A -> Nav3Key.ScreenA
+        TOKEN_DIALOG -> Nav3Key.DialogModal
+        TOKEN_POPUP -> Nav3Key.PopupOverlay
+        TOKEN_NAV2_LEAF -> Nav2LeafKey
+        else -> null
+    }
+
     companion object {
         private const val TAG = "T8Host"
         const val EXTRA_CASE_ID = "case_id"
@@ -165,6 +319,18 @@ class Nav3ToNav2InteropActivity : AppCompatActivity() {
 
         const val LEAF_ROUTE_HOME = "leaf_home"
         const val LEAF_ROUTE_DETAIL = "leaf_detail"
+        const val LEAF_ROUTE_DIALOG = "leaf_dialog"
+        const val LEAF_ROUTE_SHEET = "leaf_sheet"
+        const val LEAF_ROUTE_FULL_SCREEN_DIALOG = "leaf_full_screen_dialog"
+
+        private const val STATE_PARENT_BACK_STACK_KEYS = "state_parent_back_stack_keys"
+        private const val STATE_PENDING_LEAF_MODAL_ROUTE = "pending_leaf_modal_route"
+
+        private const val TOKEN_HOME = "home"
+        private const val TOKEN_SCREEN_A = "screen_a"
+        private const val TOKEN_DIALOG = "dialog"
+        private const val TOKEN_POPUP = "popup"
+        private const val TOKEN_NAV2_LEAF = "nav2_leaf"
 
         val COLORS = listOf(
             Color(0xFF6200EE), // Purple
@@ -200,5 +366,138 @@ private fun Nav2LeafStubScreen(label: String, color: Color) {
             color = Color.White,
             style = MaterialTheme.typography.headlineLarge,
         )
+    }
+}
+
+@androidx.compose.runtime.Composable
+private fun ParentDialogModalContent(onDismiss: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.55f)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.85f)
+                .background(Color.White, shape = RoundedCornerShape(12.dp))
+                .padding(24.dp),
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Parent Nav3 Dialog",
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(onClick = onDismiss) {
+                    Text("Dismiss")
+                }
+            }
+        }
+    }
+}
+
+@androidx.compose.runtime.Composable
+private fun ParentPopupOverlayContent(onDismiss: () -> Unit) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(24.dp)
+                .align(Alignment.TopEnd)
+                .background(Color.White, shape = RoundedCornerShape(10.dp))
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Parent Popup",
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(onClick = onDismiss) {
+                    Text("Close")
+                }
+            }
+        }
+    }
+}
+
+@androidx.compose.runtime.Composable
+private fun LeafDialogModalContent(onDismiss: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White, shape = RoundedCornerShape(12.dp))
+            .padding(24.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "Leaf Nav2 Dialog",
+                style = MaterialTheme.typography.headlineSmall,
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = onDismiss) {
+                Text("Dismiss")
+            }
+        }
+    }
+}
+
+@androidx.compose.runtime.Composable
+private fun LeafSheetModalContent(onDismiss: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.35f)),
+        contentAlignment = Alignment.BottomCenter,
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                .padding(24.dp),
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Leaf Nav2 Sheet",
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(onClick = onDismiss) {
+                    Text("Dismiss Sheet")
+                }
+            }
+        }
+    }
+}
+
+@androidx.compose.runtime.Composable
+private fun LeafFullScreenDialogModalContent(onDismiss: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.2f))
+            .padding(24.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White.copy(alpha = 0.94f), shape = RoundedCornerShape(20.dp))
+                .padding(24.dp),
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Leaf Nav2 Fullscreen Dialog",
+                    style = MaterialTheme.typography.headlineMedium,
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(onClick = onDismiss) {
+                    Text("Close")
+                }
+            }
+        }
     }
 }

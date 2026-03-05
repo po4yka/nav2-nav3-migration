@@ -13,12 +13,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.navigation.NavHostController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -72,12 +74,16 @@ import kotlin.reflect.KClass
  * R06 uses Nav3 NavDisplay + NavigationState + Navigator with bottom navigation.
  */
 class RecipeMigrationHostActivity : AppCompatActivity() {
+    private lateinit var caseCode: String
+    private var nav2Controller: NavHostController? = null
+    private var nav3NavigationState: NavigationState? = null
+    private var nav3Navigator: Navigator? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_recipe_host)
 
-        val caseCode = intent.getStringExtra(EXTRA_CASE_ID) ?: run {
+        caseCode = intent.getStringExtra(EXTRA_CASE_ID) ?: run {
             Log.e(TAG, "No case ID provided")
             finish()
             return
@@ -97,17 +103,171 @@ class RecipeMigrationHostActivity : AppCompatActivity() {
         composeView.setContent {
             MaterialTheme {
                 when (caseCode) {
-                    "R05" -> Nav2MigrationBegin()
-                    "R06" -> Nav3MigrationEnd(onExit = { finish() })
+                    "R05" -> Nav2MigrationBegin(
+                        onNavControllerReady = { controller ->
+                            nav2Controller = controller
+                        },
+                    )
+                    "R06" -> Nav3MigrationEnd(
+                        onExit = { finish() },
+                        onNavigationReady = { state, navigator ->
+                            nav3NavigationState = state
+                            nav3Navigator = navigator
+                        },
+                    )
                 }
             }
         }
     }
 
+    /** True when migration host dependencies are ready for scenario-driven tests. */
+    val isMigrationScenarioReady: Boolean
+        get() = when (caseCode) {
+            "R05" -> nav2Controller != null
+            "R06" -> nav3NavigationState != null && nav3Navigator != null
+            else -> false
+        }
+
+    // -- R05 test hooks --
+
+    fun navigateMigBeginToA1() {
+        requireCase("R05")
+        nav2ControllerOrThrow().navigate(MigBeginRouteA1)
+    }
+
+    fun switchMigBeginTopLevelToA() {
+        requireCase("R05")
+        nav2ControllerOrThrow().navigate(MigBeginBaseRouteA, navOptions { popUpTo(route = MigBeginRouteA) })
+    }
+
+    fun switchMigBeginTopLevelToB() {
+        requireCase("R05")
+        nav2ControllerOrThrow().navigate(MigBeginBaseRouteB, navOptions { popUpTo(route = MigBeginRouteA) })
+    }
+
+    fun switchMigBeginTopLevelToC() {
+        requireCase("R05")
+        nav2ControllerOrThrow().navigate(MigBeginBaseRouteC, navOptions { popUpTo(route = MigBeginRouteA) })
+    }
+
+    fun navigateMigBeginToB1(id: String = "ABC") {
+        requireCase("R05")
+        nav2ControllerOrThrow().navigate(MigBeginRouteB1(id))
+    }
+
+    fun openMigBeginDialog() {
+        requireCase("R05")
+        nav2ControllerOrThrow().navigate(MigBeginRouteD)
+    }
+
+    fun dismissMigBeginDialog(): Boolean {
+        requireCase("R05")
+        if (!isMigBeginDialogVisible) return false
+        return nav2ControllerOrThrow().popBackStack()
+    }
+
+    val currentMigBeginRoute: String
+        get() = when (val destination = nav2ControllerOrThrow().currentDestination) {
+            null -> ROUTE_UNKNOWN
+            else -> when {
+                destination.hasRoute(MigBeginRouteA::class) -> ROUTE_A
+                destination.hasRoute(MigBeginRouteA1::class) -> ROUTE_A1
+                destination.hasRoute(MigBeginRouteB::class) -> ROUTE_B
+                destination.hasRoute(MigBeginRouteB1::class) -> ROUTE_B1
+                destination.hasRoute(MigBeginRouteC::class) -> ROUTE_C
+                destination.hasRoute(MigBeginRouteD::class) -> ROUTE_D
+                else -> ROUTE_UNKNOWN
+            }
+        }
+
+    val isMigBeginDialogVisible: Boolean
+        get() = currentMigBeginRoute == ROUTE_D
+
+    // -- R06 test hooks --
+
+    fun navigateMigEndToA1() {
+        requireCase("R06")
+        nav3NavigatorOrThrow().navigate(MigEndRouteA1)
+    }
+
+    fun switchMigEndTopLevelToA() {
+        requireCase("R06")
+        nav3NavigatorOrThrow().navigate(MigEndRouteA)
+    }
+
+    fun switchMigEndTopLevelToB() {
+        requireCase("R06")
+        nav3NavigatorOrThrow().navigate(MigEndRouteB)
+    }
+
+    fun switchMigEndTopLevelToC() {
+        requireCase("R06")
+        nav3NavigatorOrThrow().navigate(MigEndRouteC)
+    }
+
+    fun navigateMigEndToB1(id: String = "ABC") {
+        requireCase("R06")
+        nav3NavigatorOrThrow().navigate(MigEndRouteB1(id))
+    }
+
+    fun openMigEndDialog() {
+        requireCase("R06")
+        nav3NavigatorOrThrow().navigate(MigEndRouteD)
+    }
+
+    fun backFromMigEnd() {
+        requireCase("R06")
+        nav3NavigatorOrThrow().goBack()
+    }
+
+    val currentMigEndTopLevelRoute: String
+        get() = when (nav3StateOrThrow().topLevelRoute) {
+            MigEndRouteA -> ROUTE_A
+            MigEndRouteB -> ROUTE_B
+            MigEndRouteC -> ROUTE_C
+            else -> ROUTE_UNKNOWN
+        }
+
+    val currentMigEndRoute: String
+        get() = when (val current = nav3StateOrThrow().backStacks[nav3StateOrThrow().topLevelRoute]?.lastOrNull()) {
+            MigEndRouteA -> ROUTE_A
+            MigEndRouteA1 -> ROUTE_A1
+            MigEndRouteB -> ROUTE_B
+            is MigEndRouteB1 -> ROUTE_B1
+            MigEndRouteC -> ROUTE_C
+            MigEndRouteD -> ROUTE_D
+            else -> ROUTE_UNKNOWN
+        }
+
+    val isMigEndDialogVisible: Boolean
+        get() = currentMigEndRoute == ROUTE_D
+
+    private fun requireCase(expected: String) {
+        check(caseCode == expected) {
+            "Case $expected expected, but activity is running $caseCode"
+        }
+    }
+
+    private fun nav2ControllerOrThrow(): NavHostController =
+        checkNotNull(nav2Controller) { "Nav2 controller is not ready yet" }
+
+    private fun nav3StateOrThrow(): NavigationState =
+        checkNotNull(nav3NavigationState) { "Nav3 NavigationState is not ready yet" }
+
+    private fun nav3NavigatorOrThrow(): Navigator =
+        checkNotNull(nav3Navigator) { "Nav3 Navigator is not ready yet" }
+
     companion object {
         private const val TAG = "RecipeMigrationHost"
         const val EXTRA_CASE_ID = "case_id"
         const val EXTRA_RUN_MODE = "run_mode"
+        const val ROUTE_A = "A"
+        const val ROUTE_A1 = "A1"
+        const val ROUTE_B = "B"
+        const val ROUTE_B1 = "B1"
+        const val ROUTE_C = "C"
+        const val ROUTE_D = "D"
+        const val ROUTE_UNKNOWN = "UNKNOWN"
 
         fun createIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
             Intent(context, RecipeMigrationHostActivity::class.java).apply {
@@ -120,8 +280,13 @@ class RecipeMigrationHostActivity : AppCompatActivity() {
 // -- R05: Nav2 Migration Begin --
 
 @androidx.compose.runtime.Composable
-private fun Nav2MigrationBegin() {
+private fun Nav2MigrationBegin(
+    onNavControllerReady: (NavHostController) -> Unit = {},
+) {
     val navController = rememberNavController()
+    LaunchedEffect(navController) {
+        onNavControllerReady(navController)
+    }
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
 
     Scaffold(bottomBar = {
@@ -209,13 +374,19 @@ private fun NavDestination?.isRouteInHierarchy(route: KClass<*>) =
 // -- R06: Nav3 Migration End --
 
 @androidx.compose.runtime.Composable
-private fun Nav3MigrationEnd(onExit: () -> Unit) {
+private fun Nav3MigrationEnd(
+    onExit: () -> Unit,
+    onNavigationReady: (NavigationState, Navigator) -> Unit = { _, _ -> },
+) {
     val navigationState = rememberNavigationState(
         startRoute = MigEndRouteA,
         topLevelRoutes = MIG_END_TOP_LEVEL_ROUTES.keys,
     )
 
     val navigator = remember { Navigator(navigationState) }
+    LaunchedEffect(navigationState, navigator) {
+        onNavigationReady(navigationState, navigator)
+    }
 
     val entryProvider = entryProvider {
         nav3FeatureASection(

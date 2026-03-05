@@ -1,8 +1,8 @@
-# Navigation Interop Lab: Separate Android Test Project Architecture
+# Navigation Interop Lab Architecture
 
 ## Purpose
 
-Create in current repository test project to validate risky navigation combinations before touching production flow:
+Define the architecture and case catalog for this repository's Android lab project that validates risky navigation combinations before production migration changes:
 
 - Fragment containers and container visibility ownership
 - Nav2 inside Nav3 host and Nav3 inside Nav2 host
@@ -13,11 +13,35 @@ Create in current repository test project to validate risky navigation combinati
 
 This document is an implementation blueprint for that test project and a complete case catalog.
 
+## Current Status
+
+Last verified against repository state: **2026-03-05**.
+
+- Milestones `M1-M5`: implemented
+- Interop families `A-H`: implemented (`61` scenarios)
+- Recipe suite `R01-R25`: implemented (`25` scenarios)
+- Total scenarios: `86`
+
+Current baseline verification commands:
+
+```bash
+./gradlew :app:assembleDebug
+./gradlew :lab-recipes:assembleDebug
+./gradlew lintDebug
+./gradlew :lab-testkit:connectedAndroidTest
+```
+
+Toolchain snapshot:
+- Gradle wrapper `9.4.0`
+- AGP `9.1.0`
+- Kotlin `2.3.10`
+- minSdk `24`, compileSdk/targetSdk `36`
+
 ---
 
 ## Source Analysis (Current Project Patterns To Reproduce)
 
-The lab must reproduce these real patterns from production code.
+The lab reproduces patterns observed in production code snapshots (external references, not modules in this repo).
 
 | Pattern | Current source |
 |---|---|
@@ -58,7 +82,7 @@ Out of scope:
 
 ### Module layout
 
-Use a **standalone repository** (not a module inside this repo).
+The lab is built directly inside this repository (`nav2-nav3-migration`).
 
 ```text
 nav2-nav3-migration/
@@ -66,7 +90,8 @@ nav2-nav3-migration/
     src/main/
       AndroidManifest.xml
       java/.../NavigationLabActivity.kt
-      res/layout/activity_navigation_lab.xml
+      res/values/themes.xml
+      res/values/strings.xml
   lab-contracts/
     src/main/kotlin/.../
       LabCaseId.kt
@@ -97,28 +122,22 @@ nav2-nav3-migration/
   lab-back/
     src/main/kotlin/.../
       back/
+  lab-recipes/
+    src/main/kotlin/.../
+      keys/
+      hosts/
+      helpers/
+      content/
   lab-results/
     src/main/kotlin/.../
       results/
   lab-testkit/
     src/androidTest/kotlin/.../
-  docs/
-    architecture.md
-    cases.md
-    known-issues.md
-    sync-with-source-repo.md
 ```
-
-### Repository strategy
-
-- Create a new Git repository (example name: `navigation-interop-lab`).
-- Keep it buildable independently (`./gradlew :app:assembleDebug` in that repo).
-- Do not include lab modules into current production `settings.gradle.kts`.
-- Do not add runtime dependency from production app to lab repo.
 
 ### Dependency boundary policy
 
-- The lab must **not** depend directly on project internals such as:
+- Non-app lab modules must **not** depend directly on production internals such as:
   - `:app`
   - `:core:*`
   - `:features:*`
@@ -150,6 +169,9 @@ flowchart LR
   Results --> Contracts
   HostNav2 --> Nav2["androidx.navigation:* (Nav2)"]
   HostNav3 --> Nav3["androidx.navigation3:* (Nav3)"]
+  App --> Recipes[":lab-recipes"]
+  Recipes --> Contracts
+  Recipes --> Nav3
   App --> Koin["Koin DI (optional)"]
 ```
 
@@ -198,23 +220,21 @@ Core runtime components:
   - back events
   - deeplink outcomes
 
-### Synchronization with source repository
+7. `NavLogger` (in `:lab-contracts`)
+- Singleton structured logger with `TAG="NavRecipe"`.
+- 8 methods: `push`, `pop`, `back`, `tabSwitch`, `deepLink`, `redirect`, `result`, `visibility`.
+- Used by all recipe host activities for navigation observability.
 
-Because the lab is in a separate repository, add a documented sync process:
-
-1. Keep a `SOURCE_SNAPSHOT.md` with:
-- source repository URL
-- source commit SHA used for latest sync
-- changed anchor files and line ranges
-
-2. Add `tools/sync/refresh_inventory.sh` in lab repo to refresh:
-- NavHost inventory
-- deeplink manager chain inventory
-- container/back-handler anchor list
-
-3. Run sync regularly (for example once per sprint or before major migration decision).
-
-4. Version every sync update as a separate PR in the lab repo.
+8. Recipe helpers (in `:lab-recipes`)
+- `DefaultTransitions` -- horizontal slide + per-entry fade overrides for Nav3 `NavDisplay`.
+- `NavStateIndicator` -- debug overlay showing current back stack and nav state.
+- `AppState` -- multi-stack tab orchestrator with `LifoUniqueQueue` history.
+- `NavigationState` -- per-tab back stack manager using `rememberNavBackStack`.
+- `Navigator` -- forward/back dispatcher that updates `NavigationState`.
+- `ConditionalNavigator` -- auth-gate wrapper that redirects when `requiresLogin`.
+- `ResultStore` -- saveable key-value result store for screen-to-screen data passing.
+- `ResultEventBus` -- Channel-based one-shot result delivery.
+- `BottomSheetSceneStrategy` -- custom `SceneStrategy` rendering entries as `ModalBottomSheet`.
 
 ### Host topologies to implement in the lab
 
@@ -268,6 +288,10 @@ Each case must include:
 | `B10` | Cross-engine pop: pop from child engine should not corrupt parent stack. |
 | `B11` | `singleTop` semantics parity for equivalent Nav2 and Nav3 routes. |
 | `B12` | Clear-to-root parity across interop boundaries. |
+| `B13` | Nav2 parent dialog over Nav3 leaf; parent/child stack isolation. |
+| `B14` | Nav3 leaf modal flow returns to Nav2 parent without stack corruption. |
+| `B15` | Parent-level modal/popup while Nav2 leaf is active. |
+| `B16` | Nav2 leaf modal dismiss without mutating Nav3 parent stack. |
 
 ### C. XML <-> Compose screen connection
 
@@ -295,6 +319,12 @@ Each case must include:
 | `D07` | Sheet dismiss should not pop parent graph unexpectedly. |
 | `D08` | Fullscreen dialog should preserve transparent-background semantics. |
 | `D09` | Transition from overlay fragment back into compose sheet state. |
+| `D10` | Pure Nav2 bottom-sheet semantics baseline. |
+| `D11` | Pure Nav2 dialog semantics baseline. |
+| `D12` | Pure Nav2 fullscreen dialog semantics baseline. |
+| `D13` | Pure Nav3 dialog-style modal semantics baseline. |
+| `D14` | Pure Nav3 sheet-style modal semantics baseline. |
+| `D15` | Legacy island DialogFragment/popup layering over Nav3 island. |
 
 ### E. Back handling and nested stacks
 
@@ -308,6 +338,7 @@ Each case must include:
 | `E06` | Back from root should trigger exit logic only once (double-back policy). |
 | `E07` | Back after deep-link fallback pop chain. |
 | `E08` | Back while pending transaction exists (`executePendingTransactions` edge). |
+| `E09` | Back-order chain: popup -> child modal -> parent route. |
 
 ### F. Deeplink and fallback behavior
 
@@ -333,6 +364,7 @@ Each case must include:
 | `G05` | Non-saveable argument injection failure case (lambda-like arg). |
 | `G06` | Runtime default argument drift case (value resolved at different times). |
 | `G07` | Restore when dialog/sheet is top-most destination. |
+| `G08` | Rotation/restore when child modal is top-most with parent stack active. |
 
 ### H. Transaction safety and race conditions
 
@@ -343,6 +375,36 @@ Each case must include:
 | `H03` | `executePendingTransactions` impact on ordering guarantees. |
 | `H04` | Concurrent navigation events from two sources (UI + deeplink). |
 | `H05` | Container visibility update races with transaction commit. |
+
+### R. Nav3 Recipe Patterns
+
+| ID | Scenario |
+|---|---|
+| `R01` | Basic Nav3 with `mutableStateListOf` backstack |
+| `R02` | BasicSaveable Nav3 with `rememberNavBackStack` persistence |
+| `R03` | BasicDsl Nav3 with `entryProvider` DSL syntax |
+| `R04` | Nav3 interop: `AndroidFragment` + `AndroidView` |
+| `R05` | Migration baseline: Nav2 with bottom navigation |
+| `R06` | Migration end: Nav3 with `NavigationState` + `Navigator` |
+| `R07` | Results via event bus (Channel-based `ResultEventBus`) |
+| `R08` | Results via state store (saveable `ResultStore`) |
+| `R09` | Multi-stack with tab history (`LifoUniqueQueue`) |
+| `R10` | Bottom bar visibility control |
+| `R11` | ViewModel preservation in Nav3 entries |
+| `R12` | Result consumption with `LaunchedEffect` |
+| `R13` | Deep link bridging to Nav3 (trampoline + synthetic backstack) |
+| `R14` | Custom transition animations (`DefaultTransitions`) |
+| `R15` | Dialog destination via `DialogSceneStrategy` |
+| `R16` | Bottom sheet destination via `BottomSheetSceneStrategy` |
+| `R17` | Adaptive list-detail layout (`ListDetailSceneStrategy`) |
+| `R18` | Conditional navigation (auth gate via `ConditionalNavigator`) |
+| `R19` | Advanced deep links with synthetic backstack |
+| `R20` | Nav2 modal reference (dialog/sheet/fullscreen) |
+| `R21` | Nav3 modal reference (dialog-style + sheet-style) |
+| `R22` | Nav2 -> Nav3 modal interop reference |
+| `R23` | Nav3 -> Nav2 modal interop reference |
+| `R24` | Nav3 legacy island + popup/dialog reference |
+| `R25` | Restore/unwind reference for stacked modals across engines |
 
 ---
 
@@ -374,9 +436,10 @@ Minimum automated coverage before using lab for migration decisions:
 
 ## Delivery Milestones
 
-| Milestone | Output |
-|---|---|
-| `M1` | New standalone repo boots (`:app`), case browser opens, `T1/T2/T3` topologies implemented. |
-| `M2` | All `A*`, `B*`, `C*` cases implemented and manually runnable. |
-| `M3` | `D*`, `E*`, `F*` cases implemented; trace logging and pass/fail invariants active. |
-| `M4` | `G*`, `H*` cases automated in `androidTest`; CI smoke pipeline added in the standalone repo. |
+| Milestone | Status | Output |
+|---|---|---|
+| `M1` | Done | Repo boots (`:app`), case browser opens, `T1/T2/T3` topologies implemented. |
+| `M2` | Done | All `A*`, `B*`, `C*` cases implemented and manually runnable. |
+| `M3` | Done | `D*`, `E*`, `F*` cases implemented; trace logging and pass/fail invariants active. |
+| `M4` | Done | `G*`, `H*` cases automated in `androidTest`; CI smoke pipeline added. |
+| `M5` | Done | Recipe cases `R01-R25`, NavLogger, transitions, nav-state indicators. |
