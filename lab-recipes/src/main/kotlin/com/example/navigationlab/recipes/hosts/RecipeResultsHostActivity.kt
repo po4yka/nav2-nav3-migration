@@ -20,6 +20,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.example.navigationlab.contracts.LabCaseId
+import com.example.navigationlab.contracts.NavLogger
 import com.example.navigationlab.recipes.R
 import com.example.navigationlab.recipes.content.HomeScreen
 import com.example.navigationlab.recipes.content.Person
@@ -84,7 +85,11 @@ private fun ResultEventContent() {
         NavDisplay(
             backStack = backStack,
             modifier = Modifier.padding(paddingValues),
-            onBack = { backStack.removeLastOrNull() },
+            onBack = {
+                val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                backStack.removeLastOrNull()
+                NavLogger.back("RecipeResultsHost", from, backStack.size)
+            },
             transitionSpec = DefaultTransitions.slideForward(),
             popTransitionSpec = DefaultTransitions.slideBack(),
             predictivePopTransitionSpec = DefaultTransitions.predictiveSlideBack(),
@@ -96,14 +101,19 @@ private fun ResultEventContent() {
                     }
                     HomeScreen(
                         person = person,
-                        onNext = { backStack.add(ResultPersonDetailsForm()) },
+                        onNext = {
+                            backStack.add(ResultPersonDetailsForm())
+                            NavLogger.push("RecipeResultsHost", "ResultPersonDetailsForm", backStack.size)
+                        },
                     )
                 }
                 entry<ResultPersonDetailsForm> {
                     PersonDetailsScreen(
                         onSubmit = { person ->
                             resultBus.sendResult<Person>(result = person)
+                            NavLogger.result("RecipeResultsHost", "EventBus", "Person")
                             backStack.removeLastOrNull()
+                            NavLogger.pop("RecipeResultsHost", "ResultPersonDetailsForm", backStack.size)
                         },
                     )
                 }
@@ -122,7 +132,11 @@ private fun ResultStateContent() {
         NavDisplay(
             backStack = backStack,
             modifier = Modifier.padding(paddingValues),
-            onBack = { backStack.removeLastOrNull() },
+            onBack = {
+                val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                backStack.removeLastOrNull()
+                NavLogger.back("RecipeResultsHost", from, backStack.size)
+            },
             transitionSpec = DefaultTransitions.slideForward(),
             popTransitionSpec = DefaultTransitions.slideBack(),
             predictivePopTransitionSpec = DefaultTransitions.predictiveSlideBack(),
@@ -131,14 +145,19 @@ private fun ResultStateContent() {
                     val person = resultStore.getResultState<Person?>()
                     HomeScreen(
                         person = person,
-                        onNext = { backStack.add(ResultPersonDetailsForm()) },
+                        onNext = {
+                            backStack.add(ResultPersonDetailsForm())
+                            NavLogger.push("RecipeResultsHost", "ResultPersonDetailsForm", backStack.size)
+                        },
                     )
                 }
                 entry<ResultPersonDetailsForm> {
                     PersonDetailsScreen(
                         onSubmit = { person ->
                             resultStore.setResult<Person>(result = person)
+                            NavLogger.result("RecipeResultsHost", "StateStore", "Person")
                             backStack.removeLastOrNull()
+                            NavLogger.pop("RecipeResultsHost", "ResultPersonDetailsForm", backStack.size)
                         },
                     )
                 }

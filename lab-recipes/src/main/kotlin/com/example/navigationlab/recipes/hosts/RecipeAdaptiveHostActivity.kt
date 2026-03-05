@@ -20,6 +20,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.example.navigationlab.contracts.LabCaseId
+import com.example.navigationlab.contracts.NavLogger
 import com.example.navigationlab.recipes.R
 import com.example.navigationlab.recipes.content.ItemDetailScreen
 import com.example.navigationlab.recipes.content.ItemExtraScreen
@@ -79,7 +80,11 @@ private fun AdaptiveContent() {
         NavDisplay(
             backStack = backStack,
             modifier = Modifier.padding(paddingValues),
-            onBack = { backStack.removeLastOrNull() },
+            onBack = {
+                val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                backStack.removeLastOrNull()
+                NavLogger.back("RecipeAdaptiveHost", from, backStack.size)
+            },
             transitionSpec = DefaultTransitions.crossFade(),
             popTransitionSpec = DefaultTransitions.crossFadeBack(),
             predictivePopTransitionSpec = DefaultTransitions.predictiveCrossFadeBack(),
@@ -89,7 +94,10 @@ private fun AdaptiveContent() {
                     metadata = ListDetailSceneStrategy.listPane(),
                 ) {
                     ItemListScreen(
-                        onItemClick = { id -> backStack.add(ItemDetail(id)) },
+                        onItemClick = { id ->
+                            backStack.add(ItemDetail(id))
+                            NavLogger.push("RecipeAdaptiveHost", "ItemDetail", backStack.size)
+                        },
                     )
                 }
                 entry<ItemDetail>(
@@ -97,7 +105,10 @@ private fun AdaptiveContent() {
                 ) { key ->
                     ItemDetailScreen(
                         id = key.id,
-                        onExtra = { backStack.add(ItemExtra(key.id)) },
+                        onExtra = {
+                            backStack.add(ItemExtra(key.id))
+                            NavLogger.push("RecipeAdaptiveHost", "ItemExtra", backStack.size)
+                        },
                     )
                 }
                 entry<ItemExtra>(

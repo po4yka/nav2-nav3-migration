@@ -22,6 +22,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.example.navigationlab.contracts.LabCaseId
+import com.example.navigationlab.contracts.NavLogger
 import com.example.navigationlab.recipes.R
 import com.example.navigationlab.recipes.helpers.DefaultTransitions
 import com.example.navigationlab.recipes.helpers.MyCustomFragment
@@ -54,7 +55,11 @@ class RecipeInteropHostActivity : FragmentActivity() {
 
                 NavDisplay(
                     backStack = backStack,
-                    onBack = { backStack.removeLastOrNull() },
+                    onBack = {
+                        val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                        backStack.removeLastOrNull()
+                        NavLogger.back("RecipeInteropHost", from, backStack.size)
+                    },
                     transitionSpec = DefaultTransitions.slideForward(),
                     popTransitionSpec = DefaultTransitions.slideBack(),
                     predictivePopTransitionSpec = DefaultTransitions.predictiveSlideBack(),
@@ -64,6 +69,7 @@ class RecipeInteropHostActivity : FragmentActivity() {
                                 AndroidFragment<MyCustomFragment>()
                                 Button(onClick = dropUnlessResumed {
                                     backStack.add(InteropViewRoute("123"))
+                                    NavLogger.push("RecipeInteropHost", "InteropViewRoute", backStack.size)
                                 }) {
                                     Text("Go to View")
                                 }

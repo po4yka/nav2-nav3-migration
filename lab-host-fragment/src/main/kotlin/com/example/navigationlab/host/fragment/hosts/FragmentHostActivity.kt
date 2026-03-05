@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.example.navigationlab.contracts.LabCaseId
+import com.example.navigationlab.contracts.NavLogger
 import com.example.navigationlab.host.fragment.R
 import com.example.navigationlab.host.fragment.databinding.ActivityFragmentHostBinding
 import com.example.navigationlab.host.fragment.fragments.LabStubFragment
@@ -51,6 +52,7 @@ class FragmentHostActivity : AppCompatActivity() {
             tx.addToBackStack(null)
         }
         tx.commit()
+        NavLogger.push(TAG, fragment::class.simpleName ?: "Fragment", supportFragmentManager.backStackEntryCount + if (addToBackStack) 1 else 0)
     }
 
     /** Add an overlay fragment on top of the current content without replacing. */

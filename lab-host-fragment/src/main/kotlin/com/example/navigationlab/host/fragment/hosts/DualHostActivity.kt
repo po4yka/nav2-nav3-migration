@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import com.example.navigationlab.contracts.LabCaseId
+import com.example.navigationlab.contracts.NavLogger
 import com.example.navigationlab.host.fragment.R
 import com.example.navigationlab.host.fragment.compose.DualStubScreen
 import com.example.navigationlab.host.fragment.fragments.LabStubFragment
@@ -83,6 +84,7 @@ class DualHostActivity : AppCompatActivity() {
     fun setBaseContent(label: String, colorIndex: Int) {
         baseLabel = label
         baseColorIndex = colorIndex.coerceIn(0, COLORS.lastIndex)
+        NavLogger.push(TAG, label, 1)
     }
 
     /** Show the overlay FrameLayout and add a fragment to it. */
@@ -93,6 +95,7 @@ class DualHostActivity : AppCompatActivity() {
             .add(R.id.overlayContainer, fragment)
             .addToBackStack("overlay")
             .commit()
+        NavLogger.push(TAG, "overlay", supportFragmentManager.backStackEntryCount + 1)
     }
 
     /** Make the overlay container visible (without adding content yet). */

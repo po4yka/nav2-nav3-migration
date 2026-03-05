@@ -25,6 +25,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.scene.DialogSceneStrategy
 import androidx.navigation3.ui.NavDisplay
 import com.example.navigationlab.contracts.LabCaseId
+import com.example.navigationlab.contracts.NavLogger
 import com.example.navigationlab.recipes.R
 import com.example.navigationlab.recipes.content.DialogContent
 import com.example.navigationlab.recipes.content.SheetContent
@@ -91,7 +92,11 @@ private fun TransitionContent() {
         Box(Modifier.padding(paddingValues).fillMaxSize()) {
         NavDisplay(
             backStack = backStack,
-            onBack = { backStack.removeLastOrNull() },
+            onBack = {
+                val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                backStack.removeLastOrNull()
+                NavLogger.back("RecipeTransitionHost", from, backStack.size)
+            },
             transitionSpec = DefaultTransitions.slideForward(),
             popTransitionSpec = DefaultTransitions.slideBack(),
             predictivePopTransitionSpec = DefaultTransitions.predictiveSlideBack(),
@@ -99,16 +104,31 @@ private fun TransitionContent() {
             entryProvider = entryProvider {
                 entry<TransitionHome> {
                     TransitionHomeScreen(
-                        onSlide = { backStack.add(TransitionSlide("slide-1")) },
-                        onFade = { backStack.add(TransitionFade("fade-1")) },
-                        onDialog = { backStack.add(DialogRoute("Hello from dialog!")) },
-                        onSheet = { backStack.add(SheetRoute("My Sheet")) },
+                        onSlide = {
+                            backStack.add(TransitionSlide("slide-1"))
+                            NavLogger.push("RecipeTransitionHost", "TransitionSlide", backStack.size)
+                        },
+                        onFade = {
+                            backStack.add(TransitionFade("fade-1"))
+                            NavLogger.push("RecipeTransitionHost", "TransitionFade", backStack.size)
+                        },
+                        onDialog = {
+                            backStack.add(DialogRoute("Hello from dialog!"))
+                            NavLogger.push("RecipeTransitionHost", "DialogRoute", backStack.size)
+                        },
+                        onSheet = {
+                            backStack.add(SheetRoute("My Sheet"))
+                            NavLogger.push("RecipeTransitionHost", "SheetRoute", backStack.size)
+                        },
                     )
                 }
                 entry<TransitionSlide> { key ->
                     TransitionSlideScreen(
                         label = key.label,
-                        onNext = { backStack.add(TransitionFade("fade-from-slide")) },
+                        onNext = {
+                            backStack.add(TransitionFade("fade-from-slide"))
+                            NavLogger.push("RecipeTransitionHost", "TransitionFade", backStack.size)
+                        },
                     )
                 }
                 entry<TransitionFade>(

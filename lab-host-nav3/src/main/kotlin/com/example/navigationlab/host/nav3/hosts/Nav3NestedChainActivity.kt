@@ -38,6 +38,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import com.example.navigationlab.contracts.LabCaseId
+import com.example.navigationlab.contracts.NavLogger
 import com.example.navigationlab.host.nav3.R
 import com.example.navigationlab.host.nav3.compose.Nav3StubScreen
 
@@ -86,7 +87,11 @@ class Nav3NestedChainActivity : AppCompatActivity() {
             MaterialTheme {
                 NavDisplay(
                     backStack = nav3BackStack,
-                    onBack = { nav3BackStack.removeLastOrNull() },
+                    onBack = {
+                        val from = nav3BackStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                        nav3BackStack.removeLastOrNull()
+                        NavLogger.back(TAG, from, nav3BackStack.size)
+                    },
                     entryProvider = { key ->
                         when (key) {
                             is ChainNav3Key.Home -> NavEntry(key) {
@@ -145,22 +150,27 @@ class Nav3NestedChainActivity : AppCompatActivity() {
     /** Navigate to the chain entry on Nav3 (Layer 1 -> Layer 2). */
     fun enterChain() {
         nav3BackStack.add(ChainNav3Key.ChainEntry)
+        NavLogger.push(TAG, "ChainEntry", nav3BackStack.size)
     }
 
     /** Navigate within Nav2 chain (Layer 2). */
     fun navigateNav2Chain(route: String) {
         nav2ChainController?.navigate(route)
+        NavLogger.push(TAG, route, nav2ChainController?.currentBackStack?.value?.size ?: 0)
     }
 
     /** Navigate within fragment's Nav2 (Layer 3/4). */
     fun navigateFragmentNav2(route: String) {
         fragmentNav2Controller?.navigate(route)
+        NavLogger.push(TAG, route, fragmentNav2Controller?.currentBackStack?.value?.size ?: 0)
     }
 
     /** Pop Nav3 root back stack. */
     fun popNav3Back(): Boolean {
         if (nav3BackStack.size <= 1) return false
+        val from = nav3BackStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
         nav3BackStack.removeLastOrNull()
+        NavLogger.pop(TAG, from, nav3BackStack.size)
         return true
     }
 

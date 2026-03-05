@@ -10,6 +10,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.graphics.Color
 import com.example.navigationlab.contracts.LabCaseId
+import com.example.navigationlab.contracts.NavLogger
 import com.example.navigationlab.host.fragment.R
 import com.example.navigationlab.host.fragment.fragments.ComposeNav2Fragment
 import com.example.navigationlab.host.fragment.fragments.LabStubFragment
@@ -52,6 +53,7 @@ class FragmentNav2HostActivity : AppCompatActivity() {
     /** Navigate to a route within the fragment's Nav2 graph. */
     fun navigateNav2(route: String) {
         composeFragment?.navHostController?.navigate(route)
+        NavLogger.push(TAG, route, nav2BackStackDepth)
     }
 
     /** Open D-family sheet-style route in the fragment Nav2 graph. */
@@ -64,7 +66,12 @@ class FragmentNav2HostActivity : AppCompatActivity() {
     fun openFullScreenDialog() = navigateNav2(ComposeNav2Fragment.ROUTE_FULL_SCREEN_DIALOG)
 
     /** Pop the fragment's Nav2 back stack. */
-    fun popNav2Back(): Boolean = composeFragment?.navHostController?.popBackStack() ?: false
+    fun popNav2Back(): Boolean {
+        val from = currentNav2Route ?: "?"
+        val result = composeFragment?.navHostController?.popBackStack() ?: false
+        if (result) NavLogger.pop(TAG, from, nav2BackStackDepth)
+        return result
+    }
 
     /** Nav2 back stack depth inside the fragment. */
     val nav2BackStackDepth: Int

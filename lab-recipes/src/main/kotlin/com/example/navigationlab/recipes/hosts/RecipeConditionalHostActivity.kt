@@ -27,6 +27,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.example.navigationlab.contracts.LabCaseId
+import com.example.navigationlab.contracts.NavLogger
 import com.example.navigationlab.recipes.R
 import com.example.navigationlab.recipes.content.AdvancedDeepHomeScreen
 import com.example.navigationlab.recipes.content.AdvancedDeepTargetScreen
@@ -153,8 +154,10 @@ private fun AdvancedDeepLinkContent() {
         if (intent.action == RecipeConditionalHostActivity.ACTION_ADVANCED_DEEP) {
             val name = intent.getStringExtra(RecipeConditionalHostActivity.KEY_NAME) ?: return@LaunchedEffect
             val location = intent.getStringExtra(RecipeConditionalHostActivity.KEY_LOCATION) ?: return@LaunchedEffect
+            NavLogger.deepLink("RecipeConditionalHost", RecipeConditionalHostActivity.ACTION_ADVANCED_DEEP, mapOf("name" to name, "location" to location))
             // Synthetic backstack: home is already the start, add target on top
             backStack.add(AdvancedDeepTarget(name = name, location = location))
+            NavLogger.push("RecipeConditionalHost", "AdvancedDeepTarget", backStack.size)
             isDeepLinkConsumed = true
         }
         isProcessing = false
@@ -172,7 +175,11 @@ private fun AdvancedDeepLinkContent() {
             NavDisplay(
                 backStack = backStack,
                 modifier = Modifier.padding(paddingValues),
-                onBack = { backStack.removeLastOrNull() },
+                onBack = {
+                    val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                    backStack.removeLastOrNull()
+                    NavLogger.back("RecipeConditionalHost", from, backStack.size)
+                },
                 transitionSpec = DefaultTransitions.slideForward(),
                 popTransitionSpec = DefaultTransitions.slideBack(),
                 predictivePopTransitionSpec = DefaultTransitions.predictiveSlideBack(),
@@ -181,6 +188,7 @@ private fun AdvancedDeepLinkContent() {
                         AdvancedDeepHomeScreen(
                             onNavigate = {
                                 backStack.add(AdvancedDeepTarget(name = "Manual", location = "Local"))
+                                NavLogger.push("RecipeConditionalHost", "AdvancedDeepTarget", backStack.size)
                             },
                         )
                     }

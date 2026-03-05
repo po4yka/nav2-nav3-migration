@@ -9,6 +9,7 @@ import androidx.compose.runtime.saveable.mapSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.navigation3.runtime.NavKey
+import com.example.navigationlab.contracts.NavLogger
 import com.example.navigationlab.recipes.helpers.TopLevelDestinationBehavior.HIDE
 import com.example.navigationlab.recipes.helpers.TopLevelDestinationBehavior.SAME_AS_PARENT
 import com.example.navigationlab.recipes.keys.TabAlphaDetail
@@ -24,6 +25,7 @@ internal class AppState(
     val navigationState: NavigationState,
 ) {
     companion object {
+        private const val HOST = "AppState"
         private val DEFAULT_DESTINATION = TopLevelDestination.ALPHA
 
         internal val TOP_LEVEL_NAVIGATION_BEHAVIOR_MAP: Map<kotlin.reflect.KClass<out NavKey>, TopLevelDestinationBehavior> = mapOf(
@@ -48,14 +50,18 @@ internal class AppState(
     }
 
     fun onSelectTopLevelDestination(destination: TopLevelDestination) {
+        val from = coreData.currentTopLevelDestination.name
         navigationState.topLevelRoute = destination.startRoute
         coreData.topLevelDestinationBackQueue.add(destination)
         coreData.currentTopLevelDestination = destination
+        NavLogger.tabSwitch(HOST, from, destination.name)
         showNavigation()
     }
 
     fun navigate(route: NavKey) {
         navigationState.backStacks[navigationState.topLevelRoute]?.add(route)
+        val depth = navigationState.backStacks[navigationState.topLevelRoute]?.size ?: 0
+        NavLogger.push(HOST, route::class.simpleName ?: "?", depth)
         updateNavigationVisibility(route)
     }
 
@@ -66,12 +72,18 @@ internal class AppState(
         if (isAtRoot) {
             coreData.topLevelDestinationBackQueue.remove()
             coreData.topLevelDestinationBackQueue.element()?.let { dest ->
+                NavLogger.back(HOST, "switched tab to ${dest.name}", 1)
                 navigationState.topLevelRoute = dest.startRoute
                 coreData.currentTopLevelDestination = dest
                 showNavigation()
-            } ?: finishActivity()
+            } ?: run {
+                NavLogger.back(HOST, "finish activity", 0)
+                finishActivity()
+            }
         } else {
+            val from = currentStack?.lastOrNull()?.let { it::class.simpleName } ?: "?"
             currentStack?.removeLastOrNull()
+            NavLogger.back(HOST, from, currentStack?.size ?: 0)
             val currentRoute = currentStack?.lastOrNull()
             if (currentRoute != null) updateNavigationVisibility(currentRoute)
             else showNavigation()
@@ -79,11 +91,12 @@ internal class AppState(
     }
 
     private fun updateNavigationVisibility(route: NavKey) {
-        when (TOP_LEVEL_NAVIGATION_BEHAVIOR_MAP[route::class]) {
-            HIDE -> hideNavigation()
-            SAME_AS_PARENT -> { /* keep current visibility */ }
-            else -> showNavigation()
+        val visible = when (TOP_LEVEL_NAVIGATION_BEHAVIOR_MAP[route::class]) {
+            HIDE -> { hideNavigation(); false }
+            SAME_AS_PARENT -> { return }
+            else -> { showNavigation(); true }
         }
+        NavLogger.visibility(HOST, "bottomBar", visible)
     }
 
     private fun showNavigation() {

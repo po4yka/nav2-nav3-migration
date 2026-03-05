@@ -26,6 +26,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.example.navigationlab.contracts.LabCaseId
+import com.example.navigationlab.contracts.NavLogger
 import com.example.navigationlab.recipes.R
 import com.example.navigationlab.recipes.content.DeepLinkHomeScreen
 import com.example.navigationlab.recipes.content.DeepLinkTargetScreen
@@ -99,7 +100,9 @@ private fun DeepLinkContent() {
 
         if (intent.action == RecipeDeepLinkHostActivity.ACTION_SHOW_TARGET) {
             val param = intent.getStringExtra(RecipeDeepLinkHostActivity.KEY_PARAM) ?: return@LaunchedEffect
+            NavLogger.deepLink("RecipeDeepLinkHost", RecipeDeepLinkHostActivity.ACTION_SHOW_TARGET, mapOf("param" to param))
             backStack.add(DeepLinkTarget(param = param))
+            NavLogger.push("RecipeDeepLinkHost", "DeepLinkTarget", backStack.size)
             isDeepLinkConsumed = true
         }
         isProcessing = false
@@ -117,14 +120,21 @@ private fun DeepLinkContent() {
             NavDisplay(
                 backStack = backStack,
                 modifier = Modifier.padding(paddingValues),
-                onBack = { backStack.removeLastOrNull() },
+                onBack = {
+                    val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                    backStack.removeLastOrNull()
+                    NavLogger.back("RecipeDeepLinkHost", from, backStack.size)
+                },
                 transitionSpec = DefaultTransitions.slideForward(),
                 popTransitionSpec = DefaultTransitions.slideBack(),
                 predictivePopTransitionSpec = DefaultTransitions.predictiveSlideBack(),
                 entryProvider = entryProvider {
                     entry<DeepLinkHome> {
                         DeepLinkHomeScreen(
-                            onNavigate = { backStack.add(DeepLinkTarget(param = "manual")) },
+                            onNavigate = {
+                                backStack.add(DeepLinkTarget(param = "manual"))
+                                NavLogger.push("RecipeDeepLinkHost", "DeepLinkTarget", backStack.size)
+                            },
                         )
                     }
                     entry<DeepLinkTarget> { key ->

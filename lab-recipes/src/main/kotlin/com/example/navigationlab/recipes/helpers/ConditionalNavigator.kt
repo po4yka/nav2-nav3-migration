@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
+import com.example.navigationlab.contracts.NavLogger
 import com.example.navigationlab.recipes.keys.GateLogin
 import com.example.navigationlab.recipes.keys.GateProfile
 
@@ -24,9 +25,11 @@ class ConditionalNavigator(
                 is GateProfile -> "GateProfile"
                 else -> null
             }
+            NavLogger.redirect(HOST, key::class.simpleName ?: "?", "GateLogin", "requires login")
             backStack.add(GateLogin(redirectToCode = redirectCode))
         } else {
             backStack.add(key)
+            NavLogger.push(HOST, key::class.simpleName ?: "?", backStack.size)
         }
     }
 
@@ -34,6 +37,7 @@ class ConditionalNavigator(
         // Remove login entry from back stack
         val lastEntry = backStack.lastOrNull()
         val redirectCode = if (lastEntry is GateLogin) lastEntry.redirectToCode else null
+        NavLogger.pop(HOST, "GateLogin", backStack.size - 1)
         backStack.removeLastOrNull()
 
         isLoggedIn = true
@@ -42,11 +46,13 @@ class ConditionalNavigator(
         val target = resolveRedirect(redirectCode)
         if (target != null) {
             backStack.add(target)
+            NavLogger.push(HOST, target::class.simpleName ?: "?", backStack.size)
         }
     }
 
     fun onLogout() {
         isLoggedIn = false
+        NavLogger.back(HOST, "logout", 1)
         // Clear to home
         while (backStack.size > 1) {
             backStack.removeLastOrNull()
@@ -54,7 +60,13 @@ class ConditionalNavigator(
     }
 
     fun goBack() {
+        val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
         backStack.removeLastOrNull()
+        NavLogger.back(HOST, from, backStack.size)
+    }
+
+    companion object {
+        private const val HOST = "ConditionalNavigator"
     }
 
     private fun requiresLogin(key: NavKey): Boolean = when (key) {

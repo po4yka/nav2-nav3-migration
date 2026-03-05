@@ -23,6 +23,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import com.example.navigationlab.contracts.LabCaseId
+import com.example.navigationlab.contracts.NavLogger
 import com.example.navigationlab.host.nav2.R
 import com.example.navigationlab.host.nav2.compose.Nav2StubScreen
 
@@ -71,7 +72,11 @@ class Nav2ToNav3InteropActivity : AppCompatActivity() {
                     composable(ROUTE_NAV3_LEAF) {
                         NavDisplay(
                             backStack = nav3LeafBackStack,
-                            onBack = { nav3LeafBackStack.removeLastOrNull() },
+                            onBack = {
+                                val from = nav3LeafBackStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                                nav3LeafBackStack.removeLastOrNull()
+                                NavLogger.back(TAG, from, nav3LeafBackStack.size)
+                            },
                             entryProvider = { key ->
                                 when (key) {
                                     is Nav3LeafKey.LeafHome -> NavEntry(key) {
@@ -94,20 +99,29 @@ class Nav2ToNav3InteropActivity : AppCompatActivity() {
         navController.navigate(route) {
             launchSingleTop = singleTop
         }
+        NavLogger.push(TAG, route, navController.currentBackStack.value.size)
     }
 
     /** Pop the Nav2 back stack. */
-    fun popNav2Back(): Boolean = navController.popBackStack()
+    fun popNav2Back(): Boolean {
+        val from = navController.currentBackStackEntry?.destination?.route ?: "?"
+        val result = navController.popBackStack()
+        if (result) NavLogger.pop(TAG, from, navController.currentBackStack.value.size)
+        return result
+    }
 
     /** Navigate within the Nav3 leaf. */
     fun navigateNav3Leaf(key: Nav3LeafKey) {
         nav3LeafBackStack.add(key)
+        NavLogger.push(TAG, key::class.simpleName ?: "?", nav3LeafBackStack.size)
     }
 
     /** Pop the Nav3 leaf back stack. */
     fun popNav3LeafBack(): Boolean {
         if (nav3LeafBackStack.size <= 1) return false
+        val from = nav3LeafBackStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
         nav3LeafBackStack.removeLastOrNull()
+        NavLogger.pop(TAG, from, nav3LeafBackStack.size)
         return true
     }
 

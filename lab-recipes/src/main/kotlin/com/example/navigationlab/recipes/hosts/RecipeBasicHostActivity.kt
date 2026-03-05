@@ -23,6 +23,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.example.navigationlab.contracts.LabCaseId
+import com.example.navigationlab.contracts.NavLogger
 import com.example.navigationlab.recipes.R
 import com.example.navigationlab.recipes.content.ContentBlue
 import com.example.navigationlab.recipes.content.ContentGreen
@@ -64,13 +65,18 @@ class RecipeBasicHostActivity : AppCompatActivity() {
                         Box(Modifier.fillMaxSize()) {
                         NavDisplay(
                             backStack = backStack,
-                            onBack = { backStack.removeLastOrNull() },
+                            onBack = {
+                                val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                                backStack.removeLastOrNull()
+                                NavLogger.back(TAG, from, backStack.size)
+                            },
                             entryProvider = { key ->
                                 when (key) {
                                     is BasicRouteA -> NavEntry(key) {
                                         ContentGreen("Welcome to Nav3") {
                                             Button(onClick = dropUnlessResumed {
                                                 backStack.add(BasicRouteB("123"))
+                                                NavLogger.push(TAG, "BasicRouteB", backStack.size)
                                             }) { Text("Click to navigate") }
                                         }
                                     }
@@ -94,7 +100,11 @@ class RecipeBasicHostActivity : AppCompatActivity() {
                         Box(Modifier.fillMaxSize()) {
                         NavDisplay(
                             backStack = backStack,
-                            onBack = { backStack.removeLastOrNull() },
+                            onBack = {
+                                val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                                backStack.removeLastOrNull()
+                                NavLogger.back(TAG, from, backStack.size)
+                            },
                             transitionSpec = DefaultTransitions.slideForward(),
                             popTransitionSpec = DefaultTransitions.slideBack(),
                             predictivePopTransitionSpec = DefaultTransitions.predictiveSlideBack(),
@@ -104,6 +114,7 @@ class RecipeBasicHostActivity : AppCompatActivity() {
                                         ContentGreen("Welcome to Nav3") {
                                             Button(onClick = dropUnlessResumed {
                                                 backStack.add(SaveableRouteB("123"))
+                                                NavLogger.push(TAG, "SaveableRouteB", backStack.size)
                                             }) { Text("Click to navigate") }
                                         }
                                     }
@@ -127,7 +138,11 @@ class RecipeBasicHostActivity : AppCompatActivity() {
                         Box(Modifier.fillMaxSize()) {
                         NavDisplay(
                             backStack = backStack,
-                            onBack = { backStack.removeLastOrNull() },
+                            onBack = {
+                                val from = backStack.lastOrNull()?.let { it::class.simpleName } ?: "?"
+                                backStack.removeLastOrNull()
+                                NavLogger.back(TAG, from, backStack.size)
+                            },
                             transitionSpec = DefaultTransitions.slideForward(),
                             popTransitionSpec = DefaultTransitions.slideBack(),
                             predictivePopTransitionSpec = DefaultTransitions.predictiveSlideBack(),
@@ -136,6 +151,7 @@ class RecipeBasicHostActivity : AppCompatActivity() {
                                     ContentGreen("Welcome to Nav3") {
                                         Button(onClick = dropUnlessResumed {
                                             backStack.add(DslRouteB("123"))
+                                            NavLogger.push(TAG, "DslRouteB", backStack.size)
                                         }) { Text("Click to navigate") }
                                     }
                                 }
