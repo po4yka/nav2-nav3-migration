@@ -58,3 +58,6 @@ SCRATCHPAD.md
 
 # Gemini CLI / Antigravity
 .gemini/
+
+# Firebase
+firebase-debug.log
