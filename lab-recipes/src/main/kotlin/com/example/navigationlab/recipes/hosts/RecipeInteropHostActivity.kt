@@ -23,6 +23,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.recipes.R
+import com.example.navigationlab.recipes.helpers.DefaultTransitions
 import com.example.navigationlab.recipes.helpers.MyCustomFragment
 import com.example.navigationlab.recipes.keys.InteropFragmentRoute
 import com.example.navigationlab.recipes.keys.InteropViewRoute
@@ -54,6 +55,9 @@ class RecipeInteropHostActivity : FragmentActivity() {
                 NavDisplay(
                     backStack = backStack,
                     onBack = { backStack.removeLastOrNull() },
+                    transitionSpec = DefaultTransitions.slideForward(),
+                    popTransitionSpec = DefaultTransitions.slideBack(),
+                    predictivePopTransitionSpec = DefaultTransitions.predictiveSlideBack(),
                     entryProvider = entryProvider {
                         entry<InteropFragmentRoute> {
                             Column(Modifier.fillMaxSize().wrapContentSize()) {

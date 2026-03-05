@@ -6,12 +6,19 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
@@ -22,6 +29,7 @@ import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.recipes.R
 import com.example.navigationlab.recipes.content.DeepLinkHomeScreen
 import com.example.navigationlab.recipes.content.DeepLinkTargetScreen
+import com.example.navigationlab.recipes.helpers.DefaultTransitions
 import com.example.navigationlab.recipes.keys.DeepLinkHome
 import com.example.navigationlab.recipes.keys.DeepLinkTarget
 
@@ -79,7 +87,11 @@ private fun DeepLinkContent() {
     val context = LocalContext.current
 
     // Handle deep link intent once
-    var isDeepLinkConsumed = rememberSaveable { false }
+    var isDeepLinkConsumed by rememberSaveable { mutableStateOf(false) }
+    val isDeepLink = (context as? RecipeDeepLinkHostActivity)?.intent?.action ==
+        RecipeDeepLinkHostActivity.ACTION_SHOW_TARGET
+    var isProcessing by rememberSaveable { mutableStateOf(isDeepLink && !isDeepLinkConsumed) }
+
     LaunchedEffect(context) {
         if (isDeepLinkConsumed) return@LaunchedEffect
         val activity = context as? RecipeDeepLinkHostActivity ?: return@LaunchedEffect
@@ -90,23 +102,36 @@ private fun DeepLinkContent() {
             backStack.add(DeepLinkTarget(param = param))
             isDeepLinkConsumed = true
         }
+        isProcessing = false
     }
 
     Scaffold { paddingValues ->
-        NavDisplay(
-            backStack = backStack,
-            modifier = Modifier.padding(paddingValues),
-            onBack = { backStack.removeLastOrNull() },
-            entryProvider = entryProvider {
-                entry<DeepLinkHome> {
-                    DeepLinkHomeScreen(
-                        onNavigate = { backStack.add(DeepLinkTarget(param = "manual")) },
-                    )
-                }
-                entry<DeepLinkTarget> { key ->
-                    DeepLinkTargetScreen(param = key.param)
-                }
-            },
-        )
+        if (isProcessing) {
+            Box(
+                modifier = Modifier.padding(paddingValues).fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator()
+            }
+        } else {
+            NavDisplay(
+                backStack = backStack,
+                modifier = Modifier.padding(paddingValues),
+                onBack = { backStack.removeLastOrNull() },
+                transitionSpec = DefaultTransitions.slideForward(),
+                popTransitionSpec = DefaultTransitions.slideBack(),
+                predictivePopTransitionSpec = DefaultTransitions.predictiveSlideBack(),
+                entryProvider = entryProvider {
+                    entry<DeepLinkHome> {
+                        DeepLinkHomeScreen(
+                            onNavigate = { backStack.add(DeepLinkTarget(param = "manual")) },
+                        )
+                    }
+                    entry<DeepLinkTarget> { key ->
+                        DeepLinkTargetScreen(param = key.param)
+                    }
+                },
+            )
+        }
     }
 }

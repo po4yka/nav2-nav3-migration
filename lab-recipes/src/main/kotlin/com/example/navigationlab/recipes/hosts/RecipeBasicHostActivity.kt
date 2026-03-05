@@ -6,11 +6,15 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation3.runtime.NavEntry
@@ -22,6 +26,8 @@ import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.recipes.R
 import com.example.navigationlab.recipes.content.ContentBlue
 import com.example.navigationlab.recipes.content.ContentGreen
+import com.example.navigationlab.recipes.helpers.DefaultTransitions
+import com.example.navigationlab.recipes.helpers.NavStateIndicator
 import com.example.navigationlab.recipes.keys.BasicRouteA
 import com.example.navigationlab.recipes.keys.BasicRouteB
 import com.example.navigationlab.recipes.keys.DslRouteA
@@ -53,7 +59,9 @@ class RecipeBasicHostActivity : AppCompatActivity() {
                 when (caseCode) {
                     "R01" -> {
                         // R01: Basic Nav3 with mutableStateListOf
+                        // No typed transitions: backStack is List<Any>, transition specs require typed Scene<T>
                         val backStack = remember { mutableStateListOf<Any>(BasicRouteA) }
+                        Box(Modifier.fillMaxSize()) {
                         NavDisplay(
                             backStack = backStack,
                             onBack = { backStack.removeLastOrNull() },
@@ -73,13 +81,23 @@ class RecipeBasicHostActivity : AppCompatActivity() {
                                 }
                             },
                         )
+                        NavStateIndicator(
+                            backStackSize = backStack.size,
+                            currentRoute = backStack.lastOrNull()?.let { it::class.simpleName ?: "?" } ?: "?",
+                            modifier = Modifier.align(Alignment.TopEnd),
+                        )
+                        }
                     }
                     "R02" -> {
                         // R02: BasicSaveable with rememberNavBackStack
                         val backStack = rememberNavBackStack(SaveableRouteA)
+                        Box(Modifier.fillMaxSize()) {
                         NavDisplay(
                             backStack = backStack,
                             onBack = { backStack.removeLastOrNull() },
+                            transitionSpec = DefaultTransitions.slideForward(),
+                            popTransitionSpec = DefaultTransitions.slideBack(),
+                            predictivePopTransitionSpec = DefaultTransitions.predictiveSlideBack(),
                             entryProvider = { key ->
                                 when (key) {
                                     is SaveableRouteA -> NavEntry(key) {
@@ -96,13 +114,23 @@ class RecipeBasicHostActivity : AppCompatActivity() {
                                 }
                             },
                         )
+                        NavStateIndicator(
+                            backStackSize = backStack.size,
+                            currentRoute = backStack.lastOrNull()?.let { it::class.simpleName ?: "?" } ?: "?",
+                            modifier = Modifier.align(Alignment.TopEnd),
+                        )
+                        }
                     }
                     "R03" -> {
                         // R03: BasicDsl with entryProvider DSL
                         val backStack = rememberNavBackStack(DslRouteA)
+                        Box(Modifier.fillMaxSize()) {
                         NavDisplay(
                             backStack = backStack,
                             onBack = { backStack.removeLastOrNull() },
+                            transitionSpec = DefaultTransitions.slideForward(),
+                            popTransitionSpec = DefaultTransitions.slideBack(),
+                            predictivePopTransitionSpec = DefaultTransitions.predictiveSlideBack(),
                             entryProvider = entryProvider {
                                 entry<DslRouteA> {
                                     ContentGreen("Welcome to Nav3") {
@@ -116,6 +144,12 @@ class RecipeBasicHostActivity : AppCompatActivity() {
                                 }
                             },
                         )
+                        NavStateIndicator(
+                            backStackSize = backStack.size,
+                            currentRoute = backStack.lastOrNull()?.let { it::class.simpleName ?: "?" } ?: "?",
+                            modifier = Modifier.align(Alignment.TopEnd),
+                        )
+                        }
                     }
                 }
             }

@@ -42,6 +42,7 @@ import com.example.navigationlab.recipes.content.MigScreenA1
 import com.example.navigationlab.recipes.content.MigScreenB
 import com.example.navigationlab.recipes.content.MigScreenB1
 import com.example.navigationlab.recipes.content.MigScreenC
+import com.example.navigationlab.recipes.helpers.DefaultTransitions
 import com.example.navigationlab.recipes.helpers.NavigationState
 import com.example.navigationlab.recipes.helpers.Navigator
 import com.example.navigationlab.recipes.helpers.rememberNavigationState
@@ -250,6 +251,9 @@ private fun Nav3MigrationEnd() {
             entries = navigationState.toDecoratedEntries(entryProvider),
             onBack = { navigator.goBack() },
             modifier = Modifier.padding(paddingValues),
+            transitionSpec = DefaultTransitions.crossFade(),
+            popTransitionSpec = DefaultTransitions.crossFadeBack(),
+            predictivePopTransitionSpec = DefaultTransitions.predictiveCrossFadeBack(),
         )
     }
 }

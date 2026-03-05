@@ -9,13 +9,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.navigation3.runtime.entryProvider
@@ -31,6 +32,8 @@ import com.example.navigationlab.recipes.content.TransitionFadeScreen
 import com.example.navigationlab.recipes.content.TransitionHomeScreen
 import com.example.navigationlab.recipes.content.TransitionSlideScreen
 import com.example.navigationlab.recipes.helpers.BottomSheetSceneStrategy
+import com.example.navigationlab.recipes.helpers.DefaultTransitions
+import com.example.navigationlab.recipes.helpers.NavStateIndicator
 import com.example.navigationlab.recipes.keys.DialogRoute
 import com.example.navigationlab.recipes.keys.SheetRoute
 import com.example.navigationlab.recipes.keys.TransitionFade
@@ -85,23 +88,13 @@ private fun TransitionContent() {
     val dialogStrategy = DialogSceneStrategy<NavKey>()
 
     Scaffold { paddingValues ->
+        Box(Modifier.padding(paddingValues).fillMaxSize()) {
         NavDisplay(
             backStack = backStack,
-            modifier = Modifier.padding(paddingValues),
             onBack = { backStack.removeLastOrNull() },
-            // Global transition: horizontal slide
-            transitionSpec = {
-                slideInHorizontally(tween(300)) { it } togetherWith
-                    slideOutHorizontally(tween(300)) { -it }
-            },
-            popTransitionSpec = {
-                slideInHorizontally(tween(300)) { -it } togetherWith
-                    slideOutHorizontally(tween(300)) { it }
-            },
-            predictivePopTransitionSpec = { _ ->
-                slideInHorizontally(tween(300)) { fullWidth -> -fullWidth } togetherWith
-                    slideOutHorizontally(tween(300)) { fullWidth -> fullWidth }
-            },
+            transitionSpec = DefaultTransitions.slideForward(),
+            popTransitionSpec = DefaultTransitions.slideBack(),
+            predictivePopTransitionSpec = DefaultTransitions.predictiveSlideBack(),
             sceneStrategy = bottomSheetStrategy then dialogStrategy,
             entryProvider = entryProvider {
                 entry<TransitionHome> {
@@ -148,5 +141,11 @@ private fun TransitionContent() {
                 }
             },
         )
+        NavStateIndicator(
+            backStackSize = backStack.size,
+            currentRoute = backStack.lastOrNull()?.let { it::class.simpleName ?: "?" } ?: "?",
+            modifier = Modifier.align(Alignment.TopEnd),
+        )
+        }
     }
 }

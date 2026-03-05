@@ -9,6 +9,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -26,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -45,6 +48,8 @@ import com.example.navigationlab.recipes.content.TabBetaScreen
 import com.example.navigationlab.recipes.content.TabGammaDetailScreen
 import com.example.navigationlab.recipes.content.TabGammaScreen
 import com.example.navigationlab.recipes.helpers.AppState
+import com.example.navigationlab.recipes.helpers.DefaultTransitions
+import com.example.navigationlab.recipes.helpers.NavStateIndicator
 import com.example.navigationlab.recipes.helpers.RecipeViewModel
 import com.example.navigationlab.recipes.helpers.TopLevelDestination
 import com.example.navigationlab.recipes.helpers.rememberAppState
@@ -214,10 +219,19 @@ private fun AppStateContent() {
         }
         val entries = topLevelRoutesInUse.flatMap { decoratedEntries[it] ?: emptyList() }
 
-        NavDisplay(
-            entries = entries,
-            onBack = { appState.onBack { /* activity finish handled by system back */ } },
-            modifier = Modifier.padding(paddingValues),
-        )
+        Box(Modifier.padding(paddingValues).fillMaxSize()) {
+            NavDisplay(
+                entries = entries,
+                onBack = { appState.onBack { /* activity finish handled by system back */ } },
+                transitionSpec = DefaultTransitions.crossFade(),
+                popTransitionSpec = DefaultTransitions.crossFadeBack(),
+                predictivePopTransitionSpec = DefaultTransitions.predictiveCrossFadeBack(),
+            )
+            NavStateIndicator(
+                backStackSize = entries.size,
+                currentRoute = appState.currentTopLevelDestination.label,
+                modifier = Modifier.align(Alignment.TopEnd),
+            )
+        }
     }
 }

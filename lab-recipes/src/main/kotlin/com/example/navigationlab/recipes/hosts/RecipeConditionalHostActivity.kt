@@ -6,13 +6,20 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
@@ -27,6 +34,8 @@ import com.example.navigationlab.recipes.content.GateHomeScreen
 import com.example.navigationlab.recipes.content.GateLoginScreen
 import com.example.navigationlab.recipes.content.GateProfileScreen
 import com.example.navigationlab.recipes.helpers.ConditionalNavigator
+import com.example.navigationlab.recipes.helpers.DefaultTransitions
+import com.example.navigationlab.recipes.helpers.NavStateIndicator
 import com.example.navigationlab.recipes.keys.AdvancedDeepHome
 import com.example.navigationlab.recipes.keys.AdvancedDeepTarget
 import com.example.navigationlab.recipes.keys.GateHome
@@ -91,28 +100,37 @@ private fun ConditionalContent() {
     val navigator = remember { ConditionalNavigator(backStack) }
 
     Scaffold { paddingValues ->
-        NavDisplay(
-            backStack = backStack,
-            modifier = Modifier.padding(paddingValues),
-            onBack = { navigator.goBack() },
-            entryProvider = entryProvider {
-                entry<GateHome> {
-                    GateHomeScreen(
-                        onProfile = { navigator.navigate(GateProfile) },
-                    )
-                }
-                entry<GateProfile> {
-                    GateProfileScreen(
-                        onLogout = { navigator.onLogout() },
-                    )
-                }
-                entry<GateLogin> {
-                    GateLoginScreen(
-                        onLogin = { navigator.onLoginSuccess() },
-                    )
-                }
-            },
-        )
+        Box(Modifier.padding(paddingValues).fillMaxSize()) {
+            NavDisplay(
+                backStack = backStack,
+                onBack = { navigator.goBack() },
+                transitionSpec = DefaultTransitions.slideForward(),
+                popTransitionSpec = DefaultTransitions.slideBack(),
+                predictivePopTransitionSpec = DefaultTransitions.predictiveSlideBack(),
+                entryProvider = entryProvider {
+                    entry<GateHome> {
+                        GateHomeScreen(
+                            onProfile = { navigator.navigate(GateProfile) },
+                        )
+                    }
+                    entry<GateProfile> {
+                        GateProfileScreen(
+                            onLogout = { navigator.onLogout() },
+                        )
+                    }
+                    entry<GateLogin> {
+                        GateLoginScreen(
+                            onLogin = { navigator.onLoginSuccess() },
+                        )
+                    }
+                },
+            )
+            NavStateIndicator(
+                backStackSize = backStack.size,
+                currentRoute = backStack.lastOrNull()?.let { it::class.simpleName ?: "?" } ?: "?",
+                modifier = Modifier.align(Alignment.TopEnd),
+            )
+        }
     }
 }
 
@@ -122,7 +140,11 @@ private fun AdvancedDeepLinkContent() {
     val context = LocalContext.current
 
     // Handle advanced deep link intent once
-    var isDeepLinkConsumed = rememberSaveable { false }
+    var isDeepLinkConsumed by rememberSaveable { mutableStateOf(false) }
+    val isDeepLink = (context as? RecipeConditionalHostActivity)?.intent?.action ==
+        RecipeConditionalHostActivity.ACTION_ADVANCED_DEEP
+    var isProcessing by rememberSaveable { mutableStateOf(isDeepLink && !isDeepLinkConsumed) }
+
     LaunchedEffect(context) {
         if (isDeepLinkConsumed) return@LaunchedEffect
         val activity = context as? RecipeConditionalHostActivity ?: return@LaunchedEffect
@@ -135,25 +157,38 @@ private fun AdvancedDeepLinkContent() {
             backStack.add(AdvancedDeepTarget(name = name, location = location))
             isDeepLinkConsumed = true
         }
+        isProcessing = false
     }
 
     Scaffold { paddingValues ->
-        NavDisplay(
-            backStack = backStack,
-            modifier = Modifier.padding(paddingValues),
-            onBack = { backStack.removeLastOrNull() },
-            entryProvider = entryProvider {
-                entry<AdvancedDeepHome> {
-                    AdvancedDeepHomeScreen(
-                        onNavigate = {
-                            backStack.add(AdvancedDeepTarget(name = "Manual", location = "Local"))
-                        },
-                    )
-                }
-                entry<AdvancedDeepTarget> { key ->
-                    AdvancedDeepTargetScreen(name = key.name, location = key.location)
-                }
-            },
-        )
+        if (isProcessing) {
+            Box(
+                modifier = Modifier.padding(paddingValues).fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator()
+            }
+        } else {
+            NavDisplay(
+                backStack = backStack,
+                modifier = Modifier.padding(paddingValues),
+                onBack = { backStack.removeLastOrNull() },
+                transitionSpec = DefaultTransitions.slideForward(),
+                popTransitionSpec = DefaultTransitions.slideBack(),
+                predictivePopTransitionSpec = DefaultTransitions.predictiveSlideBack(),
+                entryProvider = entryProvider {
+                    entry<AdvancedDeepHome> {
+                        AdvancedDeepHomeScreen(
+                            onNavigate = {
+                                backStack.add(AdvancedDeepTarget(name = "Manual", location = "Local"))
+                            },
+                        )
+                    }
+                    entry<AdvancedDeepTarget> { key ->
+                        AdvancedDeepTargetScreen(name = key.name, location = key.location)
+                    }
+                },
+            )
+        }
     }
 }

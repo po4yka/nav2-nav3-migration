@@ -24,6 +24,7 @@ import com.example.navigationlab.recipes.R
 import com.example.navigationlab.recipes.content.HomeScreen
 import com.example.navigationlab.recipes.content.Person
 import com.example.navigationlab.recipes.content.PersonDetailsScreen
+import com.example.navigationlab.recipes.helpers.DefaultTransitions
 import com.example.navigationlab.recipes.helpers.ResultEffect
 import com.example.navigationlab.recipes.helpers.ResultEventBus
 import com.example.navigationlab.recipes.helpers.rememberResultStore
@@ -84,6 +85,9 @@ private fun ResultEventContent() {
             backStack = backStack,
             modifier = Modifier.padding(paddingValues),
             onBack = { backStack.removeLastOrNull() },
+            transitionSpec = DefaultTransitions.slideForward(),
+            popTransitionSpec = DefaultTransitions.slideBack(),
+            predictivePopTransitionSpec = DefaultTransitions.predictiveSlideBack(),
             entryProvider = entryProvider {
                 entry<ResultHome> {
                     var person by remember { mutableStateOf<Person?>(null) }
@@ -119,6 +123,9 @@ private fun ResultStateContent() {
             backStack = backStack,
             modifier = Modifier.padding(paddingValues),
             onBack = { backStack.removeLastOrNull() },
+            transitionSpec = DefaultTransitions.slideForward(),
+            popTransitionSpec = DefaultTransitions.slideBack(),
+            predictivePopTransitionSpec = DefaultTransitions.predictiveSlideBack(),
             entryProvider = entryProvider {
                 entry<ResultHome> {
                     val person = resultStore.getResultState<Person?>()

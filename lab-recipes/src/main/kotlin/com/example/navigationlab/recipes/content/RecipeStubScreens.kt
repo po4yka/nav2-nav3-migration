@@ -1,5 +1,7 @@
 package com.example.navigationlab.recipes.content
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -13,6 +15,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -353,21 +360,33 @@ fun GateHomeScreen(onProfile: () -> Unit) {
 
 @Composable
 fun GateProfileScreen(onLogout: () -> Unit) {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
+
     ContentMauve("Profile (logged in)") {
-        Button(onClick = dropUnlessResumed(block = onLogout)) {
-            Text("Logout")
+        AnimatedVisibility(visible = visible, enter = fadeIn()) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Button(onClick = dropUnlessResumed(block = onLogout)) {
+                    Text("Logout")
+                }
+            }
         }
     }
 }
 
 @Composable
 fun GateLoginScreen(onLogin: () -> Unit) {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
+
     ContentRed("Login Required") {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Please log in to continue")
-            Spacer(Modifier.height(16.dp))
-            Button(onClick = dropUnlessResumed(block = onLogin)) {
-                Text("Log In")
+        AnimatedVisibility(visible = visible, enter = fadeIn()) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Please log in to continue")
+                Spacer(Modifier.height(16.dp))
+                Button(onClick = dropUnlessResumed(block = onLogin)) {
+                    Text("Log In")
+                }
             }
         }
     }

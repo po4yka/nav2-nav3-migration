@@ -24,6 +24,7 @@ import com.example.navigationlab.recipes.R
 import com.example.navigationlab.recipes.content.ItemDetailScreen
 import com.example.navigationlab.recipes.content.ItemExtraScreen
 import com.example.navigationlab.recipes.content.ItemListScreen
+import com.example.navigationlab.recipes.helpers.DefaultTransitions
 import com.example.navigationlab.recipes.keys.ItemDetail
 import com.example.navigationlab.recipes.keys.ItemExtra
 import com.example.navigationlab.recipes.keys.ItemList
@@ -79,6 +80,9 @@ private fun AdaptiveContent() {
             backStack = backStack,
             modifier = Modifier.padding(paddingValues),
             onBack = { backStack.removeLastOrNull() },
+            transitionSpec = DefaultTransitions.crossFade(),
+            popTransitionSpec = DefaultTransitions.crossFadeBack(),
+            predictivePopTransitionSpec = DefaultTransitions.predictiveCrossFadeBack(),
             sceneStrategy = listDetailStrategy,
             entryProvider = entryProvider {
                 entry<ItemList>(
