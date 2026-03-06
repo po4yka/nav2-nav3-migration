@@ -189,7 +189,7 @@ class Nav3FragmentIslandActivity : AppCompatActivity() {
         supportFragmentManager.beginTransaction()
             .replace(R.id.legacyFragmentContainer, fragment)
             .addToBackStack("island")
-            .commit()
+            .commitAllowingStateLoss()
         return true
     }
 

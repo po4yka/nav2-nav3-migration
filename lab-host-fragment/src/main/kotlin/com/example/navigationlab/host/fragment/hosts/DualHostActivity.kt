@@ -160,7 +160,9 @@ class DualHostActivity : AppCompatActivity() {
     // --- A06: deferred host setup + navigation queue ---
 
     /** Pending navigation requests queued before host inflation. */
-    private val pendingNavigationQueue = mutableListOf<Pair<String, Int>>()
+    private val pendingNavigationQueue = java.util.Collections.synchronizedList(
+        mutableListOf<Pair<String, Int>>(),
+    )
 
     /** Whether the ComposeView host has been initialized. */
     var isHostInflated: Boolean = false
@@ -192,10 +194,12 @@ class DualHostActivity : AppCompatActivity() {
         }
         isHostInflated = true
         // Drain queued navigation requests
-        pendingNavigationQueue.forEach { (label, colorIndex) ->
-            setBaseContent(label, colorIndex)
+        synchronized(pendingNavigationQueue) {
+            pendingNavigationQueue.forEach { (label, colorIndex) ->
+                setBaseContent(label, colorIndex)
+            }
+            pendingNavigationQueue.clear()
         }
-        pendingNavigationQueue.clear()
     }
 
     /** Number of pending (unprocessed) navigation requests. */

@@ -77,7 +77,7 @@ class FragmentHostActivity : AppCompatActivity() {
         if (addToBackStack) {
             tx.addToBackStack(null)
         }
-        tx.commit()
+        tx.commitAllowingStateLoss()
         NavLogger.push(TAG, fragment::class.simpleName ?: "Fragment", supportFragmentManager.backStackEntryCount + if (addToBackStack) 1 else 0)
     }
 
@@ -86,7 +86,7 @@ class FragmentHostActivity : AppCompatActivity() {
         supportFragmentManager.beginTransaction()
             .add(R.id.fragmentContainer, fragment)
             .addToBackStack("overlay")
-            .commit()
+            .commitAllowingStateLoss()
     }
 
     /** Schedule an overlay fragment operation for the next safe lifecycle boundary. */
@@ -109,7 +109,7 @@ class FragmentHostActivity : AppCompatActivity() {
             supportFragmentManager.beginTransaction()
                 .add(R.id.fragmentContainer, fragment)
                 .addToBackStack("state_loss_overlay")
-                .commit()
+                .commitAllowingStateLoss()
             didApplyStateLossCommit = true
             pendingStateLossOverlay = null
         }

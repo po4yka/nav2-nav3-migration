@@ -274,7 +274,7 @@ class Nav3NestedChainActivity : AppCompatActivity() {
         }
         supportFragmentManager.beginTransaction()
             .replace(containerId, createChainFragment(), TAG_CHAIN_FRAGMENT)
-            .commit()
+            .commitAllowingStateLoss()
         pendingChainFragmentAttach = false
     }
 
@@ -292,7 +292,7 @@ class Nav3NestedChainActivity : AppCompatActivity() {
         if (supportFragmentManager.isStateSaved) return
         supportFragmentManager.beginTransaction()
             .remove(fragment)
-            .commit()
+            .commitAllowingStateLoss()
     }
 
     private fun flushPendingChainFragmentAttach() {
@@ -383,6 +383,11 @@ sealed interface ChainNav3Key {
 class ChainStubFragment : androidx.fragment.app.Fragment() {
 
     private var onStateUpdate: ((NavHostController?, String?) -> Unit)? = null
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        onStateUpdate = null
+    }
 
     override fun onCreateView(
         inflater: android.view.LayoutInflater,

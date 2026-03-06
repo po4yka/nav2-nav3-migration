@@ -30,10 +30,10 @@ class LabRuntimeStepExecutor(
     private val deeplinkSimulator: DeeplinkSimulator = DeeplinkSimulator.default(),
 ) : StepExecutor {
 
-    private var overlayDepth: Int = 0
-    private var childDepth: Int = 0
-    private var navDepth: Int = 1
-    private var rootExitCount: Int = 0
+    @Volatile private var overlayDepth: Int = 0
+    @Volatile private var childDepth: Int = 0
+    @Volatile private var navDepth: Int = 1
+    @Volatile private var rootExitCount: Int = 0
 
     private val backOrchestrator = BackOrchestrator(
         chain = BackChain(

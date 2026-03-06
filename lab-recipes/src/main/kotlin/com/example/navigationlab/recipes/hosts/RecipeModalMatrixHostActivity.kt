@@ -207,7 +207,7 @@ class RecipeModalMatrixHostActivity : AppCompatActivity() {
         supportFragmentManager.beginTransaction()
             .replace(containerId, fragment, TAG_ISLAND_FRAGMENT)
             .addToBackStack("recipe_island")
-            .commit()
+            .commitAllowingStateLoss()
         return true
     }
 

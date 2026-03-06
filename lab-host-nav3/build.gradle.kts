@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
     id("navigationlab.android-base")
 }
 
@@ -33,6 +34,7 @@ dependencies {
     implementation(libs.fragment.ktx)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.appcompat)
+    implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
