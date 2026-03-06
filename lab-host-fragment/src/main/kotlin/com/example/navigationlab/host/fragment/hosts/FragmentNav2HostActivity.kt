@@ -28,6 +28,7 @@ import com.example.navigationlab.host.fragment.fragments.LabStubFragment
 class FragmentNav2HostActivity : AppCompatActivity() {
 
     private var restoreOverlayRequested: Boolean = false
+    private var pendingOverlayFragment: LabStubFragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,6 +63,7 @@ class FragmentNav2HostActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        flushPendingOverlayIfNeeded()
         syncOverlayVisibilityWithBackStack()
     }
 
@@ -127,10 +129,14 @@ class FragmentNav2HostActivity : AppCompatActivity() {
     fun showOverlayFragment(fragment: LabStubFragment) {
         val overlay = findViewById<FrameLayout>(R.id.activityOverlayContainer)
         overlay.visibility = View.VISIBLE
+        if (supportFragmentManager.isStateSaved) {
+            pendingOverlayFragment = fragment
+            return
+        }
         supportFragmentManager.beginTransaction()
             .add(R.id.activityOverlayContainer, fragment)
             .addToBackStack("activity_overlay")
-            .commitAllowingStateLoss()
+            .commit()
     }
 
     /** Whether the activity-level overlay is visible. */
@@ -161,6 +167,13 @@ class FragmentNav2HostActivity : AppCompatActivity() {
         if (supportFragmentManager.backStackEntryCount > 0) {
             restoreOverlayRequested = false
         }
+    }
+
+    private fun flushPendingOverlayIfNeeded() {
+        val fragment = pendingOverlayFragment ?: return
+        if (supportFragmentManager.isStateSaved) return
+        pendingOverlayFragment = null
+        showOverlayFragment(fragment)
     }
 
     // --- Dialog result (B07) ---

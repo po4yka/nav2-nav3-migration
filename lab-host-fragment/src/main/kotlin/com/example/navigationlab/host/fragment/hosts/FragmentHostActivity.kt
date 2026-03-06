@@ -21,6 +21,7 @@ class FragmentHostActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityFragmentHostBinding
     private var pendingStateLossOverlay: LabStubFragment? = null
+    private var pendingForegroundNavigation: PendingFragmentNavigation? = null
 
     /** True after a pending state-loss overlay commit has been applied (H01). */
     var didApplyStateLossCommit: Boolean = false
@@ -53,15 +54,12 @@ class FragmentHostActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        flushPendingTransactions()
+    }
+
     override fun onStop() {
-        pendingStateLossOverlay?.let { fragment ->
-            supportFragmentManager.beginTransaction()
-                .add(R.id.fragmentContainer, fragment)
-                .addToBackStack("state_loss_overlay")
-                .commitAllowingStateLoss()
-            didApplyStateLossCommit = true
-            pendingStateLossOverlay = null
-        }
         super.onStop()
     }
 
@@ -70,12 +68,16 @@ class FragmentHostActivity : AppCompatActivity() {
      * Host topology modules use this to execute scenario steps.
      */
     fun showFragment(fragment: LabStubFragment, addToBackStack: Boolean = true) {
+        if (supportFragmentManager.isStateSaved) {
+            pendingForegroundNavigation = PendingFragmentNavigation(fragment, addToBackStack)
+            return
+        }
         val tx = supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, fragment)
         if (addToBackStack) {
             tx.addToBackStack(null)
         }
-        tx.commitAllowingStateLoss()
+        tx.commit()
         NavLogger.push(TAG, fragment::class.simpleName ?: "Fragment", supportFragmentManager.backStackEntryCount + if (addToBackStack) 1 else 0)
     }
 
@@ -87,10 +89,36 @@ class FragmentHostActivity : AppCompatActivity() {
             .commit()
     }
 
-    /** Schedule an overlay fragment commitAllowingStateLoss operation for next onStop boundary. */
+    /** Schedule an overlay fragment operation for the next safe lifecycle boundary. */
     fun scheduleStateLossOverlayCommit(fragment: LabStubFragment) {
         pendingStateLossOverlay = fragment
     }
+
+    private fun flushPendingTransactions() {
+        if (supportFragmentManager.isStateSaved) return
+
+        pendingForegroundNavigation?.let { pending ->
+            pendingForegroundNavigation = null
+            showFragment(
+                fragment = pending.fragment,
+                addToBackStack = pending.addToBackStack,
+            )
+        }
+
+        pendingStateLossOverlay?.let { fragment ->
+            supportFragmentManager.beginTransaction()
+                .add(R.id.fragmentContainer, fragment)
+                .addToBackStack("state_loss_overlay")
+                .commit()
+            didApplyStateLossCommit = true
+            pendingStateLossOverlay = null
+        }
+    }
+
+    private data class PendingFragmentNavigation(
+        val fragment: LabStubFragment,
+        val addToBackStack: Boolean,
+    )
 
     /** Current backstack entry count. */
     val backStackDepth: Int

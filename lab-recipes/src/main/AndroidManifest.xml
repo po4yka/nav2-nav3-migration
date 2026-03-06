@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <permission
+        android:name="com.example.navigationlab.permission.INTERNAL_DEEPLINK"
+        android:protectionLevel="signature" />
+
     <application>
         <activity
             android:name=".hosts.RecipeBasicHostActivity"
@@ -35,7 +39,8 @@
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity
             android:name=".hosts.RecipeAdvancedDeepLinksActivity"
-            android:exported="true">
+            android:exported="true"
+            android:permission="com.example.navigationlab.permission.INTERNAL_DEEPLINK">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -47,7 +52,8 @@
         </activity>
         <activity
             android:name=".hosts.RecipeDeepLinksActivity"
-            android:exported="true">
+            android:exported="true"
+            android:permission="com.example.navigationlab.permission.INTERNAL_DEEPLINK">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

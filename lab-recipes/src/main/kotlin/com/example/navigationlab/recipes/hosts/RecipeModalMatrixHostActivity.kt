@@ -580,7 +580,8 @@ class RecipeModalMatrixHostActivity : AppCompatActivity() {
         if (dismissNav3ParentModal()) return true
         val dialog = supportFragmentManager.findFragmentByTag(TAG_ISLAND_DIALOG) as? DialogFragment
         if (dialog?.dialog?.isShowing == true) {
-            dialog.dismissAllowingStateLoss()
+            if (supportFragmentManager.isStateSaved) return false
+            dialog.dismiss()
             return true
         }
         return false
@@ -791,7 +792,7 @@ class RecipeIslandDialogFragment : DialogFragment() {
             addView(
                 AndroidButton(context).apply {
                     text = "Dismiss"
-                    setOnClickListener { dismissAllowingStateLoss() }
+                    setOnClickListener { dismiss() }
                 },
             )
         }

@@ -28,6 +28,8 @@ import com.example.navigationlab.host.fragment.fragments.Nav3ModalKey
  */
 class FragmentNav3HostActivity : AppCompatActivity() {
 
+    private var pendingOverlayFragment: LabStubFragment? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_fragment_nav2_host)
@@ -51,6 +53,11 @@ class FragmentNav3HostActivity : AppCompatActivity() {
                 .add(R.id.mainFragmentContainer, ComposeNav3Fragment.newInstance(), TAG_COMPOSE_FRAGMENT)
                 .commit()
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        flushPendingOverlayIfNeeded()
     }
 
     /** The hosted ComposeNav3Fragment, if available. */
@@ -107,10 +114,14 @@ class FragmentNav3HostActivity : AppCompatActivity() {
     fun showOverlayFragment(fragment: LabStubFragment) {
         val overlay = findViewById<FrameLayout>(R.id.activityOverlayContainer)
         overlay.visibility = View.VISIBLE
+        if (supportFragmentManager.isStateSaved) {
+            pendingOverlayFragment = fragment
+            return
+        }
         supportFragmentManager.beginTransaction()
             .add(R.id.activityOverlayContainer, fragment)
             .addToBackStack("activity_overlay")
-            .commitAllowingStateLoss()
+            .commit()
     }
 
     /** Whether the activity-level overlay is visible. */
@@ -127,6 +138,13 @@ class FragmentNav3HostActivity : AppCompatActivity() {
             runCatching { supportFragmentManager.popBackStack() }
         }
         findViewById<FrameLayout>(R.id.activityOverlayContainer).visibility = View.GONE
+    }
+
+    private fun flushPendingOverlayIfNeeded() {
+        val fragment = pendingOverlayFragment ?: return
+        if (supportFragmentManager.isStateSaved) return
+        pendingOverlayFragment = null
+        showOverlayFragment(fragment)
     }
 
     companion object {

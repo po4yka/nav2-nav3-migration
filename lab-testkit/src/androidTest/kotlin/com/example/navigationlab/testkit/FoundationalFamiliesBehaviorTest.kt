@@ -876,7 +876,7 @@ class FoundationalFamiliesBehaviorTest {
                 REQUEST_KEY,
                 bundleOf(RESULT_KEY to "confirmed"),
             )
-            dismissAllowingStateLoss()
+            dismiss()
         }
 
         override fun onCreate(savedInstanceState: Bundle?) {

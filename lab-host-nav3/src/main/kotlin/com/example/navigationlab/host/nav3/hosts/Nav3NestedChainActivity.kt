@@ -5,7 +5,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
@@ -21,6 +20,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -76,10 +76,14 @@ class Nav3NestedChainActivity : AppCompatActivity() {
 
     /** Tracked fragment Nav2 depth without restricted NavController APIs. */
     private var fragmentNav2DepthValue: Int = 0
+    private var pendingChainFragmentAttach: Boolean = false
+    private var pendingChainRouteRestore: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_nav3_host)
+        restoreNav3BackStack(savedInstanceState)
+        pendingChainRouteRestore = savedInstanceState?.getString(STATE_CHAIN_ROUTE_RESTORE)
 
         val caseCode = intent.getStringExtra(EXTRA_CASE_ID) ?: run {
             Log.e(TAG, "No case ID provided")
@@ -131,6 +135,23 @@ class Nav3NestedChainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        flushPendingChainFragmentAttach()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putStringArrayList(
+            STATE_NAV3_BACK_STACK_KEYS,
+            ArrayList(nav3BackStack.mapNotNull(::keyToToken)),
+        )
+        val chainRoute = currentNav2ChainRoute
+        if (chainRoute != null && chainRoute != CHAIN_ROUTE_ROOT) {
+            outState.putString(STATE_CHAIN_ROUTE_RESTORE, chainRoute)
+        }
+    }
+
     @Composable
     private fun Nav2ChainLayer(controller: NavHostController) {
         NavHost(
@@ -145,24 +166,25 @@ class Nav3NestedChainActivity : AppCompatActivity() {
                 AndroidView(
                     factory = { context ->
                         FragmentContainerView(context).apply {
-                            id = View.generateViewId()
-                            post {
-                                val fragment = ChainStubFragment.newInstance { navCtrl, result ->
-                                    if (navCtrl != null && navCtrl !== fragmentNav2Controller) {
-                                        fragmentNav2DepthValue = 1
-                                    }
-                                    fragmentNav2Controller = navCtrl
-                                    if (result != null) lastDialogResult = result
-                                }
-                                supportFragmentManager.beginTransaction()
-                                    .replace(id, fragment, TAG_CHAIN_FRAGMENT)
-                                    .commitAllowingStateLoss()
-                            }
+                            id = R.id.chainFragmentContainer
                         }
+                    },
+                    update = { container ->
+                        ensureChainFragmentAttached(container.id)
                     },
                     modifier = Modifier.fillMaxSize(),
                 )
             }
+        }
+        LaunchedEffect(controller, pendingChainRouteRestore) {
+            val restoreRoute = pendingChainRouteRestore ?: return@LaunchedEffect
+            if (controller.currentBackStackEntry?.destination?.route != CHAIN_ROUTE_ROOT) {
+                pendingChainRouteRestore = null
+                return@LaunchedEffect
+            }
+            controller.navigate(restoreRoute)
+            nav2ChainDepthValue = if (restoreRoute == CHAIN_ROUTE_ROOT) 1 else 2
+            pendingChainRouteRestore = null
         }
     }
 
@@ -201,6 +223,7 @@ class Nav3NestedChainActivity : AppCompatActivity() {
             nav2ChainDepthValue = 0
             fragmentNav2Controller = null
             fragmentNav2DepthValue = 0
+            clearChainFragmentIfPresent()
         }
         NavLogger.pop(TAG, from, nav3BackStack.size)
         return true
@@ -216,6 +239,7 @@ class Nav3NestedChainActivity : AppCompatActivity() {
             if (from == CHAIN_ROUTE_FRAGMENT) {
                 fragmentNav2Controller = null
                 fragmentNav2DepthValue = 0
+                clearChainFragmentIfPresent()
             }
         }
         return result
@@ -238,6 +262,69 @@ class Nav3NestedChainActivity : AppCompatActivity() {
     val currentFragmentNav2Route: String? get() = fragmentNav2Controller?.currentBackStackEntry?.destination?.route
     val isFragmentLayerReady: Boolean get() = fragmentNav2Controller != null
 
+    private fun ensureChainFragmentAttached(containerId: Int) {
+        val current = supportFragmentManager.findFragmentByTag(TAG_CHAIN_FRAGMENT)
+        if (current != null && current.id == containerId && current.view != null) {
+            pendingChainFragmentAttach = false
+            return
+        }
+        if (supportFragmentManager.isStateSaved) {
+            pendingChainFragmentAttach = true
+            return
+        }
+        supportFragmentManager.beginTransaction()
+            .replace(containerId, createChainFragment(), TAG_CHAIN_FRAGMENT)
+            .commit()
+        pendingChainFragmentAttach = false
+    }
+
+    private fun createChainFragment(): ChainStubFragment = ChainStubFragment.newInstance { navCtrl, result ->
+        if (navCtrl != null && navCtrl !== fragmentNav2Controller) {
+            fragmentNav2DepthValue = 1
+        }
+        fragmentNav2Controller = navCtrl
+        if (result != null) lastDialogResult = result
+    }
+
+    private fun clearChainFragmentIfPresent() {
+        pendingChainFragmentAttach = false
+        val fragment = supportFragmentManager.findFragmentByTag(TAG_CHAIN_FRAGMENT) ?: return
+        if (supportFragmentManager.isStateSaved) return
+        supportFragmentManager.beginTransaction()
+            .remove(fragment)
+            .commit()
+    }
+
+    private fun flushPendingChainFragmentAttach() {
+        if (!pendingChainFragmentAttach || supportFragmentManager.isStateSaved) return
+        if (currentNav2ChainRoute == CHAIN_ROUTE_FRAGMENT) {
+            ensureChainFragmentAttached(R.id.chainFragmentContainer)
+        } else {
+            pendingChainFragmentAttach = false
+        }
+    }
+
+    private fun restoreNav3BackStack(savedState: Bundle?) {
+        val tokens = savedState?.getStringArrayList(STATE_NAV3_BACK_STACK_KEYS) ?: return
+        if (tokens.isEmpty()) return
+        val restored = tokens.mapNotNull(::tokenToKey)
+        if (restored.isEmpty()) return
+        nav3BackStack.clear()
+        nav3BackStack.addAll(restored)
+    }
+
+    private fun keyToToken(key: Any): String? = when (key) {
+        is ChainNav3Key.Home -> TOKEN_HOME
+        is ChainNav3Key.ChainEntry -> TOKEN_CHAIN
+        else -> null
+    }
+
+    private fun tokenToKey(token: String): Any? = when (token) {
+        TOKEN_HOME -> ChainNav3Key.Home
+        TOKEN_CHAIN -> ChainNav3Key.ChainEntry
+        else -> null
+    }
+
     /** Confirm dialog in fragment layer and propagate result for B09 checks. */
     fun confirmFragmentDialogResult(): Boolean {
         val controller = fragmentNav2Controller ?: return false
@@ -255,6 +342,10 @@ class Nav3NestedChainActivity : AppCompatActivity() {
         private const val TAG_CHAIN_FRAGMENT = "chain_stub_fragment"
         const val EXTRA_CASE_ID = "case_id"
         const val EXTRA_RUN_MODE = "run_mode"
+        private const val STATE_NAV3_BACK_STACK_KEYS = "state_nav3_back_stack_keys"
+        private const val STATE_CHAIN_ROUTE_RESTORE = "state_chain_route_restore"
+        private const val TOKEN_HOME = "home"
+        private const val TOKEN_CHAIN = "chain_entry"
 
         const val CHAIN_ROUTE_ROOT = "chain_root"
         const val CHAIN_ROUTE_FRAGMENT = "fragment_layer"

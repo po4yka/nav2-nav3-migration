@@ -36,7 +36,7 @@ class IslandModalDialogFragment : DialogFragment() {
             addView(
                 Button(context).apply {
                     text = "Dismiss"
-                    setOnClickListener { dismissAllowingStateLoss() }
+                    setOnClickListener { dismiss() }
                 },
             )
         }

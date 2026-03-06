@@ -29,9 +29,7 @@ class RecipeAdvancedDeepLinksActivity : ComponentActivity() {
                     context = this,
                     name = name,
                     location = location,
-                ).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                },
+                ),
             )
         }
     }

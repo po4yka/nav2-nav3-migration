@@ -47,6 +47,8 @@ class Nav3FragmentIslandActivity : AppCompatActivity() {
 
     /** Nav3 root back stack exposed for scenario step executors. */
     val backStack = mutableStateListOf<Any>(Nav3Key.Home)
+    private var pendingIslandFragment: Fragment? = null
+    private var pendingIslandModalDismiss: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -121,6 +123,11 @@ class Nav3FragmentIslandActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        flushPendingIslandOperations()
+    }
+
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putStringArrayList(
@@ -175,10 +182,14 @@ class Nav3FragmentIslandActivity : AppCompatActivity() {
     fun showIslandFragment(fragment: Fragment): Boolean {
         if (!isLegacyIslandVisible) return false
         if (findViewById<FragmentContainerView?>(R.id.legacyFragmentContainer) == null) return false
+        if (supportFragmentManager.isStateSaved) {
+            pendingIslandFragment = fragment
+            return false
+        }
         supportFragmentManager.beginTransaction()
             .replace(R.id.legacyFragmentContainer, fragment)
             .addToBackStack("island")
-            .commitAllowingStateLoss()
+            .commit()
         return true
     }
 
@@ -214,7 +225,11 @@ class Nav3FragmentIslandActivity : AppCompatActivity() {
     fun dismissIslandModal(): Boolean {
         val dialog = supportFragmentManager.findFragmentByTag(ISLAND_MODAL_TAG) as? IslandModalDialogFragment
         dialog ?: return false
-        dialog.dismissAllowingStateLoss()
+        if (supportFragmentManager.isStateSaved) {
+            pendingIslandModalDismiss = true
+            return false
+        }
+        dialog.dismiss()
         return true
     }
 
@@ -267,6 +282,18 @@ class Nav3FragmentIslandActivity : AppCompatActivity() {
     val currentIslandFragmentLabel: String?
         get() = (supportFragmentManager.findFragmentById(R.id.legacyFragmentContainer) as? IslandStubFragment)
             ?.debugLabel
+
+    private fun flushPendingIslandOperations() {
+        if (supportFragmentManager.isStateSaved) return
+        pendingIslandFragment?.let { fragment ->
+            pendingIslandFragment = null
+            showIslandFragment(fragment)
+        }
+        if (pendingIslandModalDismiss) {
+            pendingIslandModalDismiss = false
+            dismissIslandModal()
+        }
+    }
 
     companion object {
         private const val TAG = "T5Host"

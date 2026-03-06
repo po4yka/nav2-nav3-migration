@@ -45,6 +45,7 @@ class DualHostActivity : AppCompatActivity() {
         private set
 
     private var rootExitGateConsumed: Boolean = false
+    private var pendingOverlayFragment: LabStubFragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -95,6 +96,11 @@ class DualHostActivity : AppCompatActivity() {
         outState.putInt(STATE_BASE_COLOR_INDEX, baseColorIndex)
     }
 
+    override fun onResume() {
+        super.onResume()
+        flushPendingOverlayIfNeeded()
+    }
+
     /** Update the Compose base container content. */
     fun setBaseContent(label: String, colorIndex: Int) {
         baseLabel = label
@@ -106,10 +112,14 @@ class DualHostActivity : AppCompatActivity() {
     fun showOverlayFragment(fragment: LabStubFragment) {
         val overlay = findViewById<FrameLayout>(R.id.overlayContainer)
         overlay.visibility = View.VISIBLE
+        if (supportFragmentManager.isStateSaved) {
+            pendingOverlayFragment = fragment
+            return
+        }
         supportFragmentManager.beginTransaction()
             .add(R.id.overlayContainer, fragment)
             .addToBackStack("overlay")
-            .commitAllowingStateLoss()
+            .commit()
         NavLogger.push(TAG, "overlay", supportFragmentManager.backStackEntryCount + 1)
     }
 
@@ -209,6 +219,13 @@ class DualHostActivity : AppCompatActivity() {
     /** Reset the root back gate to allow one more root-exit emission. */
     fun resetRootExitGate() {
         rootExitGateConsumed = false
+    }
+
+    private fun flushPendingOverlayIfNeeded() {
+        val fragment = pendingOverlayFragment ?: return
+        if (supportFragmentManager.isStateSaved) return
+        pendingOverlayFragment = null
+        showOverlayFragment(fragment)
     }
 
     companion object {

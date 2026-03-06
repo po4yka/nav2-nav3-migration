@@ -27,9 +27,7 @@ class RecipeDeepLinksActivity : ComponentActivity() {
                 RecipeDeepLinkHostActivity.createDeepLinkIntent(
                     context = this,
                     param = param,
-                ).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                },
+                ),
             )
         }
     }
