@@ -16,6 +16,8 @@ import androidx.core.view.updatePadding
 import com.example.navigationlab.di.labModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
+import java.util.Collections
+import java.util.WeakHashMap
 
 class NavigationLabApp : Application() {
     override fun onCreate() {
@@ -28,11 +30,19 @@ class NavigationLabApp : Application() {
     }
 
     private class EdgeToEdgeLifecycleCallbacks : ActivityLifecycleCallbacks {
+        private val insetsApplied: MutableSet<Activity> =
+            Collections.newSetFromMap(WeakHashMap())
+
         override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-            activity.applyEdgeToEdgeIfNeeded()
+            activity.applyEdgeToEdgeFlags()
         }
 
-        override fun onActivityStarted(activity: Activity) = Unit
+        override fun onActivityStarted(activity: Activity) {
+            if (insetsApplied.add(activity)) {
+                activity.applyEdgeToEdgeInsets()
+            }
+        }
+
         override fun onActivityResumed(activity: Activity) = Unit
         override fun onActivityPaused(activity: Activity) = Unit
         override fun onActivityStopped(activity: Activity) = Unit
@@ -50,7 +60,8 @@ class NavigationLabApp : Application() {
  */
 private val TOPOLOGY_LABEL_VIEW_ID = R.id.tvTopologyLabel
 
-private fun Activity.applyEdgeToEdgeIfNeeded() {
+/** Set edge-to-edge window flags. Safe to call before setContentView. */
+private fun Activity.applyEdgeToEdgeFlags() {
     (this as? ComponentActivity)?.enableEdgeToEdge(
         statusBarStyle = SystemBarStyle.auto(
             lightScrim = Color.TRANSPARENT,
@@ -61,7 +72,10 @@ private fun Activity.applyEdgeToEdgeIfNeeded() {
             darkScrim = Color.TRANSPARENT,
         ),
     ) ?: WindowCompat.setDecorFitsSystemWindows(window, false)
+}
 
+/** Apply window-inset padding. Must be called after setContentView. */
+private fun Activity.applyEdgeToEdgeInsets() {
     val root = findContentRoot() ?: return
     val rootPadding = root.capturePadding()
     val topologyLabel = root.findViewById<View?>(TOPOLOGY_LABEL_VIEW_ID)
