@@ -4,10 +4,12 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
@@ -40,6 +42,7 @@ class NavigationLabActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContent {
             val traceVersion by engine.traceStore.eventVersion.collectAsState()
             val traceEvents = remember(traceVersion) {
@@ -48,7 +51,7 @@ class NavigationLabActivity : ComponentActivity() {
             val lastResult by latestResult.collectAsState()
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    Column(modifier = Modifier.fillMaxSize()) {
+                    Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
                         CaseBrowserScreen(
                             scenarios = engine.scenarios,
                             onCaseSelected = { caseId, runMode ->
