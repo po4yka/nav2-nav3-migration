@@ -51,10 +51,37 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Enable KVM access for emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
       - name: Run connectedAndroidTest smoke suite
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: ${{ matrix.api-level }}
+          target: google_apis
           arch: x86_64
           profile: pixel_7
-          script: ./gradlew :app:assembleDebug :lab-testkit:connectedAndroidTest --stacktrace
+          emulator-boot-timeout: 900
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none -no-snapshot
+          script: |
+            set -euo pipefail
+            sdk=""
+            for i in {1..30}; do
+              sdk="$(adb shell getprop ro.build.version.sdk 2>/dev/null | tr -d '\r')"
+              if [[ "$sdk" =~ ^[0-9]+$ ]]; then
+                echo "Emulator API level: $sdk"
+                break
+              fi
+              echo "Waiting for responsive emulator shell ($i/30)..."
+              sleep 5
+            done
+            [[ "$sdk" =~ ^[0-9]+$ ]] || {
+              echo "Emulator shell never became responsive."
+              exit 1
+            }
+            ./gradlew :app:assembleDebug :lab-testkit:connectedAndroidTest --stacktrace
