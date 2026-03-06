@@ -25,4 +25,11 @@ case "$sdk" in
     ;;
 esac
 
-./gradlew :app:assembleDebug :lab-testkit:connectedAndroidTest --stacktrace
+./gradlew \
+  --no-parallel \
+  --max-workers=1 \
+  -Dorg.gradle.jvmargs="-Xmx4g -Dfile.encoding=UTF-8" \
+  -Dkotlin.daemon.jvm.options=-Xmx1536m \
+  :lab-testkit:connectedAndroidTest \
+  --configuration-cache \
+  --stacktrace

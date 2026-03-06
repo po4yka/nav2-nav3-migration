@@ -6,7 +6,7 @@ import android.os.SystemClock
 import androidx.navigation3.runtime.NavKey
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.runner.AndroidJUnit4
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.navigationlab.contracts.CaseFamily
 import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.recipes.hosts.RecipeAdaptiveHostActivity

@@ -1,6 +1,6 @@
 package com.example.navigationlab.testkit
 
-import androidx.test.runner.AndroidJUnit4
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.navigationlab.contracts.LabScenario
 import com.example.navigationlab.contracts.effectiveInvariantSpecs
 import com.example.navigationlab.host.fragment.ComposeToXmlBridgeProvider

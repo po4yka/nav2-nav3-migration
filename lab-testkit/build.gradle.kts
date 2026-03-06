@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -15,10 +14,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    buildFeatures {
-        compose = true
     }
 
     testOptions {
@@ -36,19 +31,15 @@ dependencies {
     implementation(project(":lab-host-nav3"))
     implementation(project(":lab-recipes"))
 
-    implementation(platform(libs.compose.bom))
-    implementation(libs.compose.ui)
-    implementation(libs.compose.runtime)
     implementation(libs.appcompat)
-    implementation(libs.material3.adaptive.nav3)
 
-    androidTestImplementation(platform(libs.compose.bom))
-    androidTestImplementation(libs.compose.ui.test.junit4)
-    androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.test.core)
+    androidTestImplementation(libs.test.ext.junit)
     androidTestImplementation(libs.test.runner)
     androidTestImplementation(libs.test.rules)
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation(libs.espresso.core)
+    androidTestImplementation(libs.compose.runtime)
+    androidTestImplementation(libs.nav3.runtime)
     androidTestImplementation(libs.junit)
-
-    debugImplementation(libs.compose.ui.test.manifest)
 }

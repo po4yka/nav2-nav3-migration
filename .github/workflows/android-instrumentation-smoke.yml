@@ -26,7 +26,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Run lint and Robolectric smoke test
-        run: ./gradlew lintDebug :app:testDebugUnitTest :lab-host-nav2:testDebugUnitTest :lab-host-nav3:testDebugUnitTest :lab-host-fragment:testDebugUnitTest --stacktrace
+        run: ./gradlew lintDebug :app:testDebugUnitTest :lab-host-nav2:testDebugUnitTest :lab-host-nav3:testDebugUnitTest :lab-host-fragment:testDebugUnitTest --configuration-cache --stacktrace
 
   connected-android-test:
     needs: quality-checks

@@ -7,7 +7,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.runner.AndroidJUnit4
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.navigationlab.contracts.CaseFamily
 import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.host.nav2.hosts.Nav2HostActivity
