@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
@@ -67,7 +66,11 @@ fun TraceTimelinePanel(
                     state = listState,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    items(events, key = { "${it.timestampMs}_${it.type}_${it.description}" }) { event ->
+                    items(events.size, key = { index ->
+                        val event = events[index]
+                        "${index}_${event.timestampMs}_${event.type}_${event.description}"
+                    }) { index ->
+                        val event = events[index]
                         TraceEventRow(
                             event = event,
                             baseTimestampMs = events.first().timestampMs,
