@@ -5,16 +5,24 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
@@ -51,6 +59,7 @@ class NavigationLabActivity : ComponentActivity() {
             val lastResult by latestResult.collectAsState()
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
+                    var resultsExpanded by remember { mutableStateOf(false) }
                     Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
                         CaseBrowserScreen(
                             scenarios = engine.scenarios,
@@ -68,6 +77,7 @@ class NavigationLabActivity : ComponentActivity() {
                                     return@CaseBrowserScreen
                                 }
 
+                                resultsExpanded = true
                                 executionJob?.cancel()
                                 executionJob = lifecycleScope.launch {
                                     val result = engine.execute(caseId, runMode, LabRuntimeStepExecutor())
@@ -95,19 +105,34 @@ class NavigationLabActivity : ComponentActivity() {
                             modifier = Modifier.weight(1f),
                         )
 
-                        lastResult?.let { result ->
-                            ResultSummaryPanel(
-                                result = result,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            )
-                        }
+                        AnimatedVisibility(
+                            visible = resultsExpanded && lastResult != null,
+                            enter = expandVertically(),
+                            exit = shrinkVertically(),
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .heightIn(max = 360.dp)
+                                    .clickable { resultsExpanded = false },
+                            ) {
+                                lastResult?.let { result ->
+                                    ResultSummaryPanel(
+                                        result = result,
+                                        modifier = Modifier
+                                            .weight(1f, fill = false)
+                                            .verticalScroll(rememberScrollState())
+                                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                                    )
+                                }
 
-                        TraceTimelinePanel(
-                            events = traceEvents,
-                            modifier = Modifier
-                                .height(220.dp)
-                                .padding(horizontal = 12.dp, vertical = 6.dp),
-                        )
+                                TraceTimelinePanel(
+                                    events = traceEvents,
+                                    modifier = Modifier
+                                        .heightIn(max = 160.dp)
+                                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                                )
+                            }
+                        }
                     }
                 }
             }
