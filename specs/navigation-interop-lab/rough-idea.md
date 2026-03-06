@@ -1,31 +1,39 @@
 # Rough Idea
 
+Initial high-level sketch for the Navigation Interop Lab.
+
+This file is archival. It captures the original one-paragraph framing before the architecture, requirements, and implementation were expanded.
+
+For current usage, start with:
+
+- [MIGRATION_RESEARCH_GUIDE.md](../../MIGRATION_RESEARCH_GUIDE.md)
+- [README.md](../../README.md)
+- [navigation_interop_lab_architecture.md](../../navigation_interop_lab_architecture.md)
+
+## Original Intent
+
 Implement an Android testing application ("Navigation Interop Lab") to validate risky navigation combinations before touching production code.
 
 ## Current Status
 
-This was the initial high-level sketch. Current project status:
-- Implemented directly in this repository
-- Topologies `T1-T8` implemented
-- Scenarios implemented: `A-H` (76) and `R01-R25` (25)
-- CI smoke workflow exists and runs instrumentation tests
-- Primary operational documentation is in [README.md](../../README.md)
+The sketch has since been realized in this repository:
 
-## Source
-
-Based on the architecture blueprint in `navigation_interop_lab_architecture.md` (root of this repository).
+- topologies `T1-T8` implemented
+- scenarios implemented: `A-H` (76) and `R01-R25` (25)
+- CI smoke workflow present and running instrumentation tests
+- primary operational documentation lives in [README.md](../../README.md)
 
 ## Key Goals
 
-- Standalone Android project that reproduces real navigation patterns from production
-- Test Nav2/Nav3 interoperability, XML/Compose bridging, back handling, deeplinks, and state restore
-- Provide both manual (case browser UI) and automated (instrumentation tests) verification modes
-- Structured trace logging with pass/fail invariant checks per scenario
-- Modular architecture: separate modules for contracts, engine, host topologies, deeplink simulation, back handling, and results
+- reproduce real navigation patterns in an isolated lab
+- test Nav2/Nav3 interoperability, XML/Compose bridging, back handling, deeplinks, and state restore
+- support both manual exploration and automated verification
+- expose structured trace logging with per-scenario invariant checks
+- keep the build independent from production modules
 
-## Scope
+## Scope Snapshot
 
-- 8 host topologies (T1-T8)
-- 76 test cases across 8 families (A-H)
-- 5 delivery milestones (M1-M5)
-- No production dependencies -- fully independent build
+- 8 host topologies (`T1-T8`)
+- 76 interop test cases across `A-H`
+- 25 recipe cases (`R01-R25`)
+- 5 delivery milestones (`M1-M5`)

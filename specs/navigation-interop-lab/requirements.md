@@ -2,20 +2,35 @@
 
 Questions and answers captured during requirements clarification.
 
+This file is historical. It records what was decided while shaping the lab, not the best path for onboarding today.
+
+Use these documents first for current work:
+
+- [MIGRATION_RESEARCH_GUIDE.md](../../MIGRATION_RESEARCH_GUIDE.md)
+- [README.md](../../README.md)
+- [navigation_interop_lab_architecture.md](../../navigation_interop_lab_architecture.md)
+
 ## Current Implementation Status
 
-This requirements log is historical. Current repository status:
-- Lab implemented inside this repository (no separate repo)
-- Milestones `M1-M5` complete
-- Scenario coverage: `A-H` (76) + `R01-R25` (25)
-- Toolchain currently in use: Gradle wrapper `9.4.0`, AGP `9.1.0`, Kotlin `2.3.10`
-- CI instrumentation smoke workflow is active at `.github/workflows/android-instrumentation-smoke.yml`
+Current repository status:
+
+- lab implemented directly inside this repository
+- milestones `M1-M5` complete
+- scenario coverage: `A-H` (76) plus `R01-R25` (25)
+- toolchain in use: Gradle wrapper `9.4.0`, AGP `9.1.0`, Kotlin `2.3.10`
+- CI instrumentation smoke workflow active at `.github/workflows/android-instrumentation-smoke.yml`
+
+## What This File Is Useful For
+
+- understanding why specific implementation constraints were chosen
+- checking whether a confusing architectural detail was an intentional requirement
+- confirming which ideas were explicitly rejected during planning
 
 ---
 
 ## Q1
 
-**Q:** The architecture document mentions creating a "standalone repository" (`navigation-interop-lab`), but also says "Create in current repository test project." Which approach do you want -- a completely separate Git repository, or a new module/directory within the existing `nav2-nav3-migration` repo?
+**Q:** The architecture document mentions creating a "standalone repository" (`navigation-interop-lab`), but also says "Create in current repository test project." Which approach was chosen?
 
 **A:** The current `nav2-nav3-migration` repo is already the standalone repo. Build the lab project directly inside it -- no need for a separate repository.
 
@@ -23,7 +38,7 @@ This requirements log is historical. Current repository status:
 
 ## Q2
 
-**Q:** What minimum Android SDK version and Kotlin version should the lab target? And do you have a preference for the Gradle version / AGP version?
+**Q:** What minimum Android SDK version and Kotlin version should the lab target, and was there a Gradle or AGP preference?
 
 **A:** minSdk = 24. No specific preference stated for Kotlin, Gradle, or AGP versions -- use latest stable.
 
@@ -31,7 +46,7 @@ This requirements log is historical. Current repository status:
 
 ## Q3
 
-**Q:** The architecture mentions Koin DI as "(optional)." Do you want to use Koin for dependency injection in the lab, or keep it simpler with manual DI / no framework?
+**Q:** The architecture mentions Koin DI as "(optional)." Was Koin selected?
 
 **A:** Yes, use Koin as DI.
 
@@ -39,7 +54,7 @@ This requirements log is historical. Current repository status:
 
 ## Q4
 
-**Q:** For the Nav3 dependency -- Navigation 3 is currently in alpha (`androidx.navigation3:*`). Are you okay using the latest alpha version, and do you have a specific version in mind? Also, should the lab use the Compose Material 3 integration for Nav3, or just the core Nav3 APIs?
+**Q:** What Nav3 dependency choice was made, and should Material 3 integration be included?
 
 **A:** Yes. Nav3 1.0.1 (stable) is now used. Material 3 integration included for completeness.
 
@@ -47,7 +62,7 @@ This requirements log is historical. Current repository status:
 
 ## Q5
 
-**Q:** The architecture defines 4 milestones (M1-M4). Do you want to implement all milestones in this planning cycle, or focus on a specific milestone first (e.g., M1 -- repo boots, case browser, T1/T2/T3 topologies)?
+**Q:** The architecture initially defined `M1-M4`. Was the intent to implement all milestones or phase them?
 
 **A:** Implement all milestones (M1-M4).
 
@@ -55,7 +70,7 @@ This requirements log is historical. Current repository status:
 
 ## Q6
 
-**Q:** For the case browser UI -- should it be a simple list-based Compose screen, or do you want something more elaborate (e.g., grouped by case family A-H, filtering, search, run status indicators)?
+**Q:** How simple should the case browser UI be?
 
 **A:** Use a simple list-based Compose screen.
 
@@ -63,7 +78,7 @@ This requirements log is historical. Current repository status:
 
 ## Q7
 
-**Q:** For the live timeline panel (trace viewer showing container changes, stack changes, fragment transactions, etc.) -- should this be a separate screen navigated to after running a case, or an inline panel visible during case execution (e.g., bottom sheet or split view)?
+**Q:** Where should the live trace and timeline panel appear?
 
 **A:** Inline panel visible during case execution.
 
@@ -71,7 +86,7 @@ This requirements log is historical. Current repository status:
 
 ## Q8
 
-**Q:** The architecture mentions three run modes: manual, scripted, and stress. For scripted mode -- should scenarios auto-advance through steps with configurable delays, or do you have a different mechanism in mind? And for stress mode -- is this rapid repeated execution of the same scenario to detect race conditions?
+**Q:** How were `scripted` and `stress` modes intended to behave?
 
 **A:** Yes to both. Scripted mode auto-advances with configurable delays. Stress mode is rapid repeated execution to detect race conditions.
 
@@ -79,7 +94,7 @@ This requirements log is historical. Current repository status:
 
 ## Q9
 
-**Q:** For the `LabTraceStore` -- should trace data persist across app restarts (e.g., saved to local DB or file), or is in-memory storage sufficient (traces lost on app kill)?
+**Q:** Should `LabTraceStore` persist across app restarts?
 
 **A:** In-memory storage is sufficient.
 
@@ -87,7 +102,7 @@ This requirements log is historical. Current repository status:
 
 ## Q10
 
-**Q:** For the `SOURCE_SNAPSHOT.md` sync process and `tools/sync/refresh_inventory.sh` -- since the lab is built inside this repo (not separate), do you still need a sync mechanism with the production repo? If yes, what's the production repo path or URL for the script to reference?
+**Q:** Was any sync mechanism with a production repo kept?
 
 **A:** No, not needed. Skip the sync mechanism (`SOURCE_SNAPSHOT.md`, `tools/sync/`, `sync-with-source-repo.md`).
 
@@ -95,7 +110,7 @@ This requirements log is historical. Current repository status:
 
 ## Q11
 
-**Q:** For CI -- the architecture mentions a "CI smoke pipeline" in M4. Do you want to set up GitHub Actions (or another CI) as part of this plan, or is CI out of scope for now?
+**Q:** Was CI included in scope?
 
 **A:** Yes, set up GitHub Actions CI.
 
@@ -103,7 +118,7 @@ This requirements log is historical. Current repository status:
 
 ## Q12
 
-**Q:** For the fake screens used in test cases -- should they be minimal (colored boxes with labels identifying the screen/route), or do you want them to include basic interactive elements (buttons, text fields) to simulate real user flows like form submission or result passing?
+**Q:** How realistic should the fake screens be?
 
 **A:** Minimal -- colored boxes with labels. No interactive form elements needed.
 
@@ -111,7 +126,7 @@ This requirements log is historical. Current repository status:
 
 ## Q13
 
-**Q:** For the invariant checks (pass/fail per case) -- should failures be displayed only in the inline trace panel, or also produce system notifications / logcat output / test report files for easier debugging?
+**Q:** Where should invariant failures be reported?
 
 **A:** Also produce logcat output (in addition to the inline trace panel).
 

@@ -5,15 +5,19 @@ description: Refactor Android code from Navigation 2 to Navigation 3 with behavi
 
 # Nav2 to Nav3 Refactor
 
-Load [references/migration-evidence.md](references/migration-evidence.md) before editing.
+Read these before editing:
+
+1. [../../MIGRATION_RESEARCH_GUIDE.md](../../MIGRATION_RESEARCH_GUIDE.md)
+2. [references/migration-evidence.md](references/migration-evidence.md)
 
 ## Workflow
 
 1. Capture the current Nav2 behavior.
-2. Introduce typed Nav3 keys and explicit navigation state.
-3. Keep interop boundaries while refactoring incrementally.
-4. Prove parity with targeted instrumentation tests.
-5. Remove temporary Nav2 paths only after parity passes.
+2. Identify the migration question category: baseline replacement, temporary interop island, modal/back parity, deeplink parity, or restore parity.
+3. Introduce typed Nav3 keys and explicit navigation state.
+4. Keep interop boundaries while refactoring incrementally.
+5. Prove parity with targeted instrumentation tests.
+6. Remove temporary Nav2 paths only after parity passes.
 
 ## 1) Capture Baseline Nav2 Behavior
 
@@ -27,6 +31,7 @@ Load [references/migration-evidence.md](references/migration-evidence.md) before
 Use as baseline anchors:
 - `lab-recipes/.../RecipeMigrationHostActivity.kt` (`Nav2MigrationBegin`)
 - `lab-recipes/.../RecipeScenarios.kt` (`R05` invariants)
+- `lab-testkit/.../RecipeMigrationTest.kt`
 
 ## 2) Introduce Nav3 Model Without Breaking UX
 
@@ -44,6 +49,7 @@ Use as target anchors:
 - `lab-recipes/.../RecipeMigrationHostActivity.kt` (`Nav3MigrationEnd`)
 - `lab-recipes/.../helpers/NavigationState.kt`
 - `lab-recipes/.../helpers/Navigator.kt`
+- `lab-recipes/.../helpers/AppState.kt`
 
 ## 3) Keep Interop Islands During Incremental Rollout
 
@@ -70,6 +76,13 @@ Validate explicitly after each migration phase:
 
 Prioritize cases from `B*`, `E*`, `G*`, and `R05/R06`.
 
+When the migration question is specifically about:
+
+- interop boundaries: prioritize `T7`, `T8`, and `CoreInteropBehaviorTest`
+- modal ordering and system back parity: prioritize `D*`, `E*`, and `SystemBackParityModalTest`
+- deeplink fallback: prioritize `F*` and `DeeplinkFamiliesBehaviorParityTest`
+- restore and process death: prioritize `G*` and `ProcessDeathRestoreInteropTest`
+
 ## 5) Verification Gates
 
 Run baseline build checks:
@@ -77,6 +90,7 @@ Run baseline build checks:
 ```bash
 ./gradlew :app:assembleDebug
 ./gradlew lintDebug
+./gradlew :lab-recipes:assembleDebug
 ```
 
 Run targeted migration/interoperability tests:
@@ -88,6 +102,7 @@ Run targeted migration/interoperability tests:
 ./gradlew :lab-testkit:connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.example.navigationlab.testkit.T8ModalInteropTest
 ./gradlew :lab-testkit:connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.example.navigationlab.testkit.SystemBackParityModalTest
 ./gradlew :lab-testkit:connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.example.navigationlab.testkit.ProcessDeathRestoreInteropTest
+./gradlew :lab-testkit:connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.example.navigationlab.testkit.DeeplinkFamiliesBehaviorParityTest
 ```
 
 If emulator/device is unavailable, run compile-only fallback and report that instrumentation coverage is pending:

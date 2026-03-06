@@ -1,5 +1,7 @@
 # Navigation Interop Lab Architecture
 
+Use [MIGRATION_RESEARCH_GUIDE.md](MIGRATION_RESEARCH_GUIDE.md) first if your goal is to learn from the repo or plan a migration. This document is the detailed blueprint and full scenario catalog.
+
 ## Purpose
 
 Define the architecture and case catalog for this repository's Android lab project that validates risky navigation combinations before production migration changes:
@@ -15,7 +17,7 @@ This document is an implementation blueprint for that test project and a complet
 
 ## Current Status
 
-Last verified against repository state: **2026-03-05**.
+Last verified against repository state: **2026-03-06**.
 
 - Milestones `M1-M5`: implemented
 - Interop families `A-H`: implemented (`76` scenarios)
@@ -31,6 +33,12 @@ Current baseline verification commands:
 ./gradlew :lab-testkit:connectedAndroidTest
 ```
 
+Compile-only fallback when no emulator or device is available:
+
+```bash
+./gradlew :lab-testkit:assembleDebug :lab-testkit:assembleDebugAndroidTest
+```
+
 Toolchain snapshot:
 - Gradle wrapper `9.4.0`
 - AGP `9.1.0`
@@ -39,9 +47,9 @@ Toolchain snapshot:
 
 ---
 
-## Source Analysis (Current Project Patterns To Reproduce)
+## External Production Evidence
 
-The lab reproduces patterns observed in production code snapshots (external references, not modules in this repo).
+The lab reproduces patterns observed in production code snapshots. The file references below are external evidence only; they are not part of this repository and cannot be inspected locally here.
 
 | Pattern | Current source |
 |---|---|
@@ -144,10 +152,8 @@ nav2-nav3-migration/
   - production `UnifiedNavigator` implementation
 - Recreate only minimal contracts and fixtures needed for experiments.
 - Keep package names neutral (`com.example.navigationlab.*`) to avoid accidental classpath overlap.
-- If production integration checks are needed, use one of:
-  - AAR snapshot consumption from CI artifact
-  - source sync script that copies small fixture snippets into `lab-fixtures/`
-  - never direct module linkage across repositories
+- If production integration checks are needed, consume them outside this repository and keep the lab itself isolated.
+- Do not add direct module linkage or sync scripts back into this repository.
 
 ### Dependency graph
 
@@ -177,22 +183,25 @@ flowchart LR
 
 ### Runtime architecture
 
-Core runtime components:
+Core runtime components and implementation anchors:
 
 1. `CaseBrowserScreen`
 - Lists all lab cases.
 - Allows run mode: manual / scripted / stress.
 
-2. `HostTopologyFactory`
-- Creates one of host topologies:
+2. Scenario catalog and host providers
+- `LabScenarioCatalog` aggregates all registered scenario providers.
+- Provider objects create host intents for each topology and case family.
+- Together they select one of these host shapes:
   - XML Activity + single fragment container
   - XML Activity + dual containers (`base + overlay`)
   - Compose root + Nav2 host
   - Compose root + Nav3 host
   - Compose root + legacy island (`AndroidViewBinding(FragmentContainerView)`)
 
-3. `InteropBridge`
-- Bridges between engines:
+3. Interop host activities
+- Interop is implemented by dedicated host activities rather than a single shared bridge class.
+- The concrete patterns covered are:
   - Nav3 -> Nav2 leaf
   - Nav2 -> Nav3 leaf
   - Compose -> Fragment
@@ -238,6 +247,8 @@ Core runtime components:
 
 ### Host topologies to implement in the lab
 
+All topologies below are implemented in the current repository.
+
 | Topology ID | Description |
 |---|---|
 | `T1` | `Activity(XML)` -> `FragmentContainerView` -> Fragments |
@@ -248,6 +259,23 @@ Core runtime components:
 | `T6` | Fragment host -> Compose content (`ComposeView`) -> internal Nav2 |
 | `T7` | Nav2 route -> Nav3 leaf screen |
 | `T8` | Nav3 key -> Nav2 leaf graph |
+
+---
+
+## Migration Decision Map
+
+Use these families when answering migration questions:
+
+| Goal | Families or recipes |
+|---|---|
+| Compare baseline Nav2 with target Nav3 design | `R05`, `R06` |
+| Validate temporary Nav2 parent -> Nav3 leaf rollout | `T7`, `B04`, `B13`, `B14`, `E09` |
+| Validate temporary Nav3 parent -> Nav2 leaf rollout | `T8`, `B03`, `B15`, `B16`, `G08` |
+| Validate modal and overlay semantics | `D*` |
+| Validate nested back behavior | `E*` |
+| Validate deeplink manager and fallback behavior | `F*` |
+| Validate restore and process-death behavior | `G*` |
+| Probe race conditions and transaction timing | `H*` |
 
 ---
 

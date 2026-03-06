@@ -2,14 +2,28 @@
 
 Use this file as the authoritative mapping between migration decisions and validated repository experiments.
 
+Read [../../../MIGRATION_RESEARCH_GUIDE.md](../../../MIGRATION_RESEARCH_GUIDE.md) first if you are new to the repository.
+
 ## Documentation Anchors
 
+- `MIGRATION_RESEARCH_GUIDE.md`
+  - Best starting point for research workflows, recommended experiments, and verification strategy.
 - `README.md`
   - Defines scope, module map, topologies `T1-T8`, and verification baseline.
 - `navigation_interop_lab_architecture.md`
   - Defines critical interop families `A-H`, recipe suite `R01-R25`, and minimum migration decision coverage (`A*`, `B*`, `E*`, `F*`, `G*`, plus one `H*` stress case).
 - `PROMPT.md`
   - Captures historical requirements and acceptance commands.
+
+## Question To Evidence Map
+
+| Migration question | Start here | Code anchors | Tests |
+|---|---|---|---|
+| How does the current Nav2 baseline behave? | `R05` | `RecipeMigrationHostActivity.kt` (`Nav2MigrationBegin`) | `RecipeMigrationTest` |
+| What should the target Nav3 state model look like? | `R06` | `RecipeMigrationHostActivity.kt` (`Nav3MigrationEnd`), `NavigationState.kt`, `Navigator.kt` | `RecipeMigrationTest` |
+| How should I keep a Nav2 parent while migrating a leaf to Nav3? | `T7`, `B04`, `B13`, `B14`, `E09` | `Nav2ToNav3InteropActivity.kt` | `CoreInteropBehaviorTest`, `T7ModalInteropTest` |
+| How should I keep a Nav3 parent while preserving a Nav2 leaf? | `T8`, `B03`, `B15`, `B16`, `G08` | `Nav3ToNav2InteropActivity.kt` | `CoreInteropBehaviorTest`, `T8ModalInteropTest`, `ProcessDeathRestoreInteropTest` |
+| What should be treated as high-risk parity behavior? | `D*`, `E*`, `F*`, `G*` | Host-specific scenario files and helpers | modal, deeplink, and restore tests |
 
 ## Migration Baseline and Target (R05/R06)
 
@@ -36,6 +50,12 @@ Use this file as the authoritative mapping between migration decisions and valid
   - `navigate(...)` and `goBack(...)` with top-level vs leaf behavior.
 - `lab-recipes/src/main/kotlin/com/example/navigationlab/recipes/helpers/AppState.kt`
   - Tab history, back policy, and bottom-bar visibility strategies.
+
+Use these helpers together:
+
+- `NavigationState` for explicit per-stack state
+- `Navigator` for push, pop, and top-level routing policy
+- `AppState` when the migrated surface has multiple top-level destinations or bottom navigation
 
 ## Interop Boundary References
 
@@ -69,14 +89,30 @@ Use this file as the authoritative mapping between migration decisions and valid
 - `lab-testkit/src/androidTest/kotlin/com/example/navigationlab/testkit/DeeplinkFamiliesBehaviorParityTest.kt`
   - Deep-link manager/fallback behavior across hosts.
 
+## Suggested Research Order
+
+1. `RecipeMigrationTest`
+2. `CoreInteropBehaviorTest`
+3. `T7ModalInteropTest` or `T8ModalInteropTest`, depending on interop direction
+4. `SystemBackParityModalTest`
+5. `ProcessDeathRestoreInteropTest`
+6. `DeeplinkFamiliesBehaviorParityTest`
+
 ## Minimum Command Set
 
 ```bash
 ./gradlew :app:assembleDebug
 ./gradlew lintDebug
+./gradlew :lab-recipes:assembleDebug
 ./gradlew :lab-testkit:connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.example.navigationlab.testkit.RecipeMigrationTest
 ./gradlew :lab-testkit:connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.example.navigationlab.testkit.CoreInteropBehaviorTest
 ./gradlew :lab-testkit:connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.example.navigationlab.testkit.SystemBackParityModalTest
 ```
 
 Run additional targeted classes from the matrix when changing modal, restore, or deep-link behavior.
+
+If no emulator or device is available:
+
+```bash
+./gradlew :lab-testkit:assembleDebug :lab-testkit:assembleDebugAndroidTest
+```
