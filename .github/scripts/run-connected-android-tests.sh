@@ -25,6 +25,8 @@ case "$sdk" in
     ;;
 esac
 
+# Keep matrix jobs focused on instrumentation only.
+# `connectedAndroidTest` assembles required targets; avoid extra `:app:assembleDebug` here.
 ./gradlew \
   --no-parallel \
   --max-workers=1 \

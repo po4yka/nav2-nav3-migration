@@ -147,7 +147,7 @@ Available methods:
 
 GitHub Actions workflow: `.github/workflows/android-instrumentation-smoke.yml`
 - triggers: push to `main`, pull requests
-- runs: debug assemble + `:lab-testkit:connectedAndroidTest` on emulator
+- runs: `:lab-testkit:connectedAndroidTest` on emulator matrix (no per-API `:app:assembleDebug`)
 
 ## Milestones
 
