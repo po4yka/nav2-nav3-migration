@@ -1,19 +1,13 @@
 plugins {
     alias(libs.plugins.android.library)
+    id("navigationlab.android-base")
 }
 
 android {
     namespace = "com.example.navigationlab.testkit"
-    compileSdk = 36
 
     defaultConfig {
-        minSdk = 24
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
     }
 
     testOptions {
@@ -37,7 +31,6 @@ dependencies {
     androidTestImplementation(libs.test.ext.junit)
     androidTestImplementation(libs.test.runner)
     androidTestImplementation(libs.test.rules)
-    androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.compose.runtime)
     androidTestImplementation(libs.nav3.runtime)
