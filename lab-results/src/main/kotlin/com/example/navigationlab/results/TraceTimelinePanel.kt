@@ -66,10 +66,7 @@ fun TraceTimelinePanel(
                     state = listState,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    items(events.size, key = { index ->
-                        val event = events[index]
-                        "${index}_${event.timestampMs}_${event.type}_${event.description}"
-                    }) { index ->
+                    items(events.size, key = { it }) { index ->
                         val event = events[index]
                         TraceEventRow(
                             event = event,

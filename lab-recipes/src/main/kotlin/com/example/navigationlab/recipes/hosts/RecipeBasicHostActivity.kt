@@ -15,6 +15,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation3.runtime.NavEntry
@@ -116,7 +117,12 @@ class RecipeBasicHostActivity : AppCompatActivity() {
                                     is BasicRouteB -> NavEntry(key) {
                                         ContentBlue("Route id: ${key.id}")
                                     }
-                                    else -> error("Unknown route: $key")
+                                    else -> NavEntry(key) {
+                                        Text(
+                                            "Unknown route: $key",
+                                            color = Color.Red,
+                                        )
+                                    }
                                 }
                             },
                         )
@@ -173,7 +179,12 @@ class RecipeBasicHostActivity : AppCompatActivity() {
                                     is SaveableRouteB -> NavEntry(key) {
                                         ContentBlue("Route id: ${key.id}")
                                     }
-                                    else -> error("Unknown route: $key")
+                                    else -> NavEntry(key) {
+                                        Text(
+                                            "Unknown route: $key",
+                                            color = Color.Red,
+                                        )
+                                    }
                                 }
                             },
                         )

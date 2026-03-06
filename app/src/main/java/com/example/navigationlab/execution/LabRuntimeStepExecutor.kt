@@ -18,6 +18,7 @@ import com.example.navigationlab.deeplink.DeeplinkSource
 import com.example.navigationlab.engine.orchestrator.HeuristicStepExecutor
 import com.example.navigationlab.engine.orchestrator.StepExecutionResult
 import com.example.navigationlab.engine.orchestrator.StepExecutor
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Runtime step executor that integrates lab infrastructure:
@@ -30,38 +31,63 @@ class LabRuntimeStepExecutor(
     private val deeplinkSimulator: DeeplinkSimulator = DeeplinkSimulator.default(),
 ) : StepExecutor {
 
-    @Volatile private var overlayDepth: Int = 0
-    @Volatile private var childDepth: Int = 0
-    @Volatile private var navDepth: Int = 1
-    @Volatile private var rootExitCount: Int = 0
+    /**
+     * Grouped depth state ensuring all four fields are read and written atomically.
+     * Although current call sites run sequentially on the main thread, grouping into
+     * an [AtomicReference] prevents subtle inconsistencies if concurrency is introduced.
+     */
+    private data class DepthState(
+        val overlayDepth: Int = 0,
+        val childDepth: Int = 0,
+        val navDepth: Int = 1,
+        val rootExitCount: Int = 0,
+    )
+
+    private val depthState = AtomicReference(DepthState())
 
     private val backOrchestrator = BackOrchestrator(
         chain = BackChain(
             overlay = BackPopper {
-                if (overlayDepth > 0) {
-                    overlayDepth -= 1
-                    true
-                } else {
-                    false
+                var popped = false
+                depthState.updateAndGet { state ->
+                    if (state.overlayDepth > 0) {
+                        popped = true
+                        state.copy(overlayDepth = state.overlayDepth - 1)
+                    } else {
+                        state
+                    }
                 }
+                popped
             },
             childStack = BackPopper {
-                if (childDepth > 0) {
-                    childDepth -= 1
-                    true
-                } else {
-                    false
+                var popped = false
+                depthState.updateAndGet { state ->
+                    if (state.childDepth > 0) {
+                        popped = true
+                        state.copy(childDepth = state.childDepth - 1)
+                    } else {
+                        state
+                    }
                 }
+                popped
             },
             navStack = BackPopper {
-                if (navDepth > 1) {
-                    navDepth -= 1
-                    true
-                } else {
-                    false
+                var popped = false
+                depthState.updateAndGet { state ->
+                    if (state.navDepth > 1) {
+                        popped = true
+                        state.copy(navDepth = state.navDepth - 1)
+                    } else {
+                        state
+                    }
+                }
+                popped
+            },
+            onRootExit = {
+                depthState.updateAndGet { state ->
+                    state.copy(rootExitCount = state.rootExitCount + 1)
                 }
             },
-            onRootExit = { rootExitCount += 1 },
             rootExitPolicy = RootExitPolicy.SINGLE_SHOT,
         ),
     )
@@ -123,10 +149,11 @@ class LabRuntimeStepExecutor(
             }
         }
 
-        metadata["depth_overlay"] = overlayDepth.toString()
-        metadata["depth_child"] = childDepth.toString()
-        metadata["depth_nav"] = navDepth.toString()
-        metadata["root_exit_count"] = rootExitCount.toString()
+        val snapshot = depthState.get()
+        metadata["depth_overlay"] = snapshot.overlayDepth.toString()
+        metadata["depth_child"] = snapshot.childDepth.toString()
+        metadata["depth_nav"] = snapshot.navDepth.toString()
+        metadata["root_exit_count"] = snapshot.rootExitCount.toString()
         metadata["root_exit_dispatched"] = backOrchestrator.isRootExitDispatched.toString()
 
         return StepExecutionResult(
@@ -136,16 +163,18 @@ class LabRuntimeStepExecutor(
     }
 
     private fun trackForwardDepths(action: LabAction) {
-        if (LabActionCommand.TRACK_FORWARD_STACK in action.commands) {
-            navDepth += 1
-        }
-
-        if (LabActionCommand.TRACK_OVERLAY_OPEN in action.commands) {
-            overlayDepth += 1
-        }
-
-        if (LabActionCommand.TRACK_CHILD_PUSH in action.commands) {
-            childDepth += 1
+        depthState.updateAndGet { state ->
+            var s = state
+            if (LabActionCommand.TRACK_FORWARD_STACK in action.commands) {
+                s = s.copy(navDepth = s.navDepth + 1)
+            }
+            if (LabActionCommand.TRACK_OVERLAY_OPEN in action.commands) {
+                s = s.copy(overlayDepth = s.overlayDepth + 1)
+            }
+            if (LabActionCommand.TRACK_CHILD_PUSH in action.commands) {
+                s = s.copy(childDepth = s.childDepth + 1)
+            }
+            s
         }
     }
 

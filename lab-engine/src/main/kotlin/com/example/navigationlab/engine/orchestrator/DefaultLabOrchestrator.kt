@@ -1,5 +1,6 @@
 package com.example.navigationlab.engine.orchestrator
 
+import android.util.Log
 import com.example.navigationlab.contracts.InvariantResult
 import com.example.navigationlab.contracts.LabResult
 import com.example.navigationlab.contracts.LabScenario
@@ -35,11 +36,23 @@ class DefaultLabOrchestrator(
                 RunMode.STRESS -> runStress(scenario)
             }
         } catch (e: Exception) {
+            val errorDetail = "${e::class.simpleName ?: "Unknown"}: ${e.message}\n${e.stackTraceToString()}"
+            Log.e(TAG, "Scenario ${scenario.id.code} failed in $mode mode", e)
+            traceStore.record(
+                type = TraceEventType.INVARIANT,
+                description = "Scenario execution failed: ${e::class.simpleName ?: "Unknown"}: ${e.message}",
+                metadata = mapOf(
+                    "exception" to (e::class.qualifiedName ?: "Unknown"),
+                    "mode" to mode.name,
+                    "scope" to "orchestrator_error",
+                    "passed" to "false",
+                ),
+            )
             LabResult(
                 caseId = scenario.id,
                 status = ResultStatus.ERROR,
                 trace = traceStore.snapshot(),
-                errorMessage = e.message,
+                errorMessage = errorDetail,
             )
         }
     }
@@ -179,5 +192,9 @@ class DefaultLabOrchestrator(
             trace = traceStore.snapshot(),
             invariantResults = invariantResults,
         )
+    }
+
+    private companion object {
+        const val TAG = "LabOrchestrator"
     }
 }

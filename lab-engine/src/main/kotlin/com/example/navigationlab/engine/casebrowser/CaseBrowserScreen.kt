@@ -28,6 +28,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.example.navigationlab.contracts.CaseFamily
 import com.example.navigationlab.contracts.LabCaseId
@@ -180,10 +182,14 @@ private fun RunModeSelector(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         RunMode.entries.forEach { mode ->
+            val modeLabel = mode.name.lowercase().replaceFirstChar { it.uppercase() }
             FilterChip(
                 selected = mode == selected,
                 onClick = { onSelected(mode) },
-                label = { Text(mode.name.lowercase().replaceFirstChar { it.uppercase() }) },
+                label = { Text(modeLabel) },
+                modifier = Modifier.semantics {
+                    contentDescription = "Run mode: $modeLabel"
+                },
             )
         }
     }
@@ -203,12 +209,18 @@ private fun FamilyFilterSelector(
             selected = selectedFamily == null,
             onClick = { onSelected(null) },
             label = { Text("All families") },
+            modifier = Modifier.semantics {
+                contentDescription = "Filter: All families"
+            },
         )
         CaseFamily.entries.forEach { family ->
             FilterChip(
                 selected = family == selectedFamily,
                 onClick = { onSelected(family) },
                 label = { Text(family.prefix) },
+                modifier = Modifier.semantics {
+                    contentDescription = "Filter: family ${family.prefix}"
+                },
             )
         }
     }
@@ -228,12 +240,18 @@ private fun TopologyFilterSelector(
             selected = selectedTopology == null,
             onClick = { onSelected(null) },
             label = { Text("All topologies") },
+            modifier = Modifier.semantics {
+                contentDescription = "Filter: All topologies"
+            },
         )
         TopologyId.entries.forEach { topology ->
             FilterChip(
                 selected = topology == selectedTopology,
                 onClick = { onSelected(topology) },
                 label = { Text(topology.name) },
+                modifier = Modifier.semantics {
+                    contentDescription = "Filter: topology ${topology.name}"
+                },
             )
         }
     }
@@ -261,7 +279,10 @@ private fun CaseRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 2.dp)
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
+            .semantics {
+                contentDescription = "${scenario.id.code}: ${scenario.title}, topology ${scenario.topology.name}"
+            },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
         ),

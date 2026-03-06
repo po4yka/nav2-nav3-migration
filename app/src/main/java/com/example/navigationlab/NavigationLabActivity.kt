@@ -11,11 +11,13 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
@@ -47,6 +49,8 @@ class NavigationLabActivity : ComponentActivity() {
     private var executionJob: Job? = null
     private val _latestResult = MutableStateFlow<LabResult?>(null)
     private val latestResult = _latestResult.asStateFlow()
+    private val _isExecuting = MutableStateFlow(false)
+    private val isExecuting = _isExecuting.asStateFlow()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,6 +61,7 @@ class NavigationLabActivity : ComponentActivity() {
                 engine.traceStore.snapshot()
             }
             val lastResult by latestResult.collectAsState()
+            val executing by isExecuting.collectAsState()
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     var resultsExpanded by remember { mutableStateOf(false) }
@@ -80,30 +85,43 @@ class NavigationLabActivity : ComponentActivity() {
                                 resultsExpanded = true
                                 executionJob?.cancel()
                                 executionJob = lifecycleScope.launch {
-                                    val result = engine.execute(caseId, runMode, LabRuntimeStepExecutor())
-                                    _latestResult.value = result
-                                    val failedInvariants = result.invariantResults.count { !it.passed }
-                                    when (result.status) {
-                                        ResultStatus.PASS -> {
-                                            Log.i(
-                                                TAG,
-                                                "Case ${caseId.code} finished: PASS (${result.trace.size} trace events)",
-                                            )
-                                        }
+                                    _isExecuting.value = true
+                                    try {
+                                        val result = engine.execute(caseId, runMode, LabRuntimeStepExecutor())
+                                        _latestResult.value = result
+                                        val failedInvariants = result.invariantResults.count { !it.passed }
+                                        when (result.status) {
+                                            ResultStatus.PASS -> {
+                                                Log.i(
+                                                    TAG,
+                                                    "Case ${caseId.code} finished: PASS (${result.trace.size} trace events)",
+                                                )
+                                            }
 
-                                        else -> {
-                                            Log.w(
-                                                TAG,
-                                                "Case ${caseId.code} finished: ${result.status} " +
-                                                    "(failed invariants: $failedInvariants, trace events: ${result.trace.size}) " +
-                                                    (result.errorMessage?.let { "| error=$it" } ?: ""),
-                                            )
+                                            else -> {
+                                                Log.w(
+                                                    TAG,
+                                                    "Case ${caseId.code} finished: ${result.status} " +
+                                                        "(failed invariants: $failedInvariants, trace events: ${result.trace.size}) " +
+                                                        (result.errorMessage?.let { "| error=$it" } ?: ""),
+                                                )
+                                            }
                                         }
+                                    } finally {
+                                        _isExecuting.value = false
                                     }
                                 }
                             },
                             modifier = Modifier.weight(1f),
                         )
+
+                        if (executing) {
+                            LinearProgressIndicator(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp),
+                            )
+                        }
 
                         AnimatedVisibility(
                             visible = resultsExpanded && lastResult != null,

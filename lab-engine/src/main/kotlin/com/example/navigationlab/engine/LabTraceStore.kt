@@ -12,18 +12,41 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
+ * Read-only view of the trace store, exposing only observation capabilities.
+ *
+ * External consumers (e.g., UI layers) should depend on this interface
+ * rather than the full [LabTraceStore], which additionally exposes
+ * mutation methods ([LabTraceStore.record], [LabTraceStore.clear],
+ * [LabTraceStore.startCase]).
+ */
+interface ReadableTraceStore {
+    /** Monotonically increasing version counter; collect this to react to new events. */
+    val eventVersion: StateFlow<Long>
+
+    /** Return an immutable snapshot of the current trace events. */
+    fun snapshot(): List<LabTraceEvent>
+
+    /** Export the current snapshot as a JSON string. */
+    fun exportSnapshotJson(pretty: Boolean = true): String
+}
+
+/**
  * In-memory store for trace events captured during lab scenario execution.
- * Observable via [events] StateFlow for live UI updates.
+ * Observable via [eventVersion] StateFlow for live UI updates.
+ *
+ * External code should prefer the [ReadableTraceStore] interface for
+ * read-only access. Mutation methods are intended for use within the
+ * `lab-engine` module only.
  */
 class LabTraceStore(
     private val maxEvents: Int = DEFAULT_MAX_EVENTS,
-) {
+) : ReadableTraceStore {
     init {
         require(maxEvents > 0) { "maxEvents must be > 0" }
     }
 
     private val _eventVersion = MutableStateFlow(0L)
-    val eventVersion: StateFlow<Long> = _eventVersion.asStateFlow()
+    override val eventVersion: StateFlow<Long> = _eventVersion.asStateFlow()
     private val ringBuffer = ArrayDeque<LabTraceEvent>(maxEvents)
     private var droppedEventCount: Int = 0
 
@@ -60,9 +83,9 @@ class LabTraceStore(
         resetBuffer()
     }
 
-    fun snapshot(): List<LabTraceEvent> = ringBuffer.toList()
+    override fun snapshot(): List<LabTraceEvent> = ringBuffer.toList()
 
-    fun exportSnapshotJson(pretty: Boolean = true): String {
+    override fun exportSnapshotJson(pretty: Boolean): String {
         val payload = JSONObject().apply {
             put("caseId", activeCaseId?.code ?: JSONObject.NULL)
             put("eventCount", ringBuffer.size)

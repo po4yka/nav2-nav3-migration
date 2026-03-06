@@ -44,6 +44,29 @@ class ComposeNav3Fragment : Fragment() {
     var lastModalResult: String? = null
         private set
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        lastModalResult = savedInstanceState?.getString(STATE_LAST_MODAL_RESULT)
+        // Restore the Nav3 back stack from saved key names.
+        // Nav3ModalKey variants are data objects so we map by simple name.
+        val savedKeys = savedInstanceState?.getStringArrayList(STATE_BACK_STACK_KEYS)
+        if (savedKeys != null && savedKeys.isNotEmpty()) {
+            backStack.clear()
+            savedKeys.mapNotNull { name -> Nav3ModalKey.fromName(name) }
+                .ifEmpty { listOf(Nav3ModalKey.Home) }
+                .forEach { backStack.add(it) }
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(STATE_LAST_MODAL_RESULT, lastModalResult)
+        outState.putStringArrayList(
+            STATE_BACK_STACK_KEYS,
+            ArrayList(backStack.map { (it as Nav3ModalKey).name }),
+        )
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -113,6 +136,9 @@ class ComposeNav3Fragment : Fragment() {
     }
 
     companion object {
+        private const val STATE_BACK_STACK_KEYS = "state_back_stack_keys"
+        private const val STATE_LAST_MODAL_RESULT = "state_last_modal_result"
+
         val COLORS = listOf(
             Color(0xFF6200EE), // Purple
             Color(0xFF03DAC5), // Teal
@@ -127,9 +153,22 @@ class ComposeNav3Fragment : Fragment() {
 
 /** Navigation keys for Nav3 inside the fragment (B08). */
 sealed interface Nav3ModalKey {
+    /** Stable name used for save/restore via Bundle. */
+    val name: String get() = this::class.simpleName ?: "Home"
+
     data object Home : Nav3ModalKey
     data object ScreenA : Nav3ModalKey
     data object ResultModal : Nav3ModalKey
+
+    companion object {
+        /** Resolve a key by its [name] property, or null if unknown. */
+        fun fromName(name: String): Nav3ModalKey? = when (name) {
+            "Home" -> Home
+            "ScreenA" -> ScreenA
+            "ResultModal" -> ResultModal
+            else -> null
+        }
+    }
 }
 
 /** Stub screen for internal Nav3 destinations within the fragment. */

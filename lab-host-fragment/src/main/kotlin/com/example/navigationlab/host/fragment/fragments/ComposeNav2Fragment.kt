@@ -37,6 +37,12 @@ import androidx.navigation.compose.rememberNavController
  * This Fragment contains a ComposeView with a Nav2 NavHost inside.
  *
  * Used for B06/B07 and D-family dialog/sheet semantics.
+ *
+ * Threading contract: [navHostController] is assigned in composition and
+ * nulled in [onDestroyView]. All public methods that touch the controller
+ * capture it into a local val with an early-return null guard, which is
+ * safe because Fragment callbacks and Compose recomposition both run on
+ * the main thread.
  */
 class ComposeNav2Fragment : Fragment() {
 
@@ -135,7 +141,8 @@ class ComposeNav2Fragment : Fragment() {
         super.onSaveInstanceState(outState)
         outState.putInt(STATE_NAV_DEPTH, navBackStackDepth)
         outState.putString(STATE_LAST_DIALOG_RESULT, lastDialogResult)
-        val route = navHostController?.currentBackStackEntry?.destination?.route
+        val controller = navHostController ?: return
+        val route = controller.currentBackStackEntry?.destination?.route
         if (route != null && route != ROUTE_HOME) {
             outState.putString(STATE_PENDING_RESTORE_ROUTE, route)
         }

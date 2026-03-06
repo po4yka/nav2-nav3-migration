@@ -10,10 +10,21 @@ import com.example.navigationlab.engine.orchestrator.StepExecutor
 /**
  * Main facade for the navigation interop lab.
  * Holds the scenario registry, trace store, and drives execution.
+ *
+ * External consumers should use [traceStore] (typed as [ReadableTraceStore])
+ * for observation only. The mutable backing store is used internally by the
+ * orchestrator during scenario execution.
  */
 class NavigationLabEngine(
-    val traceStore: LabTraceStore = LabTraceStore(),
+    private val _traceStore: LabTraceStore = LabTraceStore(),
 ) {
+    /**
+     * Read-only view of the trace store for observing events and snapshots.
+     *
+     * Use [ReadableTraceStore.eventVersion] to react to new events and
+     * [ReadableTraceStore.snapshot] to retrieve the current event list.
+     */
+    val traceStore: ReadableTraceStore get() = _traceStore
     private val _scenarios = mutableListOf<LabScenario>()
 
     /** All registered scenarios, for display in the case browser. */
@@ -50,7 +61,7 @@ class NavigationLabEngine(
             )
 
         val orchestrator = DefaultLabOrchestrator(
-            traceStore = traceStore,
+            traceStore = _traceStore,
             stepExecutor = stepExecutor,
         )
 

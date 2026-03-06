@@ -18,6 +18,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.navigationlab.contracts.InvariantResult
@@ -109,21 +111,26 @@ private fun StatusBadge(status: ResultStatus) {
         fontWeight = FontWeight.Bold,
         modifier = Modifier
             .background(bgColor, RoundedCornerShape(4.dp))
-            .padding(horizontal = 8.dp, vertical = 2.dp),
+            .padding(horizontal = 8.dp, vertical = 2.dp)
+            .semantics { contentDescription = "Status: $text" },
     )
 }
 
 @Composable
 private fun InvariantRow(invariant: InvariantResult) {
+    val statusLabel = if (invariant.passed) "OK" else "FAIL"
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 2.dp),
+            .padding(vertical = 2.dp)
+            .semantics {
+                contentDescription = "Invariant: ${invariant.description}, status: $statusLabel"
+            },
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.Top,
     ) {
         Text(
-            text = if (invariant.passed) "OK" else "FAIL",
+            text = statusLabel,
             style = MaterialTheme.typography.labelSmall,
             color = if (invariant.passed) Color(0xFF2E7D32) else Color(0xFFC62828),
             fontWeight = FontWeight.Bold,
