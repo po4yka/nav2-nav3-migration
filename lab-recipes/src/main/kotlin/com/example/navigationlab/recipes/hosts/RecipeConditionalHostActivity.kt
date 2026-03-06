@@ -142,12 +142,18 @@ class RecipeConditionalHostActivity : AppCompatActivity() {
                 putExtra(EXTRA_RUN_MODE, runMode)
             }
 
-        fun createAdvancedDeepIntent(context: Context, name: String, location: String): Intent =
+        fun createAdvancedDeepIntent(
+            context: Context,
+            name: String,
+            location: String,
+            runMode: String? = null,
+        ): Intent =
             Intent(context, RecipeConditionalHostActivity::class.java).apply {
                 action = ACTION_ADVANCED_DEEP
                 putExtra(KEY_NAME, name)
                 putExtra(KEY_LOCATION, location)
                 putExtra(EXTRA_CASE_ID, "R19")
+                if (runMode != null) putExtra(EXTRA_RUN_MODE, runMode)
             }
     }
 }

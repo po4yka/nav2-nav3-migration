@@ -104,11 +104,12 @@ class RecipeDeepLinkHostActivity : AppCompatActivity() {
                 putExtra(EXTRA_RUN_MODE, runMode)
             }
 
-        fun createDeepLinkIntent(context: Context, param: String): Intent =
+        fun createDeepLinkIntent(context: Context, param: String, runMode: String? = null): Intent =
             Intent(context, RecipeDeepLinkHostActivity::class.java).apply {
                 action = ACTION_SHOW_TARGET
                 putExtra(KEY_PARAM, param)
                 putExtra(EXTRA_CASE_ID, "R13")
+                if (runMode != null) putExtra(EXTRA_RUN_MODE, runMode)
             }
     }
 }

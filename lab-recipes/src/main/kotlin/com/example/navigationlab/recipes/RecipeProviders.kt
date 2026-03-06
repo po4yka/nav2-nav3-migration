@@ -5,10 +5,12 @@ import android.content.Intent
 import com.example.navigationlab.contracts.LabCaseId
 import com.example.navigationlab.contracts.LabScenario
 import com.example.navigationlab.recipes.hosts.RecipeAdaptiveHostActivity
+import com.example.navigationlab.recipes.hosts.RecipeAdvancedDeepLinksActivity
 import com.example.navigationlab.recipes.hosts.RecipeAppStateHostActivity
 import com.example.navigationlab.recipes.hosts.RecipeBasicHostActivity
 import com.example.navigationlab.recipes.hosts.RecipeConditionalHostActivity
 import com.example.navigationlab.recipes.hosts.RecipeDeepLinkHostActivity
+import com.example.navigationlab.recipes.hosts.RecipeDeepLinksActivity
 import com.example.navigationlab.recipes.hosts.RecipeInteropHostActivity
 import com.example.navigationlab.recipes.hosts.RecipeMigrationHostActivity
 import com.example.navigationlab.recipes.hosts.RecipeModalMatrixHostActivity
@@ -60,7 +62,15 @@ object RecipeDeepLinkProvider {
     val scenarios: List<LabScenario> = R_DEEP_LINK_SCENARIOS
 
     fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
-        RecipeDeepLinkHostActivity.createIntent(context, caseId, runMode)
+        if (caseId.code == "R13") {
+            RecipeDeepLinksActivity.createInAppIntent(
+                context = context,
+                param = RecipeDeepLinksActivity.DEFAULT_IN_APP_PARAM,
+                runMode = runMode,
+            )
+        } else {
+            RecipeDeepLinkHostActivity.createIntent(context, caseId, runMode)
+        }
 }
 
 object RecipeTransitionProvider {
@@ -84,7 +94,16 @@ object RecipeConditionalProvider {
     val scenarios: List<LabScenario> = R_CONDITIONAL_SCENARIOS
 
     fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
-        RecipeConditionalHostActivity.createIntent(context, caseId, runMode)
+        if (caseId.code == "R19") {
+            RecipeAdvancedDeepLinksActivity.createInAppIntent(
+                context = context,
+                name = RecipeAdvancedDeepLinksActivity.DEFAULT_IN_APP_NAME,
+                location = RecipeAdvancedDeepLinksActivity.DEFAULT_IN_APP_LOCATION,
+                runMode = runMode,
+            )
+        } else {
+            RecipeConditionalHostActivity.createIntent(context, caseId, runMode)
+        }
 }
 
 object RecipeModalMatrixProvider {
