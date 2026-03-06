@@ -69,19 +69,27 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none -no-snapshot
           script: |
-            set -euo pipefail
+            set -eu
             sdk=""
-            for i in {1..30}; do
-              sdk="$(adb shell getprop ro.build.version.sdk 2>/dev/null | tr -d '\r')"
-              if [[ "$sdk" =~ ^[0-9]+$ ]]; then
-                echo "Emulator API level: $sdk"
-                break
-              fi
-              echo "Waiting for responsive emulator shell ($i/30)..."
-              sleep 5
+            i=1
+            while [ "$i" -le 30 ]; do
+              sdk="$(adb shell getprop ro.build.version.sdk 2>/dev/null | tr -d '\r\n')"
+              case "$sdk" in
+                ''|*[!0-9]*)
+                  echo "Waiting for responsive emulator shell ($i/30)..."
+                  sleep 5
+                  i=$((i + 1))
+                  ;;
+                *)
+                  echo "Emulator API level: $sdk"
+                  break
+                  ;;
+              esac
             done
-            [[ "$sdk" =~ ^[0-9]+$ ]] || {
-              echo "Emulator shell never became responsive."
-              exit 1
-            }
+            case "$sdk" in
+              ''|*[!0-9]*)
+                echo "Emulator shell never became responsive."
+                exit 1
+                ;;
+            esac
             ./gradlew :app:assembleDebug :lab-testkit:connectedAndroidTest --stacktrace
