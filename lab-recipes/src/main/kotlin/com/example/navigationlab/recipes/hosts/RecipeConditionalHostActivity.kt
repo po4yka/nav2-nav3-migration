@@ -69,6 +69,11 @@ class RecipeConditionalHostActivity : AppCompatActivity() {
             finish()
             return
         }
+        if (caseCode != CASE_GATE && caseCode != CASE_ADVANCED_DEEP) {
+            Log.e(TAG, "Unsupported case ID: $caseCode")
+            finish()
+            return
+        }
         val runMode = parseRunModeOrDefault(intent.getStringExtra(EXTRA_RUN_MODE))
 
         findViewById<TextView>(R.id.tvTopologyLabel).text = getString(
@@ -82,11 +87,11 @@ class RecipeConditionalHostActivity : AppCompatActivity() {
         composeView.setContent {
             MaterialTheme {
                 when (caseCode) {
-                    "R18" -> ConditionalContent(
+                    CASE_GATE -> ConditionalContent(
                         host = this@RecipeConditionalHostActivity,
                         onExit = { finish() },
                     )
-                    "R19" -> AdvancedDeepLinkContent(
+                    CASE_ADVANCED_DEEP -> AdvancedDeepLinkContent(
                         host = this@RecipeConditionalHostActivity,
                         onExit = { finish() },
                     )
@@ -135,6 +140,8 @@ class RecipeConditionalHostActivity : AppCompatActivity() {
         const val ACTION_ADVANCED_DEEP = "com.example.navigationlab.recipes.action.ADVANCED_DEEP"
         const val KEY_NAME = "advanced_deep_name"
         const val KEY_LOCATION = "advanced_deep_location"
+        private const val CASE_GATE = "R18"
+        private const val CASE_ADVANCED_DEEP = "R19"
 
         fun createIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
             Intent(context, RecipeConditionalHostActivity::class.java).apply {
@@ -152,7 +159,7 @@ class RecipeConditionalHostActivity : AppCompatActivity() {
                 action = ACTION_ADVANCED_DEEP
                 putExtra(KEY_NAME, name)
                 putExtra(KEY_LOCATION, location)
-                putExtra(EXTRA_CASE_ID, "R19")
+                putExtra(EXTRA_CASE_ID, CASE_ADVANCED_DEEP)
                 if (runMode != null) putExtra(EXTRA_RUN_MODE, runMode)
             }
     }
@@ -255,18 +262,38 @@ private fun AdvancedDeepLinkContent(host: RecipeConditionalHostActivity, onExit:
 
     // Handle advanced deep link intent once
     var isDeepLinkConsumed by rememberSaveable { mutableStateOf(false) }
-    val isDeepLink = (context as? RecipeConditionalHostActivity)?.intent?.action ==
-        RecipeConditionalHostActivity.ACTION_ADVANCED_DEEP
-    var isProcessing by rememberSaveable { mutableStateOf(isDeepLink && !isDeepLinkConsumed) }
+    var isProcessing by rememberSaveable { mutableStateOf(false) }
 
-    LaunchedEffect(context) {
-        if (isDeepLinkConsumed) return@LaunchedEffect
-        val activity = context as? RecipeConditionalHostActivity ?: return@LaunchedEffect
-        val intent = activity.intent ?: return@LaunchedEffect
+    LaunchedEffect(context, isDeepLinkConsumed) {
+        if (isDeepLinkConsumed) {
+            isProcessing = false
+            return@LaunchedEffect
+        }
+        val activity = context as? RecipeConditionalHostActivity ?: run {
+            isProcessing = false
+            return@LaunchedEffect
+        }
+        val intent = activity.intent ?: run {
+            isProcessing = false
+            return@LaunchedEffect
+        }
 
-        if (intent.action == RecipeConditionalHostActivity.ACTION_ADVANCED_DEEP) {
-            val name = intent.getStringExtra(RecipeConditionalHostActivity.KEY_NAME) ?: return@LaunchedEffect
-            val location = intent.getStringExtra(RecipeConditionalHostActivity.KEY_LOCATION) ?: return@LaunchedEffect
+        if (intent.action != RecipeConditionalHostActivity.ACTION_ADVANCED_DEEP) {
+            isProcessing = false
+            return@LaunchedEffect
+        }
+
+        isProcessing = true
+        try {
+            val name = intent.getStringExtra(RecipeConditionalHostActivity.KEY_NAME)
+            val location = intent.getStringExtra(RecipeConditionalHostActivity.KEY_LOCATION)
+            if (name == null || location == null) {
+                Log.w(
+                    "RecipeConditionalHost",
+                    "Ignoring malformed advanced deep link: missing name/location extra",
+                )
+                return@LaunchedEffect
+            }
             NavLogger.deepLink("RecipeConditionalHost", RecipeConditionalHostActivity.ACTION_ADVANCED_DEEP, mapOf("name" to name, "location" to location))
             // Synthetic backstack: home is already the start, add target on top
             backStack.add(AdvancedDeepTarget(name = name, location = location))
@@ -274,8 +301,9 @@ private fun AdvancedDeepLinkContent(host: RecipeConditionalHostActivity, onExit:
             latestLocation = location
             NavLogger.push("RecipeConditionalHost", "AdvancedDeepTarget", backStack.size)
             isDeepLinkConsumed = true
+        } finally {
+            isProcessing = false
         }
-        isProcessing = false
     }
 
     Scaffold { paddingValues ->

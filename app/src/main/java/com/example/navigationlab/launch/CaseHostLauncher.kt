@@ -1,5 +1,6 @@
 package com.example.navigationlab.launch
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import com.example.navigationlab.contracts.LabCaseId
@@ -11,7 +12,13 @@ class CaseHostLauncher(
 ) {
     fun launch(context: Context, caseId: LabCaseId, runMode: RunMode): Boolean {
         val intentFactory = launchByCaseCode[caseId.code] ?: return false
-        context.startActivity(intentFactory(context, caseId, runMode.name))
+        val intent = intentFactory(context, caseId, runMode.name).apply {
+            // Defensive safety: non-activity callers require NEW_TASK.
+            if (context !is Activity) {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+        }
+        context.startActivity(intent)
         return true
     }
 }

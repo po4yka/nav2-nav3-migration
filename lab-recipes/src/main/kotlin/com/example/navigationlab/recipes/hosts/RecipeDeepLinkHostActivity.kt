@@ -143,24 +143,42 @@ private fun DeepLinkContent(host: RecipeDeepLinkHostActivity, onExit: () -> Unit
 
     // Handle deep link intent once
     var isDeepLinkConsumed by rememberSaveable { mutableStateOf(false) }
-    val isDeepLink = (context as? RecipeDeepLinkHostActivity)?.intent?.action ==
-        RecipeDeepLinkHostActivity.ACTION_SHOW_TARGET
-    var isProcessing by rememberSaveable { mutableStateOf(isDeepLink && !isDeepLinkConsumed) }
+    var isProcessing by rememberSaveable { mutableStateOf(false) }
 
-    LaunchedEffect(context) {
-        if (isDeepLinkConsumed) return@LaunchedEffect
-        val activity = context as? RecipeDeepLinkHostActivity ?: return@LaunchedEffect
-        val intent = activity.intent ?: return@LaunchedEffect
+    LaunchedEffect(context, isDeepLinkConsumed) {
+        if (isDeepLinkConsumed) {
+            isProcessing = false
+            return@LaunchedEffect
+        }
+        val activity = context as? RecipeDeepLinkHostActivity ?: run {
+            isProcessing = false
+            return@LaunchedEffect
+        }
+        val intent = activity.intent ?: run {
+            isProcessing = false
+            return@LaunchedEffect
+        }
 
-        if (intent.action == RecipeDeepLinkHostActivity.ACTION_SHOW_TARGET) {
-            val param = intent.getStringExtra(RecipeDeepLinkHostActivity.KEY_PARAM) ?: return@LaunchedEffect
+        if (intent.action != RecipeDeepLinkHostActivity.ACTION_SHOW_TARGET) {
+            isProcessing = false
+            return@LaunchedEffect
+        }
+
+        isProcessing = true
+        try {
+            val param = intent.getStringExtra(RecipeDeepLinkHostActivity.KEY_PARAM)
+            if (param == null) {
+                Log.w("RecipeDeepLinkHost", "Ignoring malformed deep link: missing param extra")
+                return@LaunchedEffect
+            }
             NavLogger.deepLink("RecipeDeepLinkHost", RecipeDeepLinkHostActivity.ACTION_SHOW_TARGET, mapOf("param" to param))
             backStack.add(DeepLinkTarget(param = param))
             latestParam = param
             NavLogger.push("RecipeDeepLinkHost", "DeepLinkTarget", backStack.size)
             isDeepLinkConsumed = true
+        } finally {
+            isProcessing = false
         }
-        isProcessing = false
     }
 
     Scaffold { paddingValues ->
