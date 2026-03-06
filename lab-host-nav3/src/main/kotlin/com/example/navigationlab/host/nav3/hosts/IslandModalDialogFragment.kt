@@ -10,6 +10,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
+import com.example.navigationlab.host.nav3.R
 
 /**
  * DialogFragment used by T5 scenarios to validate legacy island modal layering behavior.
@@ -17,7 +18,8 @@ import androidx.fragment.app.DialogFragment
 class IslandModalDialogFragment : DialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val label = requireArguments().getString(ARG_LABEL) ?: "Island Modal"
+        val label = requireArguments().getString(ARG_LABEL)
+            ?: getString(R.string.island_modal_default_label)
 
         val content = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
@@ -35,7 +37,7 @@ class IslandModalDialogFragment : DialogFragment() {
             )
             addView(
                 Button(context).apply {
-                    text = "Dismiss"
+                    text = getString(R.string.action_dismiss)
                     setOnClickListener { dismiss() }
                 },
             )

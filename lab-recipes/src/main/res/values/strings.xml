@@ -14,4 +14,6 @@
     <string name="topology_recipe_migration">T%1$d: Recipe Migration</string>
     <string name="interop_go_to_view">Go to View</string>
     <string name="interop_view_with_key">My View with key: %1$s</string>
+    <string name="recipe_island_dialog_label">Recipe Island Dialog</string>
+    <string name="action_dismiss">Dismiss</string>
 </resources>

@@ -214,7 +214,7 @@ class RecipeModalMatrixHostActivity : AppCompatActivity() {
     /** Open legacy island modal dialog in R24. */
     fun openIslandDialogModal() {
         if (caseCode != CASE_R24 || !isLegacyIslandVisible || isIslandDialogVisible) return
-        RecipeIslandDialogFragment.newInstance("Recipe Island Dialog")
+        RecipeIslandDialogFragment.newInstance(getString(R.string.recipe_island_dialog_label))
             .show(supportFragmentManager, TAG_ISLAND_DIALOG)
     }
 
@@ -774,7 +774,8 @@ private fun MutableList<Any>.ensureSingleRoot(root: Any) {
 class RecipeIslandDialogFragment : DialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val label = requireArguments().getString(ARG_LABEL) ?: "Recipe Island Dialog"
+        val label = requireArguments().getString(ARG_LABEL)
+            ?: getString(R.string.recipe_island_dialog_label)
         val content = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
@@ -791,7 +792,7 @@ class RecipeIslandDialogFragment : DialogFragment() {
             )
             addView(
                 AndroidButton(context).apply {
-                    text = "Dismiss"
+                    text = getString(R.string.action_dismiss)
                     setOnClickListener { dismiss() }
                 },
             )

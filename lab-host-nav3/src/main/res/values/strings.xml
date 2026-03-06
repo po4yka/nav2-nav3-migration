@@ -5,4 +5,6 @@
     <string name="topology_t5">T5: Nav3-&gt;Fragment Island</string>
     <string name="topology_t8">T8: Nav3-&gt;Nav2 Interop</string>
     <string name="topology_b09">B09: Nav3-&gt;Nav2-&gt;Fragment-&gt;Dialog</string>
+    <string name="island_modal_default_label">Island Modal</string>
+    <string name="action_dismiss">Dismiss</string>
 </resources>

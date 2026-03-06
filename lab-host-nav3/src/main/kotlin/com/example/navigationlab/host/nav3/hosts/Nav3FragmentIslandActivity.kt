@@ -217,7 +217,7 @@ class Nav3FragmentIslandActivity : AppCompatActivity() {
     /** Show a DialogFragment-based island modal. */
     fun showIslandModal() {
         if (!isLegacyIslandVisible || isIslandModalVisible) return
-        IslandModalDialogFragment.newInstance("Island Modal")
+        IslandModalDialogFragment.newInstance(getString(R.string.island_modal_default_label))
             .show(supportFragmentManager, ISLAND_MODAL_TAG)
     }
 
