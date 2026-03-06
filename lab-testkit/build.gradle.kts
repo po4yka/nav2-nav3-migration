@@ -16,6 +16,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":lab-catalog-wiring"))
     implementation(project(":lab-catalog"))
     implementation(project(":lab-contracts"))
     implementation(project(":lab-deeplink"))

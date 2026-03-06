@@ -2,7 +2,7 @@ package com.example.navigationlab.testkit
 
 import android.app.Activity
 import android.content.Context
-import com.example.navigationlab.catalog.LabScenarioCatalog
+import com.example.navigationlab.catalog.wiring.createWiredCatalog
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
@@ -17,7 +17,8 @@ class FullCatalogLaunchSmokeTest {
     @Test
     fun allCatalogCases_launchHostsWithoutCrashing() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val scenarios = LabScenarioCatalog.scenarios
+        val catalog = createWiredCatalog()
+        val scenarios = catalog.scenarios
 
         assertTrue("Catalog should contain at least the documented 101 scenarios", scenarios.size >= 101)
         val duplicates = scenarios.groupBy { it.id.code }.filterValues { it.size > 1 }
@@ -25,7 +26,7 @@ class FullCatalogLaunchSmokeTest {
         scenarios
             .sortedWith(compareBy({ it.id.family.ordinal }, { it.id.number }))
             .forEach { scenario ->
-                val intentFactory = requireNotNull(LabScenarioCatalog.launchByCaseCode[scenario.id.code]) {
+                val intentFactory = requireNotNull(catalog.launchByCaseCode[scenario.id.code]) {
                     "Missing host launcher for case ${scenario.id.code}"
                 }
                 val intent = intentFactory(context, scenario.id, "scripted")

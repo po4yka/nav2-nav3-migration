@@ -9,8 +9,4 @@ android {
 
 dependencies {
     implementation(project(":lab-contracts"))
-    implementation(project(":lab-host-fragment"))
-    implementation(project(":lab-host-nav2"))
-    implementation(project(":lab-host-nav3"))
-    implementation(project(":lab-recipes"))
 }

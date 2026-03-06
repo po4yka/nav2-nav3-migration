@@ -3,6 +3,7 @@ package com.example.navigationlab.host.fragment
 import android.content.Context
 import android.content.Intent
 import com.example.navigationlab.contracts.LabCaseId
+import com.example.navigationlab.contracts.LabHostProvider
 import com.example.navigationlab.contracts.LabScenario
 import com.example.navigationlab.host.fragment.hosts.DualHostActivity
 import com.example.navigationlab.host.fragment.hosts.FragmentHostActivity
@@ -13,13 +14,13 @@ import com.example.navigationlab.host.fragment.hosts.FragmentNav3HostActivity
  * Entry point for the fragment host module.
  * Provides T1 topology scenarios and factory for launching the host activity.
  */
-object FragmentHostProvider {
+object FragmentHostProvider : LabHostProvider {
 
     /** All scenarios registered by this module (T1 + E02 + H01). */
-    val scenarios: List<LabScenario> = T1_SCENARIOS + E_T1_SCENARIOS + H_T1_SCENARIOS
+    override val scenarios: List<LabScenario> = T1_SCENARIOS + E_T1_SCENARIOS + H_T1_SCENARIOS
 
     /** Create an Intent to launch the T1 host activity for a given case. */
-    fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
+    override fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
         FragmentHostActivity.createIntent(context, caseId, runMode)
 }
 
@@ -27,13 +28,13 @@ object FragmentHostProvider {
  * Entry point for the T4 dual-container topology.
  * Provides T4 scenarios and factory for launching DualHostActivity.
  */
-object DualHostProvider {
+object DualHostProvider : LabHostProvider {
 
     /** All scenarios registered by this module (T4 + E06 + H05). */
-    val scenarios: List<LabScenario> = T4_SCENARIOS + E_T4_SCENARIOS + H_T4_SCENARIOS
+    override val scenarios: List<LabScenario> = T4_SCENARIOS + E_T4_SCENARIOS + H_T4_SCENARIOS
 
     /** Create an Intent to launch the T4 dual-container host activity. */
-    fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
+    override fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
         DualHostActivity.createIntent(context, caseId, runMode)
 }
 
@@ -42,14 +43,14 @@ object DualHostProvider {
  * Provides B06/B07 plus D01/D02/D03/D04/D06/D07/D08/D09 scenarios and factory
  * for launching FragmentNav2HostActivity.
  */
-object FragmentNav2HostProvider {
+object FragmentNav2HostProvider : LabHostProvider {
 
     /** All scenarios registered by this provider (T6 Nav2 + D/E/F/G mixed cases). */
-    val scenarios: List<LabScenario> =
+    override val scenarios: List<LabScenario> =
         T6_SCENARIOS + D_NAV2_SCENARIOS + E_T6_NAV2_SCENARIOS + F_T6_SCENARIOS + G_T6_SCENARIOS
 
     /** Create an Intent to launch the T6 host activity for a given case. */
-    fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
+    override fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
         FragmentNav2HostActivity.createIntent(context, caseId, runMode)
 }
 
@@ -57,13 +58,13 @@ object FragmentNav2HostProvider {
  * Entry point for B08 and D05 scenarios (Fragment host -> ComposeView -> Nav3 NavDisplay).
  * Uses T6 topology pattern with Nav3 instead of Nav2.
  */
-object FragmentNav3HostProvider {
+object FragmentNav3HostProvider : LabHostProvider {
 
     /** All scenarios registered by this provider (B08 + D05 + E08). */
-    val scenarios: List<LabScenario> = B08_SCENARIOS + D_NAV3_SCENARIOS + E_T6_NAV3_SCENARIOS
+    override val scenarios: List<LabScenario> = B08_SCENARIOS + D_NAV3_SCENARIOS + E_T6_NAV3_SCENARIOS
 
     /** Create an Intent to launch the B08 host activity for a given case. */
-    fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
+    override fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
         FragmentNav3HostActivity.createIntent(context, caseId, runMode)
 }
 
@@ -72,13 +73,13 @@ object FragmentNav3HostProvider {
  * Covers C01 (compose opens fragment), C04 (compose opens DialogFragment),
  * C07 (compose args -> fragment args), C08 (activity recreate bridge).
  */
-object ComposeToXmlBridgeProvider {
+object ComposeToXmlBridgeProvider : LabHostProvider {
 
     /** C-family scenarios using T4 topology. */
-    val scenarios: List<LabScenario> = C_T4_SCENARIOS
+    override val scenarios: List<LabScenario> = C_T4_SCENARIOS
 
     /** Create an Intent to launch the T4 dual-container host activity. */
-    fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
+    override fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
         DualHostActivity.createIntent(context, caseId, runMode)
 }
 
@@ -87,12 +88,12 @@ object ComposeToXmlBridgeProvider {
  * Covers C03 (fragment hosts ComposeView), C05 (fragment opens Compose dialog),
  * C06 (XML args -> Compose args).
  */
-object XmlToComposeBridgeProvider {
+object XmlToComposeBridgeProvider : LabHostProvider {
 
     /** C-family scenarios using T6 topology. */
-    val scenarios: List<LabScenario> = C_T6_SCENARIOS
+    override val scenarios: List<LabScenario> = C_T6_SCENARIOS
 
     /** Create an Intent to launch the T6 host activity. */
-    fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
+    override fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
         FragmentNav2HostActivity.createIntent(context, caseId, runMode)
 }

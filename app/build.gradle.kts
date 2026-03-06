@@ -35,16 +35,13 @@ android {
 }
 
 dependencies {
+    implementation(project(":lab-catalog-wiring"))
     implementation(project(":lab-catalog"))
     implementation(project(":lab-contracts"))
     implementation(project(":lab-engine"))
-    implementation(project(":lab-host-fragment"))
-    implementation(project(":lab-host-nav2"))
-    implementation(project(":lab-host-nav3"))
     implementation(project(":lab-deeplink"))
     implementation(project(":lab-back"))
     implementation(project(":lab-results"))
-    implementation(project(":lab-recipes"))
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.material3)
@@ -61,6 +58,7 @@ dependencies {
     implementation(libs.core.ktx)
     implementation(libs.appcompat)
 
+    testImplementation(project(":lab-recipes"))
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
     testImplementation(libs.test.core)

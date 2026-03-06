@@ -30,6 +30,7 @@ rootProject.name = "NavigationInteropLab"
 
 include(":app")
 include(":lab-catalog")
+include(":lab-catalog-wiring")
 include(":lab-contracts")
 include(":lab-engine")
 include(":lab-host-fragment")

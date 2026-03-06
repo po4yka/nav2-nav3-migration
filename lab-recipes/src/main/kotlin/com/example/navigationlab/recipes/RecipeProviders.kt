@@ -3,6 +3,7 @@ package com.example.navigationlab.recipes
 import android.content.Context
 import android.content.Intent
 import com.example.navigationlab.contracts.LabCaseId
+import com.example.navigationlab.contracts.LabHostProvider
 import com.example.navigationlab.contracts.LabScenario
 import com.example.navigationlab.recipes.hosts.RecipeAdaptiveHostActivity
 import com.example.navigationlab.recipes.hosts.RecipeAdvancedDeepLinksActivity
@@ -17,51 +18,51 @@ import com.example.navigationlab.recipes.hosts.RecipeModalMatrixHostActivity
 import com.example.navigationlab.recipes.hosts.RecipeResultsHostActivity
 import com.example.navigationlab.recipes.hosts.RecipeTransitionHostActivity
 
-object RecipeBasicProvider {
+object RecipeBasicProvider : LabHostProvider {
 
-    val scenarios: List<LabScenario> = R_BASIC_SCENARIOS
+    override val scenarios: List<LabScenario> = R_BASIC_SCENARIOS
 
-    fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
+    override fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
         RecipeBasicHostActivity.createIntent(context, caseId, runMode)
 }
 
-object RecipeInteropProvider {
+object RecipeInteropProvider : LabHostProvider {
 
-    val scenarios: List<LabScenario> = R_INTEROP_SCENARIOS
+    override val scenarios: List<LabScenario> = R_INTEROP_SCENARIOS
 
-    fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
+    override fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
         RecipeInteropHostActivity.createIntent(context, caseId, runMode)
 }
 
-object RecipeMigrationProvider {
+object RecipeMigrationProvider : LabHostProvider {
 
-    val scenarios: List<LabScenario> = R_MIGRATION_SCENARIOS
+    override val scenarios: List<LabScenario> = R_MIGRATION_SCENARIOS
 
-    fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
+    override fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
         RecipeMigrationHostActivity.createIntent(context, caseId, runMode)
 }
 
-object RecipeResultsProvider {
+object RecipeResultsProvider : LabHostProvider {
 
-    val scenarios: List<LabScenario> = R_RESULTS_SCENARIOS
+    override val scenarios: List<LabScenario> = R_RESULTS_SCENARIOS
 
-    fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
+    override fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
         RecipeResultsHostActivity.createIntent(context, caseId, runMode)
 }
 
-object RecipeAppStateProvider {
+object RecipeAppStateProvider : LabHostProvider {
 
-    val scenarios: List<LabScenario> = R_APP_STATE_SCENARIOS
+    override val scenarios: List<LabScenario> = R_APP_STATE_SCENARIOS
 
-    fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
+    override fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
         RecipeAppStateHostActivity.createIntent(context, caseId, runMode)
 }
 
-object RecipeDeepLinkProvider {
+object RecipeDeepLinkProvider : LabHostProvider {
 
-    val scenarios: List<LabScenario> = R_DEEP_LINK_SCENARIOS
+    override val scenarios: List<LabScenario> = R_DEEP_LINK_SCENARIOS
 
-    fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
+    override fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
         if (caseId.code == "R13") {
             RecipeDeepLinksActivity.createInAppIntent(
                 context = context,
@@ -73,27 +74,27 @@ object RecipeDeepLinkProvider {
         }
 }
 
-object RecipeTransitionProvider {
+object RecipeTransitionProvider : LabHostProvider {
 
-    val scenarios: List<LabScenario> = R_TRANSITION_SCENARIOS
+    override val scenarios: List<LabScenario> = R_TRANSITION_SCENARIOS
 
-    fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
+    override fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
         RecipeTransitionHostActivity.createIntent(context, caseId, runMode)
 }
 
-object RecipeAdaptiveProvider {
+object RecipeAdaptiveProvider : LabHostProvider {
 
-    val scenarios: List<LabScenario> = R_ADAPTIVE_SCENARIOS
+    override val scenarios: List<LabScenario> = R_ADAPTIVE_SCENARIOS
 
-    fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
+    override fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
         RecipeAdaptiveHostActivity.createIntent(context, caseId, runMode)
 }
 
-object RecipeConditionalProvider {
+object RecipeConditionalProvider : LabHostProvider {
 
-    val scenarios: List<LabScenario> = R_CONDITIONAL_SCENARIOS
+    override val scenarios: List<LabScenario> = R_CONDITIONAL_SCENARIOS
 
-    fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
+    override fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
         if (caseId.code == "R19") {
             RecipeAdvancedDeepLinksActivity.createInAppIntent(
                 context = context,
@@ -106,10 +107,10 @@ object RecipeConditionalProvider {
         }
 }
 
-object RecipeModalMatrixProvider {
+object RecipeModalMatrixProvider : LabHostProvider {
 
-    val scenarios: List<LabScenario> = R_MODAL_MATRIX_SCENARIOS
+    override val scenarios: List<LabScenario> = R_MODAL_MATRIX_SCENARIOS
 
-    fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
+    override fun createHostIntent(context: Context, caseId: LabCaseId, runMode: String): Intent =
         RecipeModalMatrixHostActivity.createIntent(context, caseId, runMode)
 }
